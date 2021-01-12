@@ -188,12 +188,10 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         #loading templates
         $output .= $this->context->smarty->fetch($this->module->views_url . '/templates/admin/view.tpl');
 
-        dump($this->context->link->getAdminLink('AdminSenderAutomatedEmails'));
-
-
         return $output;
     }
-    function recursive_implode(array $array, $glue = ',', $include_keys = false, $trim_all = true)
+
+    public function recursive_implode(array $array, $glue = ',', $include_keys = false, $trim_all = true)
     {
         $glued_string = '';
 

@@ -12,8 +12,6 @@
 it will also displayt the pop up if any available, block it so it would only show
 the embed*}
 
-{*Forms that have been deleted still accessing them*}
-
 {if $showForm and $formUrl}
     <div>
         <div class="col-xs-4" id="senderFormContainer">
