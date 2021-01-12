@@ -1,0 +1,93 @@
+<div id="spm-forms" class="spm-tab-content">
+    {if empty($formsList)}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="zmdi zmdi-format-list-bulleted"></i>
+                {l s='Form widget information' mod='senderautomatedemails'}
+            </div>
+            <div class="panel-body">
+                <div class="alert alert-warning">
+                    {l s='There was no form found on your Sender.net`s account. Please create a new form and refresh this page' mod='senderautomatedemails'}
+                </div>
+                <p>
+                    <a class="btn btn-lg btn-info" href="{$appUrl|escape:'htmlall':'UTF-8'}/forms" target="_blank">
+                        {l s='Create a form' mod='senderautomatedemails'}
+                    </a>
+                </p>
+            </div>
+        </div>
+    {else}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="zmdi zmdi-format-list-bulleted"></i>
+                {l s='Widget is ' mod='senderautomatedemails'}
+                {if not $allowForms}
+                    <span id="swToggleWidgetTitle" style="color:red;">
+                            {l s='disabled' mod='senderautomatedemails'}
+                        </span>
+                {else}
+                    <span id="swToggleWidgetTitle" style="color:green;">
+                            {l s='enabled' mod='senderautomatedemails'}
+                        </span>
+                {/if}
+            </div>
+            <div class="panel-body">
+                <div class="spm-details-settings">
+                    <button id="swToggleWidget"
+                            class="btn btn-lg {if not $allowForms}btn-success{else}btn-danger{/if}">
+                        {if not $allowForms}
+                            {l s='Enable' mod='senderautomatedemails'}
+                        {else}
+                            {l s='Disable' mod='senderautomatedemails'}
+                        {/if}
+                    </button>
+                </div>
+                <blockquote>
+                    <p>
+                        {l s='When enabled, a Sender.net form widget will appear in the customization menu.
+                             It allows you to insert your Sender.net form.' mod='senderautomatedemails'}
+                    </p>
+                    <p>
+                        {l s='Please select a form to complete the activation step' mod='senderautomatedemails'}
+                    </p>
+
+                </blockquote>
+                <div class="col-xs-12{if not $allowForms} hidden{/if}" id="forms_tab">
+                    <div class="form-group">
+                        <label for="swFormsSelect">
+                            {l s='Select form' mod='senderautomatedemails'}
+                        </label>
+                        <select id="swFormsSelect" name="swFormsSelect"
+                                value="{$formId|escape:'htmlall':'UTF-8'}">
+                            <option value="0">
+                                {l s='Select a form' mod='senderautomatedemails'}
+                            </option>
+                            {foreach $formsList as $form}
+                                <option {if $form->id eq $formId}selected="selected"{/if}value="{$form->id|escape:'htmlall':'UTF-8'}"
+                                        {if !$form->is_active} disabled{/if}>
+                                    {$form->title|escape:'htmlall':'UTF-8'} {if !$form->is_active} <strong>| {l s='Form not active' mod='senderautomatedemails'}</strong>  {/if}
+                                </option>
+                            {/foreach}
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+            <br><br>
+            <div class="panel-body">
+                <a class="btn btn-lg btn-info" href="{$appUrl|escape:'htmlall':'UTF-8'}/forms" target="_blank" rel="help">
+                    {l s='Create/Activate a form in Sender.net' mod='senderautomatedemails'}
+                </a>
+
+                <div style="margin-top: 30px" class="alert alert-info">
+                    {l s='The form is used in displayHome hook' mod='senderautomatedemails'}
+                </div>
+            </div>
+
+            <div style="display: none;"  class="alert alert-success updated">
+                {l s='Saved' mod='senderautomatedemails'}
+            </div>
+
+        </div>
+    {/if}
+</div>

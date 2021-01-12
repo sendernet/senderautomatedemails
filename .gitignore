@@ -1,0 +1,9 @@
+sftp-config.json
+.phpintel
+/nbproject
+.DS_Store
+.idea
+lib/Sender/Base62.php
+lib/Sender/test.json
+README.md
+CHANGELOG.md

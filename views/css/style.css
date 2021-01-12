@@ -1,0 +1,256 @@
+
+/* -- Additional sender styles -------------- */
+
+#content.bootstrap {
+    padding-top: 10px !important;
+}
+
+.lc-block,
+.sender-prestashop-button {
+    display: inline-block;
+    vertical-align: middle
+}
+
+@media screen and (max-width:35.5em) {
+    .sender-prestashop-hide-small {
+        border: none!important;
+        padding-right: 0!important
+    }
+    .sender-prestashop-center-sm {
+        text-align: center!important
+    }
+}
+
+@media screen and (min-width:1400px) {
+    .sender-prestashop-card {
+        /*min-height:800px!important*/
+    }
+}
+
+.spm-current-link {
+    background-color: #006159!important
+}
+
+.spm-text-left {
+    text-align: left
+}
+
+.spm-text-right {
+    text-align: right
+}
+
+.sender-prestashop-section {
+    padding-bottom: 30px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #f1f1f1
+}
+
+.content div.sender-prestashop-section:last-of-type {
+    border-bottom: none!important
+}
+
+.spm-details-settings {
+    padding: 1em
+}
+
+.sender-prestashop-card,
+.sender-prestashop-connect {
+    padding: 20px;
+    background: #fff;
+    border-radius: 2px;
+    margin: 0px 15px 15px 0
+}
+
+.sender-prestashop-card {
+    -webkit-box-shadow: 0 1px 11px 0 rgba(0, 0, 0, .27);
+    box-shadow: 0 1px 11px 0 rgba(0, 0, 0, .27);
+    min-height: 500px;
+    overflow: auto
+}
+
+.sender-prestashop-connect {
+    -webkit-box-shadow: 0 1px 11px 0 rgba(0, 0, 0, .27);
+    box-shadow: 0 1px 11px 0 rgba(0, 0, 0, .27)
+}
+
+.sender-prestashop-header {
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f1f1f1
+}
+
+.sender-prestashop-content {
+    padding: 15px
+}
+
+.sender-prestashop-menu {
+    margin-top: 15px;
+    padding-right: 15px !important;
+    padding-left: 0px !important
+}
+
+.sender-prestashop-alert {
+    font-size: 15px;
+    padding: 15px;
+    -webkit-transition: all .3s linear;
+    -o-transition: all .3s linear;
+    transition: all .3s linear;
+    margin-bottom: 5px;
+    background: #f1f1f1
+}
+
+.sender-prestashop-error {
+    border-left: 5px solid tomato
+}
+
+.sender-prestashop-info {
+    border-left: 5px solid #006159
+}
+
+.sender-prestashop-warning {
+    border-left: 5px solid orange
+}
+
+.sender-prestashop-success {
+    border-left: 5px solid green
+}
+
+.sender-prestashop-alert:hover {
+    background: rgba(255, 93, 30, .5)
+}
+
+.sender-prestashop-button {
+    -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, .16), 0 2px 10px rgba(0, 0, 0, .12);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, .16), 0 2px 10px rgba(0, 0, 0, .12);
+    text-decoration: none;
+    color: #fff !important;
+    text-decoration: none !important;
+    background-color: #009688;
+    margin-bottom: 0;
+    font-weight: 400;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    padding: 4px 12px;
+    font-size: 13px;
+    line-height: 1.42857143;
+    border-radius: 2px;
+    -webkit-transition: all .2s linear;
+    -o-transition: all .2s linear;
+    transition: all .2s linear
+}
+
+.sender-prestashop-button:hover {
+    background-color: #006159;
+    color: #fff
+}
+
+.sender-prestashop-button:disabled,
+.sender-prestashop-button[disabled] {
+    background-color: #ababab!important;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    opacity: .7;
+    cursor: initial
+}
+
+.login-holder {
+    position: fixed;
+    top: 50%;
+    width: 100%;
+    margin-top: -228px
+}
+
+.lc-block {
+    padding: 50px;
+    background: #fff;
+    -webkit-box-shadow: 0 1px 11px rgba(0, 0, 0, .27);
+    box-shadow: 0 1px 11px rgba(0, 0, 0, .27);
+    border-radius: 2px;
+    width: 500px;
+    position: relative
+}
+
+.spm-main-menu {
+    list-style: none;
+    padding-left: 0;
+    margin: 20px 0 0
+}
+
+.spm-main-menu>li>a {
+    padding: 14px 20px 14px 52px;
+    display: block;
+    color: #4C4C4C;
+    font-weight: 500;
+    position: relative;
+    text-decoration: none
+}
+
+.spm-main-menu>li>a:hover {
+    color: #262626;
+    background-color: #f7f7f7;
+    text-decoration: none
+}
+
+.spm-main-menu>li>a>i {
+    position: absolute;
+    left: 16px;
+    font-size: 20px;
+    top: 0;
+    width: 25px;
+    text-align: center;
+    padding: 13px 0
+}
+
+.spm-main-menu>li.spm-active>a {
+    color: #262626;
+    background-color: #F4F4F4
+}
+
+.spm-tab-content {
+    display: none
+}
+
+.spm-tab-content.spm-current {
+    display: inherit
+}
+
+.panel-heading{
+    margin-left: -20px !important;
+    margin-right: -20px !important;
+    padding-left: 9px !important;
+    padding-right: 9px !important;
+}
+
+input[type="checkbox"]{
+    margin: 3px 4px 0!important;
+    vertical-align: bottom!important;
+}
+td,th{
+    word-break: break-word;
+    min-width: 80px;
+}
+
+.updated{
+    width: 30%;
+    z-index: 100;
+    position: fixed!important;
+    top: 50%;
+    left: 50%;
+}
+@media screen and (min-width:768px) {
+    .updated{
+        width: 10%;
+    }
+}
+
+.field-create{
+    margin-top: 20px!important;
+}
+
+#syncList, #syncError{
+    -webkit-transition: all 0.5s ease!important;
+    -moz-transition: all 0.5s ease!important;
+    -o-transition: all 0.5s ease!important;
+    transition: all 0.5s ease!important;
+}
