@@ -535,4 +535,14 @@ class SenderApiClient
         return $this->makeApiRequest($data);
     }
 
+    //Temp logger
+    public function logDebug($message)
+    {
+        $this->debugLogger = new FileLogger(0);
+        $rootPath = _PS_ROOT_DIR_ . __PS_BASE_URI__ . basename(_PS_MODULE_DIR_);
+        $logPath = '/senderautomatedemails/log/sender_automated_emails_logs_' . date('Ymd') . '.log';
+        $this->debugLogger->setFilename($rootPath . $logPath);
+        $this->debugLogger->logDebug($message);
+    }
+
 }

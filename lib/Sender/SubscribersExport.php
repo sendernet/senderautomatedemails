@@ -9,11 +9,7 @@ class SubscribersExport extends SenderApiClient
     {
         parent::__construct();
     }
-    /**
-     * @param $customers
-     * @param $columns
-     * @return array
-     */
+
     public function textImport($customers, $columns)
     {
         $requestConfig = [
@@ -21,18 +17,50 @@ class SubscribersExport extends SenderApiClient
             "method" => "subscribers/text_import",
         ];
 
-        //Send subscribers as per text_import route required field
         $data['customers'] = $customers;
         $columnsFormed = $this->prepareStartImportColumns($columns);
 
-        $textImport = $this->makeHttpRequest($requestConfig, $data);
-        return $this->startImport($columnsFormed, $textImport['fileName'], $textImport['rowCount']);
+        $textImport = $this->makeTextImportRequest($requestConfig, $data['customers']);
+
+        $this->logDebug('Text import completed');
+
+        $dataStartImport = $this->formStartImportData($columnsFormed, $textImport['fileName'], $textImport['rowCount']);
+        return $this->startImport($dataStartImport);
     }
 
-    /**
-     * @param $columns
-     * @return array
-     */
+    public function formStartImportData($columns, $fileName, $rowCount)
+    {
+        return $dataStartImport = [
+            "emailColumn" => 0,
+            "firstnameColumn" => 1,
+            "lastnameColumn" => 2,
+            'customFieldColumns' => [],
+            'columns' => $columns,
+            'fileName' => $fileName,
+            "source" => "Copy" . '/' . "paste list",
+            'rowCount' => $rowCount,
+            'tags' => [],
+        ];
+    }
+
+    public function makeTextImportRequest($requestConfig, $data)
+    {
+        $client = new Client();
+        try {
+            $response = $client->post($this->senderBaseUrl . $requestConfig['method'], [
+                'headers' => $this->getSenderHeaders(),
+                'json' => [
+                    'subscribers' => $data
+                ],
+            ]);
+
+            return $responseData = json_decode($response->getBody()->getContents(), true);
+        }catch (Exception $e){
+            $this->logDebug($e->getMessage());
+            exit();
+        }
+    }
+
     public function prepareStartImportColumns($columns)
     {
         $columnsTypes = array_unique(array_reduce(array_map('array_keys', $columns), 'array_merge', []));
@@ -59,58 +87,32 @@ class SubscribersExport extends SenderApiClient
         return $columnsTypes;
     }
 
-    public function makeHttpRequest($requestConfig, $data)
+    public function getSenderHeaders()
     {
-        $client = new Client();
-        try {
-            $response = $client->post($this->senderBaseUrl . $requestConfig['method'], [
-                'headers' => [
-                    'Authorization' => $this->prefixAuth . Configuration::get('SPM_API_KEY'),
-                    'Accept' => 'Application/json',
-                    'Content-type' => 'Application/json'
-                ],
-                'json' => [
-                    'subscribers' => $data['customers']
-                ],
-            ]);
+        $headers = [
+            'Authorization' => $this->prefixAuth . Configuration::get('SPM_API_KEY'),
+            'Accept' => 'Application/json',
+            'Content-type' => 'Application/json'
+        ];
 
-            return $responseData = json_decode($response->getBody()->getContents(), true);
-        }catch (Exception $e){
-            dump($e->getMessage());
-            exit();
-        }
+        return $headers;
     }
 
-    public function startImport($columns, $fileName, $rowCount)
+    public function startImport($data)
     {
         $method = 'subscribers/start_import';
-
-        $dataEnd = [
-            "emailColumn" => 0,
-            "firstnameColumn" => 1,
-            "lastnameColumn" => 2,
-            'customFieldColumns' => [],
-            'columns' => $columns,
-            'fileName' => $fileName,
-            "source" => "Copy" . '/' . "paste list",
-            'rowCount' => $rowCount,
-            'tags' => [],
-        ];
 
         try {
             $client = new Client();
             $client->post($this->senderBaseUrl . $method, [
-                'json' => $dataEnd,
-                'headers' => [
-                    'Authorization' => $this->prefixAuth . Configuration::get('SPM_API_KEY'),
-                    'Accept' => 'Application/json',
-                    'Content-type' => 'Application/json'
-                ],
+                'headers' => $this->getSenderHeaders(),
+                'json' => $data,
             ]);
 
             $now = date("Y-m-d H:i:s");
             Configuration::updateValue('SPM_SENDERAPP_SYNC_LIST_DATE', $now);
 
+            $this->logDebug('Completed import to Sender.net');
             return $data = [
                 'success' => true,
                 'message' => $now,
