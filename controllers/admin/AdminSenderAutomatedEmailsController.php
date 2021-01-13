@@ -1,23 +1,22 @@
 <?php
 /**
- * 2010-2018 Sender.net
+ * 2010-2021 Sender.net
  *
  * Sender.net Automated Emails
  *
  * @author Sender.net <info@sender.net>
- * @copyright 2010-2018 Sender.net
+ * @copyright 2010-2021 Sender.net
  * @license https://opensource.org/licenses/osl-3.0.php Open Software License v. 3.0 (OSL-3.0)
  * Sender.net
  */
 
 require_once(dirname(__FILE__) . '/../../lib/Sender/SenderApiClient.php');
 
-use GuzzleHttp\Client;
-
+/**
+ * Class AdminSenderAutomatedEmailsController
+ */
 class AdminSenderAutomatedEmailsController extends ModuleAdminController
 {
-    private $customFields = [];
-
     public function __construct()
     {
         $this->bootstrap = true;
@@ -45,8 +44,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
      * Render options
      * Checks if user is authenticated (valid api key)
      * Handle connect and disconnect actions
-     *
-     * @return  string
+     * @return string|void
      */
     public function renderOptions()
     {
@@ -55,24 +53,46 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             $this->disconnect();
         }
 
-        $senderApiKey = Tools::getValue('apiKey', null);
-        if ($senderApiKey) {
+        if (!empty(Configuration::get('SPM_API_KEY'))){
+            return $this->renderConfigurationMenu();
+        }
+
+        $senderApiKey = Tools::getValue('apiKey');
+        if(!$senderApiKey){
+            return $this->renderAuth();
+        }else{
             $this->connect($senderApiKey);
         }
 
-        if (!$this->module->apiClient()->checkApiKey()) {
-            // User is NOT authenticated
-            return $this->renderAuth();
+        return $this->renderAuth();
+
+    }
+
+    /**
+     * @param $apiKey
+     */
+    private function connect($apiKey)
+    {
+        if (!$apiKey) {
+            $this->redirectToAdminMenu('&error=101');
+        }
+
+        $this->module->apiClient = new SenderApiClient();
+        $this->module->apiClient->setApiKey($apiKey);
+
+        if ($this->module->apiClient->checkApiKey()) {
+            $this->module->logDebug('Connected to Sender. Got key: ' . $apiKey);
+            $this->enableDefaults($apiKey);
+            // Redirect back to module admin page
+            $this->redirectToAdminMenu('&conf=200');
         } else {
-            // Use proper function
-            // If not connect maybe use SENDER_PLUGIN_ENABLED to
-            // check if show configuration
-            return $this->renderConfigurationMenu();
+            $this->redirectToAdminMenu('&error=100');
+//            $this->errors[] = Tools::displayError($this->l('Could not authenticate. Please try again.'));
         }
     }
 
     /**
-     * Handles the form submission
+     * Handles the form submission for connecting Sender account
      * @return string
      */
     public function postProcess()
@@ -84,6 +104,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
                 $this->redirectToAdminMenu('&error=101');
             }
         }
+
     }
 
     /**
@@ -93,22 +114,10 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
      */
     public function renderAuth()
     {
-        if (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
-            $returnUrl = $this->context->link->getAdminLink('AdminSenderAutomatedEmails');
-        } else {
-            $returnUrl = $this->context->shop->getBaseUrl()
-                . basename(_PS_ADMIN_DIR_)
-                . DIRECTORY_SEPARATOR
-                . $this->context->link->getAdminLink('AdminSenderAutomatedEmails');
-        }
-
-        $authUrl = SenderApiClient::generateAuthUrl($this->context->shop->getBaseUrl(), $returnUrl);
-
         $options = array(
-//            'authUrl'       => $authUrl, //Not in use
             'moduleVersion' => $this->module->version,
             'imageUrl'      => $this->module->getPathUri() . 'views/img/sender_logo.png',
-            //'baseUrl'       => $this->module->apiClient()->getBaseUrl(), //Not in use
+            'link'          => $this->context->link,
         );
 
         $this->context->smarty->assign($options);
@@ -117,9 +126,8 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
     }
 
     /**
-     * TEMPORARY!
      * Loading the sender menu settings if authenticated
-     * @todo  Use proper methot like renderConfiguration instead!
+     * @todo  Use proper method like renderConfiguration instead!
      */
     public function renderConfigurationMenu()
     {
@@ -142,7 +150,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         $this->context->controller->addCSS($this->module->views_url . '/css/style.css');
         $this->context->controller->addCSS($this->module->views_url . '/css/material-font.css');
 
-        $customFields = $this->module->apiClient->getCustomFields();
+        $customFields = $this->module->apiClient()->getCustomFields();
 
         #Removing the default fields
         $customFieldsToHide = ['email', 'firstname', 'lastname'];
@@ -182,7 +190,8 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             'genderFieldId'          => Configuration::get('SPM_CUSTOMER_FIELD_GENDER_ID'),
             'birthdayFieldId'          => Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY_ID'),
             'customFields'           => $customFields,
-            'syncedList'             => Configuration::get('SPM_SENDERAPP_SYNC_LIST_DATE') ? Configuration::get('SPM_SENDERAPP_SYNC_LIST_DATE') : ''
+            'syncedList'             => Configuration::get('SPM_SENDERAPP_SYNC_LIST_DATE') ? Configuration::get('SPM_SENDERAPP_SYNC_LIST_DATE') : '',
+//            'information'            => $this->module->displayInformation() ? $this->module->displayInformation() : '',
         ));
 
         #loading templates
@@ -191,61 +200,11 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         return $output;
     }
 
-    public function recursive_implode(array $array, $glue = ',', $include_keys = false, $trim_all = true)
-    {
-        $glued_string = '';
-
-        // Recursively iterates array and adds key/value to glued string
-        array_walk_recursive($array, function($value, $key) use ($glue, $include_keys, &$glued_string)
-        {
-            $include_keys and $glued_string .= $key.$glue;
-            if ($key == 'lastname'){
-                $glued_string .= $value.'\n';
-            }else{
-                $glued_string .= $value.$glue;
-            }
-        });
-
-        // Removes last $glue from string
-        strlen($glue) > 0 and $glued_string = substr($glued_string, 0, -strlen($glue));
-
-        // Trim ALL whitespace
-        $trim_all and $glued_string = preg_replace("/(\s)/ixsm", '', $glued_string);
-
-        return (string) $glued_string;
-    }
-
 
     /**
-     * Tries to store api key returned from
-     * Sender.net
-     *
-     * @param  string $apiKey
-     * @return void
-     * @todo Throw an error if something goes wrong
+     * Enabling default values for prestashop
+     * @param $apiKey
      */
-    private function connect($apiKey)
-    {
-        if (!$apiKey) {
-            return;
-        }
-
-        $apiClient = new SenderApiClient();
-
-        $apiClient->setApiKey($apiKey);
-
-        if ($apiClient->checkApiKey()) {
-            $this->module->logDebug('Connected to Sender. Got key: ' . $apiKey);
-            $this->enableDefaults($apiKey);
-            unset($apiClient);
-            // Redirect back to module admin page
-            $this->redirectToAdminMenu('&conf=200');
-        } else {
-            $this->redirectToAdminMenu('&error=100');
-//            $this->errors[] = Tools::displayError($this->l('Could not authenticate. Please try again.'));
-        }
-    }
-
     private function enableDefaults($apiKey)
     {
         Configuration::updateValue('SPM_API_KEY', $apiKey);
@@ -267,7 +226,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
      */
     private function disconnect()
     {
-        $this->module->logDebug('Disconnected');
+        $this->module->logDebug('Removing api key');
         Configuration::deleteByName('SPM_API_KEY');
         // Redirect back to module admin page
         $this->redirectToAdminMenu();
