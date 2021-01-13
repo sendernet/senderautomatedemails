@@ -80,7 +80,19 @@ class SenderAutomatedEmails extends Module
         $this->description = $this->l('All you need for your email marketing in one tool.');
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall?');
 
+        $this->loadDefaultSettings();
 
+        #deprecated_function => new_function_to_use
+        #Issue not giving error on deprecated, functions still available
+        $this->deprecatedFunctions = [
+            'getIdFromClassName' => 'findOneIdByClassName',
+            'getFormatedName' => 'getFormattedName'
+        ];
+//        $tabsArray[] = Tab::getIdFromClassName("AdminSenderAutomatedEmails");
+    }
+
+    public function loadDefaultSettings()
+    {
         $this->defaultSettings = array(
             'SPM_API_KEY' => '',
             'SPM_IS_MODULE_ACTIVE' => 0,
@@ -102,16 +114,9 @@ class SenderAutomatedEmails extends Module
             'SPM_CUSTOMER_FIELD_GENDER_ID' => 0,
             'SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID' => 0,
         );
-//            'SPM_CUSTOMER_NEWSLETTER' => 1,
-//            'SPM_CUSTOMER_GENDER' => 1,
+//           [ 'SPM_CUSTOMER_NEWSLETTER' => 1,
+//            'SPM_CUSTOMER_GENDER' => 1,];
 
-        #deprecated_function => new_function_to_use
-        #Issue not giving error on deprecated, functions still available
-        $this->deprecatedFunctions = [
-            'getIdFromClassName' => 'findOneIdByClassName',
-            'getFormatedName' => 'getFormattedName'
-        ];
-//        $tabsArray[] = Tab::getIdFromClassName("AdminSenderAutomatedEmails");
     }
 
     /**
@@ -211,12 +216,9 @@ class SenderAutomatedEmails extends Module
     }
 
     /**
-     * On this hook we setup our form
-     *
-     * @param   $params array
-     * @return string Smarty template
+     * Loading form when selected form is active
      */
-    public function hookDisplayHome($params)
+    public function hookDisplayHome()
     {
         // Check if we should
         if (!Configuration::get('SPM_IS_MODULE_ACTIVE') || (!Configuration::get('SPM_ALLOW_FORMS'))) {
@@ -234,14 +236,17 @@ class SenderAutomatedEmails extends Module
             if (!$form->is_active){
                 return;
             }
+
             $currentAccount = $this->apiClient()->getCurrentAccount();
             $resourceKey = $currentAccount ? $currentAccount->resource_key : '';
             if (empty($resourceKey)){
                 return;
             }
+
             if ($form->type === 'embed') {
                 $embedHash = $form->settings->embed_hash;
             }
+
             // Add forms
             if (Configuration::get('SPM_ALLOW_FORMS')) {
                 $options['formUrl'] = isset($form->settings->resource_path) ? $form->settings->resource_path : '';
@@ -250,12 +255,11 @@ class SenderAutomatedEmails extends Module
                 $options['embedForm'] = isset($embedHash);
                 $options['embedHash'] = isset($embedHash) ? $embedHash : '';
             }
+
+            $this->context->smarty->assign($options);
+            return $this->context->smarty->fetch($this->views_url . '/templates/front/form.tpl');
         }
-
-        $this->context->smarty->assign($options);
-
-        return $this->context->smarty->fetch($this->views_url . '/templates/front/form.tpl');
-
+        return;
     }
 
     /**
@@ -392,6 +396,7 @@ class SenderAutomatedEmails extends Module
         $recipient = array(
             'email' => $context->email,
         );
+
         #Default fields
         (Configuration::get('SPM_CUSTOMER_FIELD_FIRSTNAME')) == 1 ? $recipient['firstname'] = $context->firstname : false;
         (Configuration::get('SPM_CUSTOMER_FIELD_LASTNAME')) == 1 ? $recipient['lastname'] = $context->lastname : false;
@@ -442,7 +447,6 @@ class SenderAutomatedEmails extends Module
                 . 'index.php?fc=module&module='
                 . $this->name
                 . "&controller=recover&hash={$cartHash}", //cart_hash where formed?
-//            "url" => "testing",
             "currency" => $this->context->currency->iso_code,
             "order_total" => (string)$cart->getOrderTotal(),
             "products" => array()
@@ -470,7 +474,6 @@ class SenderAutomatedEmails extends Module
 
             $data['products'][] = $prod;
         }
-
 
         return $data;
     }
@@ -652,7 +655,6 @@ class SenderAutomatedEmails extends Module
     {
         #First check if we should capture these details
         $this->logDebug('When the order would be finish');
-//        dump($context);
         if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
             $order = $context['order'];
         } else {
@@ -865,7 +867,7 @@ class SenderAutomatedEmails extends Module
         }
     }
 
-    function recursive_implode(array $array, $glue = ',', $include_keys = false, $trim_all = true)
+    public function recursive_implode(array $array, $glue = ',', $include_keys = false, $trim_all = true)
     {
         $glued_string = '';
 
