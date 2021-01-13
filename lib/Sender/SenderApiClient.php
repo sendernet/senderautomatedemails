@@ -34,13 +34,14 @@ class SenderApiClient
     }
 
     /**
-     * Returns current Api key
-     *
-     * @return type
+     * @return false|mixed
      */
     public function getApiKey()
     {
-        return $this->apiKey;
+        if (!empty($this->apiKey)) {
+            return $this->apiKey;
+        }
+        return false;
     }
 
     /**
@@ -106,17 +107,17 @@ class SenderApiClient
      * @param string $baseUrl [website base url]
      * @param string $returnUrl [url to return with api key attached]
      */
-    public static function generateAuthUrl($baseUrl, $returnUrl)
+    public function generateAuthUrl($baseUrl, $returnUrl)
     {
         $query = http_build_query(array(
             'return' => $returnUrl . '&response_key=API_KEY',
-            'return_cancel' => self::$baseUrl,
+            'return_cancel' => $this->senderBaseUrl,
             'store_baseurl' => $baseUrl,
             'store_currency' => 'EUR'
         ));
 
         //Make here connection to endpoint which would verify that apiKey is valid
-        return self::$baseUrl . 'me';
+        return $this->senderBaseUrl . 'me';
 //        return self::$baseUrl . '/commerce/auth/?' . $query;
     }
 
@@ -191,7 +192,7 @@ class SenderApiClient
         $server_output = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        
+
         if($status === 200){
             return json_decode($server_output);
         }else{

@@ -45,10 +45,6 @@
 					<input type="submit" value="{l s='Authenticate' mod='senderautomatedemails'}"
 						   name="actionApiKey" class="btn btn-lg" style="background-color: #009587; color: #fff;"
 					>
-{*					<a href="{$authUrl|escape:'htmlall':'UTF-8'}" class="btn btn-lg"*}
-{*					   style="background-color: #009587; color: #fff;">*}
-{*						{l s='Authenticate' mod='senderautomatedemails'}*}
-{*					</a>*}
 				</form>
 			</div>
 		</div>

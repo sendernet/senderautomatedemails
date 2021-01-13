@@ -73,11 +73,7 @@ class SenderAutomatedEmails extends Module
         $this->module_url = __PS_BASE_URI__ . basename(_PS_MODULE_DIR_) . '/' . $this->name;
         $this->images_url = $this->module_url . '/views/img/';
         $this->module_path = _PS_ROOT_DIR_ . $this->module_url;
-
-        $this->apiClient = new SenderApiClient(Configuration::get('SPM_API_KEY'));
-        $this->subscribersExport = new SubscribersExport();
-
-
+        
         parent::__construct();
 
         $this->displayName = $this->l('Sender.net Automated Emails');
@@ -858,7 +854,8 @@ class SenderAutomatedEmails extends Module
                 WHERE newsletter = 1');
             if (!empty($customersRequirements)){
                 $stringCustomers = $this->recursive_implode($customersRequirements);
-                return $this->subscribersExport->textImport($stringCustomers, $customersRequirements);
+                $subscribersExport = new SubscribersExport();
+                return $subscribersExport->textImport($stringCustomers, $customersRequirements);
             }
         } catch (PrestaShopDatabaseException $e) {
             return $data = [
