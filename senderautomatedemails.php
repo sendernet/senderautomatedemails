@@ -75,7 +75,7 @@ class SenderAutomatedEmails extends Module
         $this->module_path = _PS_ROOT_DIR_ . $this->module_url;
 
         $this->apiClient = new SenderApiClient(Configuration::get('SPM_API_KEY'));
-        $this->subscribersExport = new SubscribersExport(Configuration::get('SPM_API_KEY'));
+        $this->subscribersExport = new SubscribersExport();
 
 
         parent::__construct();
@@ -299,7 +299,7 @@ class SenderAutomatedEmails extends Module
      */
     public function hookactionCustomerAccountAdd($context)
     {
-        $this->logDebug('New newcustomer is buying something');
+        $this->logDebug('Someone is buying something');
         // Validate if we should
         if (!Validate::isLoadedObject($context['newCustomer']) ||
             (!Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS') && !Configuration::get('SPM_ALLOW_GUEST_TRACK'))

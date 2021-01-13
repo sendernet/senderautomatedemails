@@ -63,7 +63,7 @@ class SubscribersExport extends SenderApiClient
     {
         $client = new Client();
         try {
-            $response = $client->post($this->apiEndpoint . '/' . $requestConfig['method'], [
+            $response = $client->post($this->senderBaseUrl . $requestConfig['method'], [
                 'headers' => [
                     'Authorization' => $this->prefixAuth . Configuration::get('SPM_API_KEY'),
                     'Accept' => 'Application/json',
@@ -99,7 +99,7 @@ class SubscribersExport extends SenderApiClient
 
         try {
             $client = new Client();
-            $client->post($this->apiEndpoint . '/' . $method, [
+            $client->post($this->senderBaseUrl . $method, [
                 'json' => $dataEnd,
                 'headers' => [
                     'Authorization' => $this->prefixAuth . Configuration::get('SPM_API_KEY'),

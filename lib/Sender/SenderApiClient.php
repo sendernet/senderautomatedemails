@@ -1,34 +1,31 @@
 <?php
 /**
- * 2010-2018 Sender.net
+ * 2010-2021 Sender.net
  *
  * Sender.net Api Client
  *
  * @author Sender.net <info@sender.net>
- * @copyright 2010-2018 Sender.net
+ * @copyright 2010-2021 Sender.net
  */
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
 
 class SenderApiClient
 {
-
-    public static $version = '2.0';
-    public static $baseUrl = 'https://api.sender.net/v2';
-    protected $apiKey;
-    public $apiEndpoint;
-    private $apiEndpointChecker;
-    private $commerceEndpoint;
+    protected $senderBaseUrl = 'https://api.sender.net/v2/';
     protected $prefixAuth = 'Bearer ';
+    protected $apiKey;
+
+    private $commerceEndpoint;
     private $limit = '?limit=100';
     private $appUrl = 'https://app.sender.net';
+
+    public $apiEndpoint;
+
 
     public function __construct($apiKey = null)
     {
         $this->apiKey = null;
-        $this->apiEndpoint = self::$baseUrl;
-        $this->apiEndpointChecker = self::$baseUrl . '/me';
 //        $this->commerceEndpoint = self::$baseUrl . '/commerce/v1';
 
         if ($apiKey) {
@@ -47,13 +44,11 @@ class SenderApiClient
     }
 
     /**
-     * Return base URL
-     *
-     * @return type
+     * @return string
      */
-    public static function getBaseUrl()
+    public function getBaseUrl()
     {
-        return self::$baseUrl;
+        return $this->senderBaseUrl;
     }
 
     /**
@@ -90,8 +85,9 @@ class SenderApiClient
     public function checkApiKey()
     {
         try {
+            $method = 'me';
             $client = new Client();
-            $response = $client->get($this->apiEndpointChecker, [
+            $response = $client->get($this->senderBaseUrl . $method, [
                 'headers' => ['Authorization' => $this->prefixAuth . $this->apiKey]
             ]);
 
@@ -102,12 +98,6 @@ class SenderApiClient
         } catch (Exception $e) {
             return false;
         }
-//        $response = $this->ping();
-//        if (!isset($response->api_key) || !$this->getApiKey() || $response->api_key != $this->getApiKey()) { // Wrong api key
-//
-//            return false;
-//        }
-//        return $response;
     }
 
     /**
@@ -154,7 +144,7 @@ class SenderApiClient
     private function makeApiRequest($requestConfig, $params)
     {
         if (function_exists('curl_version')) {
-            return $this->makeCurlRequest($requestConfig, $params, $this->apiEndpoint);
+            return $this->makeCurlRequest($requestConfig, $params);
         }
     }
 
@@ -165,7 +155,7 @@ class SenderApiClient
      * @param $endpoint
      * @return false|mixed
      */
-    private function makeCurlRequest($requestConfig, $data, $endpoint)
+    private function makeCurlRequest($requestConfig, $data)
     {
         #Forming data for curl request
         $formedData = [];
@@ -182,16 +172,16 @@ class SenderApiClient
         $httpMethod = $requestConfig['http'] ? $requestConfig['http'] : 'get';
         switch ($httpMethod) {
             case "get":
-                curl_setopt($ch, CURLOPT_URL, $endpoint . '/' . $requestConfig['method'] . $this->limit);
+                curl_setopt($ch, CURLOPT_URL, $this->senderBaseUrl . $requestConfig['method'] . $this->limit);
                 curl_setopt($ch, CURLOPT_HTTPGET, 1);
                 break;
             case "post":
-                curl_setopt($ch, CURLOPT_URL, $endpoint . '/' . $requestConfig['method']);
+                curl_setopt($ch, CURLOPT_URL, $this->senderBaseUrl . $requestConfig['method']);
                 curl_setopt($ch, CURLOPT_POST, 1);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $formedData);
                 break;
             case "patch":
-                curl_setopt($ch, CURLOPT_URL, $endpoint . '/' . $requestConfig['method']);
+                curl_setopt($ch, CURLOPT_URL, $this->senderBaseUrl . $requestConfig['method']);
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $formedData);
                 break;
@@ -201,8 +191,7 @@ class SenderApiClient
         $server_output = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-
-
+        
         if($status === 200){
             return json_decode($server_output);
         }else{
@@ -356,6 +345,8 @@ class SenderApiClient
         $response = $this->makeApiRequest($requestConfig, $data);
 
         if ($response) {
+            dump($response);
+            exit();
             return $response;
         }
         return;
