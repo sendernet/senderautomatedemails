@@ -196,10 +196,9 @@ class SenderApiClient
         if($status === 200){
             return json_decode($server_output);
         }else{
-//            return htmlentities($server_output ,ENT_QUOTES);
-            dump('Curl error: ' . curl_error($ch));
-            dump($status);
-            dump(json_encode($server_output));
+            $this->logDebug($status);
+            $this->logDebug('Curl error: ' . curl_error($ch));
+            $this->logDebug(json_encode($server_output));
         }
         curl_close($ch);
         return false;
@@ -346,8 +345,6 @@ class SenderApiClient
         $response = $this->makeApiRequest($requestConfig, $data);
 
         if ($response) {
-            dump($response);
-            exit();
             return $response;
         }
         return;
@@ -521,6 +518,21 @@ class SenderApiClient
 
         return $response->data;
 //        return $response->data;
+    }
+
+    public function updateSubscriber($subscriber, $subscriberId)
+    {
+        $requestConfig = [
+            'http' => "patch",
+            'method' => "subscribers/$subscriberId",
+        ];
+
+        $response = $this->makeApiRequest($requestConfig, $subscriber);
+
+        if ($response) {
+            return $response;
+        }
+        return;
     }
 
     public function ping()

@@ -20,7 +20,7 @@
                 {else}
                     <blockquote>
                         <p>
-                            {l s='Select to which list save customers as subscribers on Sender.net' mod='senderautomatedemails'}
+                            {l s='Select to which list export customers as subscribers to Sender.net' mod='senderautomatedemails'}
                         </p>
                     </blockquote>
                     <div id="swCustomerListSelectContainer" class="form-group">

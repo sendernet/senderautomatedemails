@@ -315,6 +315,7 @@ class SenderAutomatedEmails extends Module
 
         $encodedEmail = base64_encode($this->context->customer->email);
         $isSubscriber = $this->checkSubscriberState($encodedEmail, $context);
+
         $this->logDebug($isSubscriber ? 'Already a subscriber' : 'New subscriber potentially');
 
         #If subscriber false
@@ -329,6 +330,7 @@ class SenderAutomatedEmails extends Module
             #@todo Update customer details (firstname & lastname)
             #Track cart details
             $recipient = $this->formDefaultsRecipientSubscriber($this->context->customer);
+            $this->syncRecipient($recipient, $isSubscriber->id, $this->context);
         }else{
             $this->logDebug('Forming the new subscriber');
             $recipient = $this->formDefaultsRecipient($this->context->customer);
@@ -520,7 +522,7 @@ class SenderAutomatedEmails extends Module
      *
      * @return void
      */
-    private function syncRecipient($context)
+    private function syncRecipient($recipient, $subscriberId, $context)
     {
         $this->logDebug('syncRecipient hook');
         // Validate if we should
@@ -531,23 +533,7 @@ class SenderAutomatedEmails extends Module
             return false;
         }
 
-        $this->apiClient()->updateSubscriber($context);
-
-        #4 cosas,
-
-        #Check if client already exists
-        $recipient = $this->formDefaultsRecipient($this->context);
-        $encodedEmail = base64_encode($recipient['email']);
-        if ($isSubscriber = $this->apiClient()->isAlreadySubscriber($encodedEmail)){
-            #Check if customer is on list customer track
-            #Take the groups out and compare with
-            $hasGroups = $isSubscriber['subscriber_tags'];
-            $groups = array_map();
-        }
-
-        $customFields = $this->getCustomFields($this->context);
-        $this->logDebug('Customer ' . json_encode($recipient));
-        $this->logDebug('CustomFields ' . json_encode($customFields));
+        $this->apiClient()->updateSubscriber($recipient, $subscriberId);
 
         $listToAdd = !empty(Configuration::get('SPM_CUSTOMERS_LIST_NAME')) ? [Configuration::get('SPM_CUSTOMERS_LIST_NAME')] : '';
 
@@ -555,7 +541,9 @@ class SenderAutomatedEmails extends Module
             $listToAdd = Configuration::get('SPM_GUEST_LIST_NAME');
         }
 
-        $addToListResult = $this->apiClient()->addToList($recipient, $listToAdd);
+        $tagId = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+
+        $addToListResult = $this->apiClient()->addToList($subscriberId, $tagId);
 
         if (!empty($customFields)) {
             $this->apiClient()->addFields($addToListResult->id, $customFields);
