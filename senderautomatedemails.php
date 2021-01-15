@@ -263,6 +263,364 @@ class SenderAutomatedEmails extends Module
     }
 
     /**
+     * Here we handle new signups, we fetch customer info
+     * then if enabled tracking and user has opted in for
+     * a newsletter we add him to the prefered list
+     *
+     * @param  array $context
+     * @return array $context
+     */
+    public function hookactionCustomerAccountAdd($context)
+    {
+        $this->logDebug('Guest on checkout filled personal information');
+        // Validate if we should
+        if (!Validate::isLoadedObject($context['newCustomer']) ||
+            (!Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS') && !Configuration::get('SPM_ALLOW_GUEST_TRACK'))
+            || !Configuration::get('SPM_IS_MODULE_ACTIVE')) {
+            $this->logDebug('Something went wrong');
+            return;
+        }
+
+        if (Configuration::get('SPM_ALLOW_TRACK_CARTS') != 1){
+            $this->logDebug('New customer wont be track. No list selected to save the contacts');
+            return;
+        }
+
+        $encodedEmail = base64_encode($this->context->customer->email);
+        $isSubscriber = $this->checkSubscriberState($encodedEmail, $context);
+
+        $this->logDebug(json_encode($isSubscriber) ? 'Already a subscriber' : 'New subscriber potentially');
+
+        #If subscriber false
+        if (!$context['newCustomer']->newsletter && !$isSubscriber){
+            $this->logDebug('Customer did not marked option to receive newsletters or is not a subscriber');
+            return;
+        }
+
+        #Form the recipient or sync it
+        if ($isSubscriber){
+            $this->logDebug('We have a subscriber here');
+            #Track cart details
+            $recipient = $this->formDefaultsRecipientSubscriber($this->context->customer);
+            $this->syncRecipient($recipient, $isSubscriber->id, $this->context);
+        }else{
+            $this->logDebug('Forming the new subscriber');
+            $recipient = $this->formDefaultsRecipient($this->context->customer);
+        }
+
+        $this->logDebug('#hookactionCustomerAccountAdd START');
+        $customFields = $this->getCustomFields($this->context);
+
+        if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
+            $cookie = $this->context->cookie->getAll();
+        } else {
+            $cookie = $context['cookie']->getFamily($context['cookie']->id);
+        }
+
+        #Creating/Update subscriber on the required list
+        try {
+            if ($isSubscriber){
+                $tagId = Configuration::get('SPM_GUEST_LIST_ID');
+                $subscriberId = $isSubscriber->id;
+                $this->apiClient()->addToList($subscriberId, $tagId);
+                $this->logDebug('Subscriber added to list');
+            }else{
+                $listToAdd = !empty(Configuration::get('SPM_GUEST_LIST_NAME')) ? [Configuration::get('SPM_GUEST_LIST_NAME')] : '';
+                $newSubscriber = $this->apiClient()->addSubscriberAndList($recipient, $listToAdd);
+                $subscriberId = $newSubscriber->id;
+                $this->logDebug('Subscriber has been created: ' . json_encode($newSubscriber));
+            }
+
+            if (!empty($customFields)) {
+                $this->apiClient()->addFields($subscriberId, $customFields);
+                $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
+            }
+
+            $this->syncCart($context['cart'], $cookie);
+            $this->logDebug('#hookactionCustomerAccountAdd END');
+        }catch (Exception $e){
+            $this->logDebug('Error hookactionCustomer ' . json_encode($e->getMessage()));
+        }
+    }
+
+    /**
+     * Use this hook in order to be sure
+     * whether we have captured the latest cart info
+     * it fires when user uses instant checkout
+     * or logged in user goes to checkout page
+     *
+     * @param  object $context
+     * @return object $context
+     */
+    public function hookActionCartSummary($context)
+    {
+        if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
+            $cookie = $context['cookie']->getAll();
+        } else {
+            $cookie = $context['cookie']->getFamily($context['cookie']->id);
+        }
+
+        // Validate if we should track
+        if (!isset($cookie['email'])
+            || !Validate::isLoadedObject($context['cart'])
+            || (!Configuration::get('SPM_ALLOW_TRACK_CARTS')
+                && isset($cookie['logged']) && $cookie['logged'])
+            || (!Configuration::get('SPM_ALLOW_GUEST_TRACK')
+                && isset($cookie['is_guest']) && $cookie['is_guest'])
+            || !Configuration::get('SPM_IS_MODULE_ACTIVE')
+            || $this->context->controller instanceof OrderController) {
+            return;
+        }
+
+        $this->logDebug('#hookActionCartSummary START');
+        $this->syncCart($context['cart'], $cookie);
+
+        $this->logDebug('#hookActionCartSummary END');
+
+        return $context;
+    }
+
+    /**
+     * Use this hook only if we have customer email
+     * @return object
+     */
+    public function hookActionCartSave($context)
+    {
+        $this->logDebug('hookActionCartSAve');
+//        if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
+//            $cookie = $context['cookie']->getAll();
+//        } else {
+//            $cookie = $context['cookie']->getFamily($context['cookie']->id);
+//        }
+//        // Validate if we should track
+//        if (!isset($cookie['email'])
+//            || !Validate::isLoadedObject($context['cart'])
+//            || (!Configuration::get('SPM_ALLOW_TRACK_CARTS')
+//                && isset($cookie['logged']) && $cookie['logged'])
+//            || (!Configuration::get('SPM_ALLOW_GUEST_TRACK')
+//                && isset($cookie['is_guest']) && $cookie['is_guest'])
+//            || !Configuration::get('SPM_IS_MODULE_ACTIVE')
+//            || $this->context->controller instanceof OrderController) {
+//            $this->logDebug('hookActionCartSave first condition failed');
+//            return;
+//        }
+//
+//        $encodedEmail = base64_encode($cookie['email']);
+//        if ($isSubscriber = $this->apiClient()->isAlreadySubscriber($encodedEmail)){
+//            if ($isSubscriber->unsubscribed){
+//                $this->logDebug('Subscriber is NOT active in SENDER wont track customer cart');
+//                return;
+//            }
+//            $this->logDebug('Subscriber active in SENDER');
+//        }
+//
+//        $this->logDebug('#hookActionCartSave START');
+//
+//        $this->syncCart($context['cart'], $cookie, $isSubscriber);
+//
+//        $this->logDebug('#hookActionCartSave END');
+    }
+
+    /**
+     * Hook into order confirmation. Mark cart as converted since order is made.
+     * Keep in mind that it doesn't mean that payment has been made
+     *
+     *
+     * @param  object $context
+     * @return object $context
+     */
+    public function hookDisplayOrderConfirmation($context)
+    {
+        $this->logDebug('hookDisplayOrderConfirmation');
+        #First check if we should capture these details
+        $this->logDebug('When the order would be finish');
+        if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
+            $order = $context['order'];
+        } else {
+            $order = $context['objOrder'];
+        }
+
+        try {
+            // Return if cart object is not found or module is not active
+//            if (!Configuration::get('SPM_IS_MODULE_ACTIVE')
+//                || !Validate::isLoadedObject($order)
+//                || !isset($order->id_cart)) {
+//                return $context;
+//            }
+
+            $this->logDebug('#hookActionValidateOrder START');
+
+            // Convert cart
+            $converStatus = $this->apiClient()->cartConvert($order->id_cart);
+
+            $this->logDebug('Cart convert response: '
+                . json_encode($converStatus));
+        }catch (Exception $e)
+        {
+            $this->logDebug($e->getMessage());
+        }
+    }
+
+    /**
+     * Here we handle customer info where he update his account
+     * and we delete or add him to the prefered list
+     *
+     * @param  array $context
+     * @return array $context
+     */
+    public function hookactionObjectCustomerUpdateAfter($context)
+    {
+        $this->logDebug('hookactionObjectCustomerUpdateAfter');
+        return $this->hookactionCustomerAccountUpdate($context);
+    }
+
+    /**
+     * Here we handle customer info where he update his account
+     * and we delete or add him to the prefered list
+     *
+     * @param  array $context
+     * @return array $context
+     */
+    public function hookactionCustomerAccountUpdate($context)
+    {
+        $this->logDebug('hookactionCustomerAccountUpdate');
+        $this->logDebug('Customer is updating his personal details');
+
+        $customer = $this->context->customer;
+
+        //Validate if we should
+        if (!Validate::isLoadedObject($customer)
+            || !Configuration::get('SPM_IS_MODULE_ACTIVE')
+            || !Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
+            $this->logDebug('exiting update customer');
+            return $customer;
+        }
+        $this->logDebug('#hookactionCustomerAccountUpdate START');
+
+        $listId = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+        $recipient = $this->formDefaultsRecipientSubscriber($this->context->customer);
+        $encodedEmail = base64_encode($this->context->customer->email);
+        $isSubscriber = $this->checkSubscriberState($encodedEmail, $context);
+
+        // Check if user opted in for a newsletter
+        if (!$customer->newsletter && !$customer->optin) {
+            $this->logDebug('Customer did not checked newsletter or optin!');
+            $deleteFromListResult = $this->apiClient()->listRemove(
+                $recipient,
+                $listId
+            );
+            $this->logDebug('Delete the recipient ' .
+                json_encode($recipient) . ' from the ' . json_encode($listId) . ' list is ' . json_encode($deleteFromListResult) . '.');
+        } else {
+            $addToListResult = $this->syncRecipient($recipient, $isSubscriber->id, $this->context);
+            $this->logDebug('Add this recipient: ' .
+                json_encode($recipient));
+            $this->logDebug('Add to list response:' .
+                json_encode($addToListResult));
+        }
+        $this->logDebug('#hookactionCustomerAccountUpdate END');
+    }
+
+    /**
+     * On this hook we setup product
+     * import JSON for sender to get the data
+     *
+     * @param  array $params
+     * @return mixed string Smarty
+     */
+    public function hookDisplayFooterProduct($params)
+    {
+        $this->logDebug('hookDisplayFooterProduct');
+        $product = $params['product'];
+        $image_url = '';
+
+        if ($product instanceof Product /* or ObjectModel */) {
+            $product = (array)$product;
+
+            if (empty($product)
+                || !Configuration::get('SPM_IS_MODULE_ACTIVE')
+                || !Configuration::get('SPM_ALLOW_IMPORT')) {
+                return;
+            }
+
+            // Get image
+            $images = $params['product']->getWsImages();
+
+            if (sizeof($images) > 0) {
+                $image = new Image($images[0]['id']);
+                $image_url = _PS_BASE_URL_ . _THEME_PROD_DIR_ . $image->getExistingImgPath() . ".jpg";
+            }
+
+            //Get price
+            if (!empty($product['specificPrice'])) {
+                //Get discount
+                if ($product['specificPrice']['reduction_type'] == 'percentage') {
+                    $discount = '-' . (($product['specificPrice']['reduction']) * 100 | round(0)) . '%';
+                } elseif ($product['specificPrice']['reduction_type'] == 'amount') {
+                    $discount = '-' . (($product['specificPrice']['reduction']) * 100
+                            | round(0)) . $this->context->currency->iso_code;
+                } else {
+                    $discount = '-0%';
+                }
+                $price = round($params['product']->getPriceWithoutReduct(), 2);
+                $special_price = round($params['product']->getPublicPrice(), 2);
+            } else {
+                $price = round($params['product']->getPublicPrice(), 2);
+                $special_price = round($params['product']->getPublicPrice(), 2);
+                $discount = '-0%';
+            }
+        } else {
+            if (empty($product)
+                || !Configuration::get('SPM_IS_MODULE_ACTIVE')
+                || !Configuration::get('SPM_ALLOW_IMPORT')) {
+                return;
+            }
+
+            // Get image
+            $image_url = $product['images']['0']['small']['url'];
+
+            if ($product['images']['0']['small']['url']) {
+                $image_url = $product['images']['0']['small']['url'];
+            }
+
+            //Get discount
+            if ($product['has_discount']) {
+                if ($product['discount_type'] == 'percentage') {
+                    $discount = $product['discount_percentage'];
+                }
+                if ($product['discount_type'] == 'amount') {
+                    $discount = $product['discount_amount_to_display'];
+                }
+            } else {
+                $discount = '-0%';
+            }
+            //Get price
+            $price = $product['regular_price_amount'];
+            $special_price = $product['price_amount'];
+        }
+
+        $options = array(
+            'name' => $product['name'],
+            "image" => $image_url,
+            "description" => str_replace(
+                PHP_EOL,
+                '',
+                strip_tags($product['description'])
+            ),
+            "price" => $price,
+            "special_price" => $special_price,
+            "currency" => $this->context->currency->iso_code,
+            "quantity" => $product['quantity'],
+            "discount" => $discount
+        );
+
+
+        $this->context->smarty->assign('product', $options);
+
+        return $this->context->smarty->fetch($this->views_url . '/templates/front/product_import.tpl');
+    }
+
+    /**
      * @param $encodedEmail
      * @param $context
      */
@@ -287,89 +645,7 @@ class SenderAutomatedEmails extends Module
             return $isSubscriber;
             #Sync recipient
         }
-    }
-
-    /**
-     * Here we handle new signups, we fetch customer info
-     * then if enabled tracking and user has opted in for
-     * a newsletter we add him to the prefered list
-     *
-     * @param  array $context
-     * @return array $context
-     */
-    public function hookactionCustomerAccountAdd($context)
-    {
-        $this->logDebug('Someone is buying something');
-        // Validate if we should
-        if (!Validate::isLoadedObject($context['newCustomer']) ||
-            (!Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS') && !Configuration::get('SPM_ALLOW_GUEST_TRACK'))
-            || !Configuration::get('SPM_IS_MODULE_ACTIVE')) {
-            $this->logDebug('Something went wrong');
-            return;
-        }
-
-        if (Configuration::get('SPM_ALLOW_TRACK_CARTS') != 1){
-            $this->logDebug('New customer wont be track. No list selected to save the contacts');
-            return;
-        }
-
-        $encodedEmail = base64_encode($this->context->customer->email);
-        $isSubscriber = $this->checkSubscriberState($encodedEmail, $context);
-
-        $this->logDebug($isSubscriber ? 'Already a subscriber' : 'New subscriber potentially');
-
-        #If subscriber false
-        if (!$context['newCustomer']->newsletter && !$isSubscriber){
-            $this->logDebug('Customer did not marked option to receive newsletters');
-            return;
-        }
-
-        #Form the recipient or sync it
-        if ($isSubscriber){
-            $this->logDebug('We have a subscriber here');
-            #@todo Update customer details (firstname & lastname)
-            #Track cart details
-            $recipient = $this->formDefaultsRecipientSubscriber($this->context->customer);
-            $this->syncRecipient($recipient, $isSubscriber->id, $this->context);
-        }else{
-            $this->logDebug('Forming the new subscriber');
-            $recipient = $this->formDefaultsRecipient($this->context->customer);
-        }
-
-        $listToAdd = !empty(Configuration::get('SPM_CUSTOMERS_LIST_NAME')) ? [Configuration::get('SPM_CUSTOMERS_LIST_NAME')] : '';
-        $this->logDebug('#hookactionCustomerAccountAdd START');
-
-        $customFields = $this->getCustomFields($this->context);
-
-        if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
-            $cookie = $this->context->cookie->getAll();
-        } else {
-            $cookie = $context['cookie']->getFamily($context['cookie']->id);
-        }
-
-        #Creating/Update subscriber on the required list
-        try {
-            if ($isSubscriber){
-                $tagId = Configuration::get('SPM_CUSTOMERS_LIST_ID');
-                $subscriberId = $isSubscriber->id;
-                $this->apiClient()->addToList($subscriberId, $tagId);
-                $this->logDebug('Subscriber added to prestashop saved group');
-            }else{
-                $newSubscriber = $this->apiClient()->addSubscriberAndList($recipient, $listToAdd);
-                $subscriberId = $newSubscriber->id;
-                $this->logDebug('Subscriber has been created: ' . json_encode($newSubscriber));
-            }
-
-            if (!empty($customFields)) {
-                $this->apiClient()->addFields($subscriberId, $customFields);
-                $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
-            }
-
-            $this->syncCart($context['cart'], $cookie);
-            $this->logDebug('#hookactionCustomerAccountAdd END');
-        }catch (Exception $e){
-            $this->logDebug('Error hookactionCustomer ' . json_encode($e->getMessage()));
-        }
+        return false;
     }
 
     /**
@@ -554,284 +830,11 @@ class SenderAutomatedEmails extends Module
     }
 
     /**
-     * Use this hook in order to be sure
-     * whether we have captured the latest cart info
-     * it fires when user uses instant checkout
-     * or logged in user goes to checkout page
-     *
-     * @param  object $context
-     * @return object $context
-     */
-    public function hookActionCartSummary($context)
-    {
-        if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
-            $cookie = $context['cookie']->getAll();
-        } else {
-            $cookie = $context['cookie']->getFamily($context['cookie']->id);
-        }
-
-        // Validate if we should track
-        if (!isset($cookie['email'])
-            || !Validate::isLoadedObject($context['cart'])
-            || (!Configuration::get('SPM_ALLOW_TRACK_CARTS')
-                && isset($cookie['logged']) && $cookie['logged'])
-            || (!Configuration::get('SPM_ALLOW_GUEST_TRACK')
-                && isset($cookie['is_guest']) && $cookie['is_guest'])
-            || !Configuration::get('SPM_IS_MODULE_ACTIVE')
-            || $this->context->controller instanceof OrderController) {
-            return;
-        }
-
-        $this->logDebug('#hookActionCartSummary START');
-        $this->syncCart($context['cart'], $cookie);
-
-        $this->logDebug('#hookActionCartSummary END');
-
-        return $context;
-    }
-
-    /**
-     * Use this hook only if we have customer email
-     *
-     * @return object
-     */
-    public function hookActionCartSave($context)
-    {
-//        if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
-//            $cookie = $context['cookie']->getAll();
-//        } else {
-//            $cookie = $context['cookie']->getFamily($context['cookie']->id);
-//        }
-//        // Validate if we should track
-//        if (!isset($cookie['email'])
-//            || !Validate::isLoadedObject($context['cart'])
-//            || (!Configuration::get('SPM_ALLOW_TRACK_CARTS')
-//                && isset($cookie['logged']) && $cookie['logged'])
-//            || (!Configuration::get('SPM_ALLOW_GUEST_TRACK')
-//                && isset($cookie['is_guest']) && $cookie['is_guest'])
-//            || !Configuration::get('SPM_IS_MODULE_ACTIVE')
-//            || $this->context->controller instanceof OrderController) {
-//            $this->logDebug('hookActionCartSave first condition failed');
-//            return;
-//        }
-//
-//        $encodedEmail = base64_encode($cookie['email']);
-//        if ($isSubscriber = $this->apiClient()->isAlreadySubscriber($encodedEmail)){
-//            if ($isSubscriber->unsubscribed){
-//                $this->logDebug('Subscriber is NOT active in SENDER wont track customer cart');
-//                return;
-//            }
-//            $this->logDebug('Subscriber active in SENDER');
-//        }
-//
-//        $this->logDebug('#hookActionCartSave START');
-//
-//        $this->syncCart($context['cart'], $cookie, $isSubscriber);
-//
-//        $this->logDebug('#hookActionCartSave END');
-    }
-
-    /**
-     * Hook into order confirmation. Mark cart as converted since order is made.
-     * Keep in mind that it doesn't mean that payment has been made
-     *
-     *
-     * @param  object $context
-     * @return object $context
-     */
-    public function hookDisplayOrderConfirmation($context)
-    {
-        #First check if we should capture these details
-        $this->logDebug('When the order would be finish');
-        if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
-            $order = $context['order'];
-        } else {
-            $order = $context['objOrder'];
-        }
-
-        try {
-            // Return if cart object is not found or module is not active
-//            if (!Configuration::get('SPM_IS_MODULE_ACTIVE')
-//                || !Validate::isLoadedObject($order)
-//                || !isset($order->id_cart)) {
-//                return $context;
-//            }
-
-            $this->logDebug('#hookActionValidateOrder START');
-
-            // Convert cart
-            $converStatus = $this->apiClient()->cartConvert($order->id_cart);
-
-            $this->logDebug('Cart convert response: '
-                . json_encode($converStatus));
-        }catch (Exception $e)
-        {
-            $this->logDebug($e->getMessage());
-        }
-    }
-
-    /**
-     * Here we handle customer info where he update his account
-     * and we delete or add him to the prefered list
-     *
-     * @param  array $context
-     * @return array $context
-     */
-    public function hookactionObjectCustomerUpdateAfter($context)
-    {
-        return $this->hookactionCustomerAccountUpdate($context);
-    }
-
-    /**
-     * Here we handle customer info where he update his account
-     * and we delete or add him to the prefered list
-     *
-     * @param  array $context
-     * @return array $context
-     */
-    public function hookactionCustomerAccountUpdate($context)
-    {
-        $this->logDebug('Customer is updating his personal details');
-
-        $customer = $this->context->customer;
-        //Validate if we should
-        if (!Validate::isLoadedObject($customer)
-            || (!Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS')
-                && !Configuration::get('SPM_ALLOW_GUEST_TRACK'))
-            || !Configuration::get('SPM_IS_MODULE_ACTIVE')) {
-            return $customer;
-        }
-        $this->logDebug('#hookactionCustomerAccountUpdate START');
-
-        $listId = Configuration::get('SPM_CUSTOMERS_LIST_ID');
-        $recipient = array(
-            'email' => $customer->email,
-        );
-
-        // Check if user opted in for a newsletter
-        if (!$customer->newsletter
-            && !$customer->optin) {
-            $this->logDebug('Customer did not checked newsletter or optin!');
-            $deleteFromListResult = $this->apiClient()->listRemove(
-                $recipient,
-                $listId
-            );
-            $this->logDebug('Delete the recipient ' .
-                json_encode($recipient) . ' from the ' . json_encode($listId) . ' list is ' . json_encode($deleteFromListResult) . '.');
-        } else {
-            $addToListResult = $this->syncRecipient();
-            $this->logDebug('Add this recipient: ' .
-                json_encode($recipient));
-            $this->logDebug('Add to list response:' .
-                json_encode($addToListResult));
-        }
-        $this->logDebug('#hookactionCustomerAccountUpdate END');
-    }
-
-    /**
-     * On this hook we setup product
-     * import JSON for sender to get the data
-     *
-     * @param  array $params
-     * @return mixed string Smarty
-     */
-    public function hookDisplayFooterProduct($params)
-    {
-
-        $product = $params['product'];
-        $image_url = '';
-
-        if ($product instanceof Product /* or ObjectModel */) {
-            $product = (array)$product;
-
-            if (empty($product)
-                || !Configuration::get('SPM_IS_MODULE_ACTIVE')
-                || !Configuration::get('SPM_ALLOW_IMPORT')) {
-                return;
-            }
-
-            // Get image
-            $images = $params['product']->getWsImages();
-
-            if (sizeof($images) > 0) {
-                $image = new Image($images[0]['id']);
-                $image_url = _PS_BASE_URL_ . _THEME_PROD_DIR_ . $image->getExistingImgPath() . ".jpg";
-            }
-
-            //Get price
-            if (!empty($product['specificPrice'])) {
-                //Get discount
-                if ($product['specificPrice']['reduction_type'] == 'percentage') {
-                    $discount = '-' . (($product['specificPrice']['reduction']) * 100 | round(0)) . '%';
-                } elseif ($product['specificPrice']['reduction_type'] == 'amount') {
-                    $discount = '-' . (($product['specificPrice']['reduction']) * 100
-                            | round(0)) . $this->context->currency->iso_code;
-                } else {
-                    $discount = '-0%';
-                }
-                $price = round($params['product']->getPriceWithoutReduct(), 2);
-                $special_price = round($params['product']->getPublicPrice(), 2);
-            } else {
-                $price = round($params['product']->getPublicPrice(), 2);
-                $special_price = round($params['product']->getPublicPrice(), 2);
-                $discount = '-0%';
-            }
-        } else {
-            if (empty($product)
-                || !Configuration::get('SPM_IS_MODULE_ACTIVE')
-                || !Configuration::get('SPM_ALLOW_IMPORT')) {
-                return;
-            }
-
-            // Get image
-            $image_url = $product['images']['0']['small']['url'];
-
-            if ($product['images']['0']['small']['url']) {
-                $image_url = $product['images']['0']['small']['url'];
-            }
-
-            //Get discount
-            if ($product['has_discount']) {
-                if ($product['discount_type'] == 'percentage') {
-                    $discount = $product['discount_percentage'];
-                }
-                if ($product['discount_type'] == 'amount') {
-                    $discount = $product['discount_amount_to_display'];
-                }
-            } else {
-                $discount = '-0%';
-            }
-            //Get price
-            $price = $product['regular_price_amount'];
-            $special_price = $product['price_amount'];
-        }
-
-        $options = array(
-            'name' => $product['name'],
-            "image" => $image_url,
-            "description" => str_replace(
-                PHP_EOL,
-                '',
-                strip_tags($product['description'])
-            ),
-            "price" => $price,
-            "special_price" => $special_price,
-            "currency" => $this->context->currency->iso_code,
-            "quantity" => $product['quantity'],
-            "discount" => $discount
-        );
-
-
-        $this->context->smarty->assign('product', $options);
-
-        return $this->context->smarty->fetch($this->views_url . '/templates/front/product_import.tpl');
-    }
-
-    /**
      * Generates Configuration link in modules selection view
      */
     public function getContent()
     {
+        $this->logDebug('getContent');
         Tools::redirectAdmin($this->context->link->getAdminLink('AdminSenderAutomatedEmails'));
     }
 
@@ -894,8 +897,10 @@ class SenderAutomatedEmails extends Module
         if (version_compare(_PS_VERSION_, '1.7', '>=')) {
             $new_tab->icon = "mail";
         }
+
         $new_tab->id_parent = Tab::getIdFromClassName('CONFIGURE');
         $new_tab->active = 1;
+
         foreach ($langs as $l) {
             $new_tab->name[$l['id_lang']] = $this->l('Sender.net Settings');
         }
