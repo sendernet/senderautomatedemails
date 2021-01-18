@@ -221,7 +221,8 @@ class SenderAutomatedEmails extends Module
     public function hookDisplayHome()
     {
         // Check if we should
-        if (!Configuration::get('SPM_IS_MODULE_ACTIVE') || (!Configuration::get('SPM_ALLOW_FORMS'))) {
+        if (!Configuration::get('SPM_IS_MODULE_ACTIVE') || (!Configuration::get('SPM_ALLOW_FORMS'))
+            || Configuration::get('SPM_FORM_ID') == $this->defaultSettings['SPM_FORM_ID']) {
             return;
         }
 
@@ -229,37 +230,33 @@ class SenderAutomatedEmails extends Module
             'showForm' => false
         );
 
-        // Retrieve the form & resource_key
-        if (Configuration::get('SPM_FORM_ID') != $this->defaultSettings['SPM_FORM_ID']) {
-            $form = $this->apiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
-            #Check if form is disabled
-            if (!$form->is_active){
-                return;
-            }
-
-            $currentAccount = $this->apiClient()->getCurrentAccount();
-            $resourceKey = $currentAccount ? $currentAccount->resource_key : '';
-            if (empty($resourceKey)){
-                return;
-            }
-
-            if ($form->type === 'embed') {
-                $embedHash = $form->settings->embed_hash;
-            }
-
-            // Add forms
-            if (Configuration::get('SPM_ALLOW_FORMS')) {
-                $options['formUrl'] = isset($form->settings->resource_path) ? $form->settings->resource_path : '';
-                $options['resourceKey'] = $resourceKey;
-                $options['showForm'] = true;
-                $options['embedForm'] = isset($embedHash);
-                $options['embedHash'] = isset($embedHash) ? $embedHash : '';
-            }
-
-            $this->context->smarty->assign($options);
-            return $this->context->smarty->fetch($this->views_url . '/templates/front/form.tpl');
+        $form = $this->apiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
+        #Check if form is disabled
+        if (!$form->is_active) {
+            return;
         }
-        return;
+
+        $currentAccount = $this->apiClient()->getCurrentAccount();
+        $resourceKey = $currentAccount ? $currentAccount->resource_key : '';
+        if (empty($resourceKey)) {
+            return;
+        }
+
+        if ($form->type === 'embed') {
+            $embedHash = $form->settings->embed_hash;
+        }
+
+        // Add forms
+        if (Configuration::get('SPM_ALLOW_FORMS')) {
+            $options['formUrl'] = isset($form->settings->resource_path) ? $form->settings->resource_path : '';
+            $options['resourceKey'] = $resourceKey;
+            $options['showForm'] = true;
+            $options['embedForm'] = isset($embedHash);
+            $options['embedHash'] = isset($embedHash) ? $embedHash : '';
+        }
+
+        $this->context->smarty->assign($options);
+        return $this->context->smarty->fetch($this->views_url . '/templates/front/form.tpl');
     }
 
     /**
@@ -272,6 +269,7 @@ class SenderAutomatedEmails extends Module
      */
     public function hookactionCustomerAccountAdd($context)
     {
+        $this->logDebug('#hookactionCustomerAccountAdd START');
         $this->logDebug('Guest on checkout filled personal information');
         // Validate if we should
         if (!Validate::isLoadedObject($context['newCustomer']) ||
@@ -287,28 +285,18 @@ class SenderAutomatedEmails extends Module
         }
 
         $encodedEmail = base64_encode($this->context->customer->email);
-        $isSubscriber = $this->checkSubscriberState($encodedEmail, $context);
-
-        $this->logDebug(json_encode($isSubscriber) ? 'Already a subscriber' : 'New subscriber potentially');
-
-        #If subscriber false
-        if (!$context['newCustomer']->newsletter && !$isSubscriber){
-            $this->logDebug('Customer did not marked option to receive newsletters or is not a subscriber');
-            return;
-        }
+        $isSubscriber = $this->checkSubscriberState($encodedEmail, $context); // el sub o es falso
 
         #Form the recipient or sync it
         if ($isSubscriber){
-            $this->logDebug('We have a subscriber here');
+            $this->logDebug('Already exists subscriber');
             #Track cart details
             $recipient = $this->formDefaultsRecipientSubscriber($this->context->customer);
-            $this->syncRecipient($recipient, $isSubscriber->id, $this->context);
         }else{
             $this->logDebug('Forming the new subscriber');
             $recipient = $this->formDefaultsRecipient($this->context->customer);
         }
 
-        $this->logDebug('#hookactionCustomerAccountAdd START');
         $customFields = $this->getCustomFields($this->context);
 
         if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
@@ -322,8 +310,9 @@ class SenderAutomatedEmails extends Module
             if ($isSubscriber){
                 $tagId = Configuration::get('SPM_GUEST_LIST_ID');
                 $subscriberId = $isSubscriber->id;
+                $this->syncRecipient($recipient, $isSubscriber->id, $this->context);
                 $this->apiClient()->addToList($subscriberId, $tagId);
-                $this->logDebug('Subscriber added to list');
+                $this->logDebug('Subscriber sync and added to guest track list option');
             }else{
                 $listToAdd = !empty(Configuration::get('SPM_GUEST_LIST_NAME')) ? [Configuration::get('SPM_GUEST_LIST_NAME')] : '';
                 $newSubscriber = $this->apiClient()->addSubscriberAndList($recipient, $listToAdd);
@@ -626,7 +615,6 @@ class SenderAutomatedEmails extends Module
      */
     public function checkSubscriberState($encodedEmail, $context)
     {
-        #If subscriber TRUE
         if ($isSubscriber = $this->apiClient()->isAlreadySubscriber($encodedEmail)){
             if (!$isSubscriber->unsubscribed){
                 $this->logDebug('Active subscriber');
@@ -763,14 +751,9 @@ class SenderAutomatedEmails extends Module
      * @param  array $cookie
      * @return void
      */
-    public function syncCart($cart, $cookie, $isSubscriber = false)
+    public function syncCart($cart, $cookie)
     {
         // Keep recipient up to date with Sender.net list
-        //No need any longer as with subscribers we can assign directly to a list
-        if ($isSubscriber) {
-            $this->logDebug('We have a subscriber, we will sync his\her shop details');
-            $this->syncRecipient($isSubscriber);
-        }
         // Generate cart data array for api call
         $cartData = $this->mapCartData($cart, $cookie['email']);
 
@@ -778,7 +761,6 @@ class SenderAutomatedEmails extends Module
             $cartTrackResult = $this->apiClient()->trackCart($cartData);
 
             $this->logDebug('Cart track request:' . json_encode($cartData));
-
             $this->logDebug('Cart track response: ' . json_encode($cartTrackResult));
         } elseif (empty($cartData['products']) && isset($cookie['id_cart'])) {
             $cartDeleteResult = $this->apiClient()->cartDelete($cookie['id_cart']);
