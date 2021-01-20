@@ -3,7 +3,7 @@
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 
-class SubscribersExport extends SenderApiClient
+class CustomersExport extends SenderApiClient
 {
     public function textImport($customers, $columns)
     {

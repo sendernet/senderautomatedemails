@@ -15,7 +15,7 @@ if (!defined('_PS_VERSION_')) {
 }
 
 require_once 'lib/Sender/SenderApiClient.php';
-require_once 'lib/Sender/SubscribersExport.php';
+require_once 'lib/Sender/CustomersExport.php';
 require_once 'lib/Sender/Base62.php';
 require_once(_PS_CONFIG_DIR_ . "/config.inc.php");
 
@@ -818,8 +818,8 @@ class SenderAutomatedEmails extends Module
                 WHERE newsletter = 1');
             if (!empty($customersRequirements)){
                 $stringCustomers = $this->recursive_implode($customersRequirements);
-                $subscribersExport = new SubscribersExport(Configuration::get('SPM_API_KEY'));
-                return $subscribersExport->textImport($stringCustomers, $customersRequirements);
+                $customersExport = new CustomersExport(Configuration::get('SPM_API_KEY'));
+                return $customersExport->textImport($stringCustomers, $customersRequirements);
             }
         } catch (PrestaShopDatabaseException $e) {
             return $data = [
