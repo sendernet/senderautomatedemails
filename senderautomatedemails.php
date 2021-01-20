@@ -284,8 +284,7 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        $encodedEmail = base64_encode($this->context->customer->email);
-        $isSubscriber = $this->checkSubscriberState($encodedEmail, $context); // el sub o es falso
+        $isSubscriber = $this->checkSubscriberState($this->context->customer->email, $context);
 
         #Form the recipient or sync it
         if ($isSubscriber){
@@ -488,8 +487,7 @@ class SenderAutomatedEmails extends Module
 
         $listId = Configuration::get('SPM_CUSTOMERS_LIST_ID');
         $recipient = $this->formDefaultsRecipientSubscriber($this->context->customer);
-        $encodedEmail = base64_encode($this->context->customer->email);
-        $isSubscriber = $this->checkSubscriberState($encodedEmail, $context);
+        $isSubscriber = $this->checkSubscriberState($this->context->customer->email, $context);
 
         // Check if user opted in for a newsletter
         if (!$customer->newsletter && !$customer->optin) {
@@ -610,12 +608,13 @@ class SenderAutomatedEmails extends Module
     }
 
     /**
-     * @param $encodedEmail
+     * @param $email
      * @param $context
+     * @return false|void
      */
-    public function checkSubscriberState($encodedEmail, $context)
+    public function checkSubscriberState($email, $context)
     {
-        if ($isSubscriber = $this->apiClient()->isAlreadySubscriber($encodedEmail)){
+        if ($isSubscriber = $this->apiClient()->isAlreadySubscriber($email)){
             if (!$isSubscriber->unsubscribed){
                 $this->logDebug('Active subscriber');
                 #
