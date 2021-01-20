@@ -181,6 +181,7 @@ class SenderApiClient
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if($status === 200){
+            curl_close($ch);
             return json_decode($server_output);
         }else{
             $this->logDebug($status);
@@ -364,6 +365,7 @@ class SenderApiClient
         $response = $this->makeApiRequest($requestConfig, $data);
 
         if ($response) {
+            $this->logDebug($response);
             return $response;
         }
         return;
@@ -402,7 +404,7 @@ class SenderApiClient
         if ($response) {
             return $response->data;
         }
-        return;
+        return false;
     }
 
     public function reactivateSubscriber($id)

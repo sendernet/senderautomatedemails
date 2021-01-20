@@ -280,8 +280,8 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if (Configuration::get('SPM_ALLOW_TRACK_CARTS') != 1){
-            $this->logDebug('New customer wont be track. No list selected to save the contacts');
+        if (Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS') != 1){
+            $this->logDebug('New customer wont be track. Tracking cart is not enable');
             return;
         }
 
@@ -309,8 +309,9 @@ class SenderAutomatedEmails extends Module
         try {
             if ($isSubscriber){
                 $tagId = Configuration::get('SPM_GUEST_LIST_ID');
+                $this->logDebug($tagId);
                 $subscriberId = $isSubscriber->id;
-                $this->syncRecipient($recipient, $isSubscriber->id, $this->context);
+                $this->syncRecipient($recipient, $isSubscriber->id, $tagId);
                 $this->apiClient()->addToList($subscriberId, $tagId);
                 $this->logDebug('Subscriber sync and added to guest track list option');
             }else{
@@ -500,7 +501,8 @@ class SenderAutomatedEmails extends Module
             $this->logDebug('Delete the recipient ' .
                 json_encode($recipient) . ' from the ' . json_encode($listId) . ' list is ' . json_encode($deleteFromListResult) . '.');
         } else {
-            $addToListResult = $this->syncRecipient($recipient, $isSubscriber->id, $this->context);
+            $tagId = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+            $addToListResult = $this->syncRecipient($recipient, $isSubscriber->id, $tagId);
             $this->logDebug('Add this recipient: ' .
                 json_encode($recipient));
             $this->logDebug('Add to list response:' .
@@ -701,8 +703,8 @@ class SenderAutomatedEmails extends Module
      */
     private function mapCartData($cart, $email)
     {
-        $imageType = ImageType::getFormatedName('home'); //Dont get this part what for....dump returns home_default
-
+        $imageType = ImageType::getFormatedName('home');
+        $this->logDebug($imageType);
         $cartHash = $cart->id;
         $this->logDebug('This is the cart hash ' . $cartHash);
 
@@ -737,7 +739,7 @@ class SenderAutomatedEmails extends Module
                     $imageType
                 )
             );
-
+            $this->logDebug(json_encode($prod));
             $data['products'][] = $prod;
         }
 
@@ -759,12 +761,10 @@ class SenderAutomatedEmails extends Module
 
         if (!empty($cartData['products'])) {
             $cartTrackResult = $this->apiClient()->trackCart($cartData);
-
             $this->logDebug('Cart track request:' . json_encode($cartData));
             $this->logDebug('Cart track response: ' . json_encode($cartTrackResult));
         } elseif (empty($cartData['products']) && isset($cookie['id_cart'])) {
             $cartDeleteResult = $this->apiClient()->cartDelete($cookie['id_cart']);
-
             $this->logDebug('Cart delete response:' . json_encode($cartDeleteResult));
         }
     }
@@ -780,7 +780,7 @@ class SenderAutomatedEmails extends Module
      *
      * @return void
      */
-    private function syncRecipient($recipient, $subscriberId, $context)
+    private function syncRecipient($recipient, $subscriberId, $tagId)
     {
         $this->logDebug('syncRecipient hook');
         // Validate if we should
@@ -792,15 +792,6 @@ class SenderAutomatedEmails extends Module
         }
 
         $this->apiClient()->updateSubscriber($recipient, $subscriberId);
-
-        $listToAdd = !empty(Configuration::get('SPM_CUSTOMERS_LIST_NAME')) ? [Configuration::get('SPM_CUSTOMERS_LIST_NAME')] : '';
-
-        if ($this->context->customer->is_guest) {
-            $listToAdd = Configuration::get('SPM_GUEST_LIST_NAME');
-        }
-
-        $tagId = Configuration::get('SPM_CUSTOMERS_LIST_ID');
-
         $addToListResult = $this->apiClient()->addToList($subscriberId, $tagId);
 
         if (!empty($customFields)) {
