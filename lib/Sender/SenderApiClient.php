@@ -102,23 +102,11 @@ class SenderApiClient
     }
 
     /**
-     * Generate authentication URL
-     *
-     * @param string $baseUrl [website base url]
-     * @param string $returnUrl [url to return with api key attached]
+     * @return string
      */
-    public function generateAuthUrl($baseUrl, $returnUrl)
+    public function generateAuthUrl()
     {
-        $query = http_build_query(array(
-            'return' => $returnUrl . '&response_key=API_KEY',
-            'return_cancel' => $this->senderBaseUrl,
-            'store_baseurl' => $baseUrl,
-            'store_currency' => 'EUR'
-        ));
-
-        //Make here connection to endpoint which would verify that apiKey is valid
         return $this->senderBaseUrl . 'me';
-//        return self::$baseUrl . '/commerce/auth/?' . $query;
     }
 
     /**
@@ -204,6 +192,18 @@ class SenderApiClient
         return false;
     }
 
+    public function trackCart($params)
+    {
+        $requestConfig = [
+            'http' => 'post',
+            'method' => 'carts'
+        ];
+        $data2 = [$params];
+        $data = $params;
+
+        return $response = $this->makeApiRequest($requestConfig, $data);
+    }
+
     /**
      * Convert cart
      *
@@ -219,237 +219,6 @@ class SenderApiClient
         $data = [];
 //        return $this->makeCommerceRequest($params, 'cart_convert');
         return $response = $this->makeApiRequest($requestConfig, $data);
-    }
-
-    /**
-     * Retrieve all forms
-     * @return mixed
-     */
-    public function getAllForms()
-    {
-        $requestConfig = [
-            "http" => 'get',
-            "method" => "forms",
-        ];
-
-        $data = [];
-
-        $response = $this->makeApiRequest($requestConfig, $data);
-
-        return $response->data;
-    }
-
-    /**
-     * Retrieve all mailinglists
-     *
-     * @return type
-     */
-    public function getAllLists()
-    {
-        $requestConfig = [
-            'http' => 'get',
-            "method" => "tags",
-        ];
-        $data = '';
-
-        $response = $this->makeApiRequest($requestConfig, $data);
-
-        return $response->data;
-    }
-
-    /**
-     * Retrieve specific form via ID
-     *
-     * @param type $id
-     * @return type
-     */
-    public function getFormById($id)
-    {
-        $requestConfig = [
-            "http" => "get",
-            "method" => "forms/$id"
-        ];
-
-        $data = [];
-
-        $response = $this->makeApiRequest($requestConfig, $data);
-
-        if ($response) {
-            return $response->data;
-        }
-    }
-
-    /**
-     * Gets current account connected
-     * @return mixed
-     */
-    public function getCurrentAccount()
-    {
-        $requestConfig = [
-            "http" => "get",
-            "method" => "accounts/current"
-        ];
-
-        $data = [];
-        $response = $this->makeApiRequest($requestConfig, $data);
-
-        if ($response) {
-            return $response->data;
-        }
-        return false;
-    }
-
-    public function isAlreadySubscriber($emailHash)
-    {
-        $requestConfig = [
-            'http' => 'get',
-            'method' => "subscribers/integrations/$emailHash"
-        ];
-
-        $data = [];
-        $response = $this->makeApiRequest($requestConfig, $data);
-
-        if ($response) {
-            return $response->data;
-        }
-        return;
-    }
-
-    public function reactivateSubscriber($id)
-    {;
-        $requestConfig = [
-            'http' => 'post',
-            'method' => "subscribers/reactivate"
-        ];
-
-        $data['subscribers'] = [0 => $id];
-
-        $response = $this->makeApiRequest($requestConfig, $data);
-//        dump($response);
-//        exit();
-        if ($response) {
-            return true;
-        }
-        return;
-    }
-
-    public function addToList($subscriberId, $tagId)
-    {
-        $requestConfig = [
-            'http' => 'post',
-            'method' => "subscribers/tags/$tagId"
-        ];
-
-        $data['subscribers'] = [0 => $subscriberId];
-
-        $response = $this->makeApiRequest($requestConfig, $data);
-
-        if ($response) {
-            return $response;
-        }
-        return;
-    }
-
-    /**
-     * Add user or info to mailinglist
-     *
-     * @param object $recipient
-     * @param $listName
-     * @return array
-     */
-    public function addSubscriberAndList($recipient, $listName)
-    {
-        $requestConfig = [
-            'http' => 'post',
-            'method' => 'subscribers'
-        ];
-
-        $data = [];
-        foreach ($recipient as $key => $item) {
-            $data[$key] = $item;
-        }
-
-        #Validation to not
-        if (!empty($listName)) {
-            foreach ($listName as $key => $item) {
-                $data['tags'] = [$key => $item];
-            }
-        }
-
-        $response = $this->makeApiRequest($requestConfig, $data);
-
-        if ($response) {
-            return $response->data;
-        }
-        return;
-    }
-
-    /**
-     * @param $subscriberId
-     * @param $fields
-     * @return bool
-     */
-    public function addFields($subscriberId, $fields)
-    {
-        try {
-            foreach ($fields as $fieldId => $value) {
-                $requestConfig = [
-                    'http' => "patch",
-                    'method' => "subscribers/$subscriberId/fields/$fieldId"
-                ];
-                $data = ['value' => $value];
-                $this->makeApiRequest($requestConfig, $data);
-            }
-            return true;
-        } catch (Exception $exception) {
-            $this->module->logDebug('Unable to add fields to subscriber');
-            $this->module->logDebug(json_encode($fields));
-        }
-
-    }
-
-    public function getExtraCustomFields()
-    {
-        $data = [];
-        $extraCustomFields = ['BIRTHDAY', 'GENDER', 'PARTNER'];
-        foreach ($extraCustomFields as $field) {
-            if (Configuration::get('SPM_CUSTOMER_FIELD_' . $field)) {
-                array_push($data, strtolower($field));
-            }
-        }
-        return $data;
-    }
-
-    public function trackCart($params)
-    {
-        $requestConfig = [
-            'http' => 'post',
-            'method' => 'carts'
-        ];
-        $data2 = [$params];
-        $data = $params;
-
-        return $response = $this->makeApiRequest($requestConfig, $data);
-    }
-
-    /**
-     * Delete user from mailinglist
-     *
-     * @param object $recipient
-     * @param int $listId
-     * @return array
-     */
-    public function listRemove($recipient, $listId)
-    {
-        $data = array(
-            "method" => "listRemove",
-            "params" => array(
-                "list_id" => $listId,
-                "emails" => $recipient
-            )
-        );
-
-        return $this->makeApiRequest($data);
     }
 
     /**
@@ -506,18 +275,167 @@ class SenderApiClient
 //        return $this->makeCommerceRequest($params, 'cart_delete');
     }
 
-    public function getCustomFields()
+    /**
+     * Retrieve all forms
+     * @return mixed
+     */
+    public function getAllForms()
     {
         $requestConfig = [
-            'http' => 'get',
-            "method" => "fields",
+            "http" => 'get',
+            "method" => "forms",
         ];
+
         $data = [];
 
         $response = $this->makeApiRequest($requestConfig, $data);
 
         return $response->data;
-//        return $response->data;
+    }
+
+    /**
+     * Retrieve specific form via ID
+     *
+     * @param type $id
+     * @return type
+     */
+    public function getFormById($id)
+    {
+        $requestConfig = [
+            "http" => "get",
+            "method" => "forms/$id"
+        ];
+
+        $data = [];
+
+        $response = $this->makeApiRequest($requestConfig, $data);
+
+        if ($response) {
+            return $response->data;
+        }
+    }
+
+    /**
+     * Retrieve all mailinglists
+     *
+     * @return type
+     */
+    public function getAllLists()
+    {
+        $requestConfig = [
+            'http' => 'get',
+            "method" => "tags",
+        ];
+        $data = '';
+
+        $response = $this->makeApiRequest($requestConfig, $data);
+
+        return $response->data;
+    }
+
+    public function addToList($subscriberId, $tagId)
+    {
+        $requestConfig = [
+            'http' => 'post',
+            'method' => "subscribers/tags/$tagId"
+        ];
+
+        $data['subscribers'] = [0 => $subscriberId];
+
+        $response = $this->makeApiRequest($requestConfig, $data);
+
+        if ($response) {
+            return $response;
+        }
+        return;
+    }
+
+    /**
+     * Delete user from mailinglist
+     *
+     * @param object $recipient
+     * @param int $listId
+     * @return array
+     */
+    public function listRemove($recipient, $listId)
+    {
+        $data = array(
+            "method" => "listRemove",
+            "params" => array(
+                "list_id" => $listId,
+                "emails" => $recipient
+            )
+        );
+
+        return $this->makeApiRequest($data);
+    }
+
+    public function isAlreadySubscriber($email)
+    {
+        $requestConfig = [
+            'http' => 'get',
+            'method' => "subscribers/by_email/$email"
+        ];
+
+        $data = [];
+        $response = $this->makeApiRequest($requestConfig, $data);
+
+        if ($response) {
+            return $response->data;
+        }
+        return;
+    }
+
+    public function reactivateSubscriber($id)
+    {;
+        $requestConfig = [
+            'http' => 'post',
+            'method' => "subscribers/reactivate"
+        ];
+
+        $data['subscribers'] = [0 => $id];
+
+        $response = $this->makeApiRequest($requestConfig, $data);
+//        dump($response);
+//        exit();
+        if ($response) {
+            return true;
+        }
+        return;
+    }
+
+    /**
+     * Add user or info to mailinglist
+     *
+     * @param object $recipient
+     * @param $listName
+     * @return array
+     */
+    public function addSubscriberAndList($recipient, $listName)
+    {
+        $requestConfig = [
+            'http' => 'post',
+            'method' => 'subscribers'
+        ];
+
+        $data = [];
+        foreach ($recipient as $key => $item) {
+            $data[$key] = $item;
+        }
+
+        #Validation to not
+        if (!empty($listName)) {
+            foreach ($listName as $key => $item) {
+                $data['tags'] = [$key => $item];
+            }
+        }
+
+        $response = $this->makeApiRequest($requestConfig, $data);
+
+        if ($response) {
+            return $response->data;
+        }
+        return;
     }
 
     public function updateSubscriber($subscriber, $subscriberId)
@@ -533,6 +451,76 @@ class SenderApiClient
             return $response;
         }
         return;
+    }
+
+    /**
+     * @param $subscriberId
+     * @param $fields
+     * @return bool
+     */
+    public function addFields($subscriberId, $fields)
+    {
+        try {
+            foreach ($fields as $fieldId => $value) {
+                $requestConfig = [
+                    'http' => "patch",
+                    'method' => "subscribers/$subscriberId/fields/$fieldId"
+                ];
+                $data = ['value' => $value];
+                $this->makeApiRequest($requestConfig, $data);
+            }
+            return true;
+        } catch (Exception $exception) {
+            $this->module->logDebug('Unable to add fields to subscriber');
+            $this->module->logDebug(json_encode($fields));
+        }
+
+    }
+
+    /**
+     * Gets current account connected
+     * @return mixed
+     */
+    public function getCurrentAccount()
+    {
+        $requestConfig = [
+            "http" => "get",
+            "method" => "accounts/current"
+        ];
+
+        $data = [];
+        $response = $this->makeApiRequest($requestConfig, $data);
+
+        if ($response) {
+            return $response->data;
+        }
+        return false;
+    }
+
+    public function getExtraCustomFields()
+    {
+        $data = [];
+        $extraCustomFields = ['BIRTHDAY', 'GENDER', 'PARTNER'];
+        foreach ($extraCustomFields as $field) {
+            if (Configuration::get('SPM_CUSTOMER_FIELD_' . $field)) {
+                array_push($data, strtolower($field));
+            }
+        }
+        return $data;
+    }
+
+    public function getCustomFields()
+    {
+        $requestConfig = [
+            'http' => 'get',
+            "method" => "fields",
+        ];
+        $data = [];
+
+        $response = $this->makeApiRequest($requestConfig, $data);
+
+        return $response->data;
+//        return $response->data;
     }
 
     public function ping()
