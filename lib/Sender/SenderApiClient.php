@@ -517,6 +517,22 @@ class SenderApiClient
         return false;
     }
 
+    public function getCurrentUser()
+    {
+        $requestConfig = [
+            "http" => "get",
+            "method" => "me"
+        ];
+
+        $data = [];
+        $response = $this->makeApiRequest($requestConfig, $data);
+
+        if ($response) {
+            return $response;
+        }
+        return false;
+    }
+
     public function getExtraCustomFields()
     {
         $data = [];

@@ -165,6 +165,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             'imageUrl'               => $this->module->getPathUri() . 'views/img/sender_logo.png',
             //Which user show here as auth been done over apiKey, no user involve
             'connectedAccount'       => $this->module->apiClient()->getCurrentAccount(),
+            'connectedUser'          => $this->module->apiClient()->getCurrentUser(),
             'apiKey'                 => $this->module->apiClient()->getApiKey(),
             'disconnectUrl'          => $disconnectUrl,
             'baseUrl'                => $this->module->apiClient()->getBaseUrl(),

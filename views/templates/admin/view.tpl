@@ -90,6 +90,22 @@
                             </tr>
                             <tr>
                                 <td>
+                                    {l s='User email:' mod='senderautomatedemails'}
+                                </td>
+                                <td>
+                                    <strong>{$connectedUser->email|escape:'htmlall':'UTF-8'}</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    {l s='Username:' mod='senderautomatedemails'}
+                                </td>
+                                <td>
+                                    <strong>{$connectedUser->username|escape:'htmlall':'UTF-8'}</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
                                     {l s='Api key:' mod='senderautomatedemails'}
                                 </td>
                                 <td>
