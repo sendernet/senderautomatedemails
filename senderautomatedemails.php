@@ -309,10 +309,8 @@ class SenderAutomatedEmails extends Module
         try {
             if ($isSubscriber){
                 $tagId = Configuration::get('SPM_GUEST_LIST_ID');
-                $this->logDebug($tagId);
                 $subscriberId = $isSubscriber->id;
                 $this->syncRecipient($recipient, $isSubscriber->id, $tagId);
-                $this->apiClient()->addToList($subscriberId, $tagId);
                 $this->logDebug('Subscriber sync and added to guest track list option');
             }else{
                 $listToAdd = !empty(Configuration::get('SPM_GUEST_LIST_NAME')) ? [Configuration::get('SPM_GUEST_LIST_NAME')] : '';
