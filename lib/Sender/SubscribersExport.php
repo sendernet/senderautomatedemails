@@ -104,7 +104,7 @@ class SubscribersExport extends SenderApiClient
     public function startImport($data)
     {
         $method = 'subscribers/start_import';
-        dump($data);
+
         try {
             $client = new Client();
             $client->post($this->senderBaseUrl . $method, [

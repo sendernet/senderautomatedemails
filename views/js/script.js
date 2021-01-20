@@ -357,31 +357,27 @@
 
         } else {}
 
-
         jQuery('#syncList').click(function (){
             jQuery('#syncList').html('Working on it');
             jQuery.get(syncListAjaxUrl, {
                 action: 'syncList',
             }, function(response) {
                 var proceed = jQuery.parseJSON(response);
-                if (!proceed.data.success) {
+                if (!proceed.result.success) {
                     jQuery('#syncList').html('Synchronize this list with Sender.net');
-                    jQuery('#syncError').show().html(proceed.data.message);
-                    console.log('Did not synchronized');
+                    jQuery('#syncError').show().html(proceed.result.message);
                 } else {
-                    console.log('Synchronized')
                     $('#syncError').css('display', 'none');
                     jQuery('#syncList').removeClass('btn-warning');
                     jQuery('#syncList').addClass('btn-success');
                     jQuery('#syncList').html('Synchronized');
-                    jQuery('#syncDate').html(proceed.data.message);
+                    jQuery('#syncDate').html(proceed.result.message);
                     setTimeout(function(){
                         $('#syncList').removeClass('btn-success').addClass('btn-warning').html('Synchronize this list with Sender.net');
                     }, 5000);
                 }
             });
         });
-
 
     });
 

@@ -37,4 +37,3 @@ if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->na
             exit;
     }
 }
-exit;
