@@ -8,7 +8,7 @@
         </div>
         <div class="panel-body">
             <div class="panel-body">
-                {if empty($customersLists)}
+                {if empty($allLists)}
                     <div class="alert alert-warning">
                         {l s='To save customers you must have at least one list at your Sender.net`s account' mod='senderautomatedemails'}
                     </div>

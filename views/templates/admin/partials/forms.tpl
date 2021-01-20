@@ -1,5 +1,5 @@
 <div id="spm-forms" class="spm-tab-content">
-    {if empty($formsList)}
+    {if empty($allForms)}
         <div class="panel panel-default">
             <div class="panel-heading">
                 <i class="zmdi zmdi-format-list-bulleted"></i>
@@ -62,7 +62,7 @@
                             <option value="0">
                                 {l s='Select a form' mod='senderautomatedemails'}
                             </option>
-                            {foreach $formsList as $form}
+                            {foreach $allForms as $form}
                                 <option {if $form->id eq $formId}selected="selected"{/if}value="{$form->id|escape:'htmlall':'UTF-8'}"
                                         {if !$form->is_active} disabled{/if}>
                                     {$form->title|escape:'htmlall':'UTF-8'} {if !$form->is_active} <strong>| {l s='Form not active' mod='senderautomatedemails'}</strong>  {/if}

@@ -27,7 +27,7 @@
                 </button>
             </div>
             <div class="panel-body">
-                {if empty($customersLists)}
+                {if empty($allLists)}
                     <div class="alert alert-warning">
                         {l s='To track customers carts you must have at least one list at your Sender.net`s account' mod='senderautomatedemails'}
                     </div>
@@ -50,11 +50,11 @@
                             <option value="0">
                                 {l s='Select a list' mod='senderautomatedemails'}
                             </option>
-                            {foreach $customersLists as $customerList}
-                                <option id="{$customerList->title|escape|lower:'htmlall':'UTF-8'}"
-                                        {if $customerList->id eq $customerListId}selected="selected"{/if}
-                                        value="{$customerList->id|escape:'htmlall':'UTF-8'}">
-                                    {$customerList->title|escape:'htmlall':'UTF-8'}
+                            {foreach $allLists as $list}
+                                <option id="{$list->title|escape|lower:'htmlall':'UTF-8'}"
+                                        {if $list->id eq $customerListId}selected="selected"{/if}
+                                        value="{$list->id|escape:'htmlall':'UTF-8'}">
+                                    {$list->title|escape:'htmlall':'UTF-8'}
                                 </option>
                             {/foreach}
                         </select>
@@ -80,7 +80,7 @@
             {/if}
         </div>
         <div class="panel-body">
-            {if empty($guestsLists)}
+            {if empty($allLists)}
                 <div class="alert alert-warning">
                     {l s='To track guest user carts you must have at least one list at your Sender.net`s account' mod='senderautomatedemails'}
                 </div>
@@ -101,7 +101,7 @@
                     </button>
                 </div>
                 <div class="panel-body">
-                    {if empty($guestsLists)}
+                    {if empty($allLists)}
                         <div class="alert alert-warning">
                             {l s='To track customers carts you must have at least one list at your Sender.net`s account' mod='senderautomatedemails'}
                         </div>
@@ -124,11 +124,11 @@
                                 <option value="0">
                                     {l s='Select a list' mod='senderautomatedemails'}
                                 </option>
-                                {foreach $guestsLists as $guestsList}
-                                    <option id="{$guestsList->title|escape|lower:'htmlall':'UTF-8'}"
-                                            {if $guestsList->id eq $guestListId}selected="selected"{/if}
-                                            value="{$guestsList->id|escape:'htmlall':'UTF-8'}">
-                                        {$guestsList->title|escape:'htmlall':'UTF-8'}
+                                {foreach $allLists as $list}
+                                    <option id="{$list->title|escape|lower:'htmlall':'UTF-8'}"
+                                            {if $list->id eq $guestListId}selected="selected"{/if}
+                                            value="{$list->id|escape:'htmlall':'UTF-8'}">
+                                        {$list->title|escape:'htmlall':'UTF-8'}
                                     </option>
                                 {/foreach}
                             </select>
