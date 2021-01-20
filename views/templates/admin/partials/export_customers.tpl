@@ -23,21 +23,28 @@
                             {l s='Select to which list export customers as subscribers to Sender.net' mod='senderautomatedemails'}
                         </p>
                     </blockquote>
-                    <div id="swCustomerListSelectContainer" class="form-group">
-                        <label for="swCustomerListSelect">
+                    <div id="swExportClientToListContainer" class="form-group">
+                        <label for="swExportClientToList">
                             {l s='Select list' mod='senderautomatedemails'}
                         </label>
-                        <select id="swCustomerListSelect" value="{$formId|escape:'htmlall':'UTF-8'}">
+                        <select id="swExportClientToList" name="swExportListSelect"
+                                value="{$exportListId|escape:'htmlall':'UTF-8'}">
+                            {if empty($allLists)}
+                            <option value="0">
+                                {l s='No lists created in Sender app' mod='senderautomatedemails'}
+                            </option>
+                            {else}
                             <option value="0">
                                 {l s='Select a list' mod='senderautomatedemails'}
                             </option>
-                            {foreach $customersLists as $customerList}
-                                <option id="{$customerList->title|escape|lower:'htmlall':'UTF-8'}"
-                                        {if $customerList->id eq $customerListId}selected="selected"{/if}
-                                        value="{$customerList->id|escape:'htmlall':'UTF-8'}">
-                                    {$customerList->title|escape:'htmlall':'UTF-8'}
+                            {foreach $allLists as $list}
+                                <option id="{$list->title|escape|lower:'htmlall':'UTF-8'}"
+                                        {if $list->id eq $exportListId}selected="selected"{/if}
+                                        value="{$list->id|escape:'htmlall':'UTF-8'}">
+                                    {$list->title|escape:'htmlall':'UTF-8'}
                                 </option>
                             {/foreach}
+                            {/if}
                         </select>
                     </div>
                 {/if}

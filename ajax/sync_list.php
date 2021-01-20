@@ -15,7 +15,6 @@ require_once(dirname(__FILE__) . '/../senderautomatedemails.php');
 
 $senderautomatedemails = new SenderAutomatedEmails();
 
-
 if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->name)) {
     die(json_encode(array('result' => false)));
 } else {
@@ -23,10 +22,17 @@ if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->na
         case 'syncList':
             try {
                 $response = $senderautomatedemails->syncList();
-                die(json_encode(['data' => $response]));
+                die(json_encode(['result' => $response]));
             }catch (Exception $e){
-                die(json_encode(['data' => $response]));
+                die(json_encode(['result' => $response]));
             }
+        case 'exportList':
+            if (Tools::getValue('list_id') === 0 ){
+                Configuration::updateValue('SPM_SENDERAPP_SYNC_LIST_ID', Tools::getValue('list_id'));
+                die(json_encode(['result' => 'No export list selected, will import without saving to list']));
+            }
+            Configuration::updateValue('SPM_SENDERAPP_SYNC_LIST_ID', Tools::getValue('list_id'));
+            die(json_encode(['result' => 'Updated']));
         default:
             exit;
     }

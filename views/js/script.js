@@ -11,7 +11,6 @@
 
 (function($) {
     'use strict';
-
     jQuery(document).ready(function() {
 
         jQuery('#swToggleNewSignups').on('click', function(event) {
@@ -207,7 +206,6 @@
 
         });
 
-
         jQuery('#swGuestListSelect').on('change', function(event) {
 
             jQuery('#swGuestListSelect').attr('disabled', true);
@@ -230,6 +228,7 @@
             });
 
         });
+
         jQuery('.spm-customer-data-input').on('change', function(event) {
             if($(this).is(':checked')) {
                 jQuery.post(dataAjaxurl, { action: 'addData', option_name: $(this).val() }, function(response) {
@@ -325,6 +324,20 @@
 
             });
 
+        });
+
+        jQuery('#swExportClientToList').on('change', function(event) {
+            jQuery.post(syncListAjaxUrl, {
+                action: 'exportList',
+                list_id: jQuery('#swExportClientToList').val(),
+            }, function(response) {
+                var proceed = jQuery.parseJSON(response);
+                if (!proceed.result) {
+                    console.log('Export list not saved');
+                } else {
+                    console.log('Export list saved');
+                }
+            });
         });
 
         /**

@@ -173,6 +173,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             'formsList'              => $this->module->apiClient()->getAllForms(),
             'guestsLists'            => $this->module->apiClient()->getAllLists(),
             'customersLists'         => $this->module->apiClient()->getAllLists(),
+            'allLists'               => $this->module->apiClient()->getAllLists(),
             'allowNewSignups'        => Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS'),
             'allowCartTrack'         => Configuration::get('SPM_ALLOW_TRACK_CARTS'),
             'allowForms'             => Configuration::get('SPM_ALLOW_FORMS'),
@@ -182,11 +183,12 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             'formsAjaxurl'           => $this->module->module_url . '/ajax/forms_ajax.php?token=' . Tools::getAdminToken($this->module->name),
             'listsAjaxurl'           => $this->module->module_url . '/ajax/lists_ajax.php?token=' . Tools::getAdminToken($this->module->name),
             'dataAjaxurl'            => $this->module->module_url . '/ajax/data_ajax.php?token=' . Tools::getAdminToken($this->module->name),
-            'syncListAjaxUrl'            => $this->module->module_url . '/ajax/sync_list.php?token=' . Tools::getAdminToken($this->module->name),
+            'syncListAjaxUrl'        => $this->module->module_url . '/ajax/sync_list.php?token=' . Tools::getAdminToken($this->module->name),
             'formId'                 => Configuration::get('SPM_FORM_ID'),
             'partnerOfferId'         => Configuration::get('SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID'),
             'guestListId'            => Configuration::get('SPM_GUEST_LIST_ID'),
             'customerListId'         => Configuration::get('SPM_CUSTOMERS_LIST_ID'),
+            'exportListId'           => Configuration::get('SPM_SENDERAPP_SYNC_LIST_ID'),
             'genderFieldId'          => Configuration::get('SPM_CUSTOMER_FIELD_GENDER_ID'),
             'birthdayFieldId'          => Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY_ID'),
             'customFields'           => $customFields,
@@ -199,7 +201,6 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
 
         return $output;
     }
-
 
     /**
      * Enabling default values for prestashop

@@ -113,6 +113,7 @@ class SenderAutomatedEmails extends Module
             'SPM_CUSTOMER_FIELD_BIRTHDAY_ID' => 0,
             'SPM_CUSTOMER_FIELD_GENDER_ID' => 0,
             'SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID' => 0,
+            'SPM_SENDERAPP_SYNC_LIST_ID' => 0,
         );
 //           [ 'SPM_CUSTOMER_NEWSLETTER' => 1,
 //            'SPM_CUSTOMER_GENDER' => 1,];
