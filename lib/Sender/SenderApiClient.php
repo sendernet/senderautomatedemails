@@ -180,7 +180,6 @@ class SenderApiClient
         $server_output = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-
         if($status === 200){
             return json_decode($server_output);
         }else{
@@ -333,6 +332,26 @@ class SenderApiClient
         return $response->data;
     }
 
+    /**
+     * @param $listId
+     * @return mixed
+     */
+    public function getList($listId)
+    {
+        $requestConfig = [
+            'http' => 'get',
+            "method" => "tags/$listId",
+        ];
+        $data = '';
+
+        $response = $this->makeApiRequest($requestConfig, $data);
+        if ($response) {
+            return $response->data;
+        }
+
+        return;
+    }
+
     public function addToList($subscriberId, $tagId)
     {
         $requestConfig = [
@@ -396,8 +415,7 @@ class SenderApiClient
         $data['subscribers'] = [0 => $id];
 
         $response = $this->makeApiRequest($requestConfig, $data);
-//        dump($response);
-//        exit();
+
         if ($response) {
             return true;
         }

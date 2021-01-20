@@ -829,7 +829,7 @@ class SenderAutomatedEmails extends Module
                 WHERE newsletter = 1');
             if (!empty($customersRequirements)){
                 $stringCustomers = $this->recursive_implode($customersRequirements);
-                $subscribersExport = new SubscribersExport();
+                $subscribersExport = new SubscribersExport(Configuration::get('SPM_API_KEY'));
                 return $subscribersExport->textImport($stringCustomers, $customersRequirements);
             }
         } catch (PrestaShopDatabaseException $e) {

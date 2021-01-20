@@ -5,11 +5,6 @@ use GuzzleHttp\Exception\RequestException;
 
 class SubscribersExport extends SenderApiClient
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     public function textImport($customers, $columns)
     {
         $requestConfig = [
@@ -25,11 +20,19 @@ class SubscribersExport extends SenderApiClient
         $this->logDebug('Text import completed');
 
         $dataStartImport = $this->formStartImportData($columnsFormed, $textImport['fileName'], $textImport['rowCount']);
+
         return $this->startImport($dataStartImport);
     }
 
     public function formStartImportData($columns, $fileName, $rowCount)
     {
+        $tagId = Configuration::get('SPM_SENDERAPP_SYNC_LIST_ID');
+
+        if ($tagId != 0) {
+            $this->logDebug("Will add to $tagId");
+            $tag[] = $this->getList($tagId);
+        }
+
         return $dataStartImport = [
             "emailColumn" => 0,
             "firstnameColumn" => 1,
@@ -39,7 +42,7 @@ class SubscribersExport extends SenderApiClient
             'fileName' => $fileName,
             "source" => "Copy" . '/' . "paste list",
             'rowCount' => $rowCount,
-            'tags' => [],
+            'tags' => isset($tag) ? $tag : [],
         ];
     }
 
@@ -101,7 +104,7 @@ class SubscribersExport extends SenderApiClient
     public function startImport($data)
     {
         $method = 'subscribers/start_import';
-
+        dump($data);
         try {
             $client = new Client();
             $client->post($this->senderBaseUrl . $method, [
