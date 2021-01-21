@@ -356,7 +356,8 @@ class SenderAutomatedEmails extends Module
             || (!Configuration::get('SPM_ALLOW_GUEST_TRACK')
                 && isset($cookie['is_guest']) && $cookie['is_guest'])
             || !Configuration::get('SPM_IS_MODULE_ACTIVE')
-            || $this->context->controller instanceof OrderController) {
+            || $this->context->controller instanceof OrderController != true) {
+            $this->logDebug('hookActionCartSummary stop');
             return;
         }
 
@@ -472,7 +473,7 @@ class SenderAutomatedEmails extends Module
     public function hookactionCustomerAccountUpdate($context)
     {
         $this->logDebug('hookactionCustomerAccountUpdate');
-        $this->logDebug('Customer is updating his personal details');
+        $this->logDebug('Updating personal details');
 
         $customer = $this->context->customer;
 
@@ -621,11 +622,17 @@ class SenderAutomatedEmails extends Module
                 #
             }else{
                 $this->logDebug('Unsubscribed subscriber');
-                if ($context['newCustomer']->newsletter){
-                    #Reactivate subscriber
+                if (array_key_exists('newCustomer', $context) && $context['newCustomer']->newsletter){
+                    #Changes over website
                     $this->apiClient()->reactivateSubscriber($isSubscriber->id);
+                    $this->logDebug('context -> newCustomer');
                     $this->logDebug('Subscriber reactivated');
-                }else{
+                }elseif (array_key_exists('object', $context) && $context['object']->newsletter) {
+                    #Changes over interface
+                    $this->apiClient()->reactivateSubscriber($isSubscriber->id);
+                    $this->logDebug('context -> object');
+                    $this->logDebug('Subscriber reactivated');
+                } else{
                     return false;
                 }
             }
