@@ -389,38 +389,40 @@ class SenderAutomatedEmails extends Module
     public function hookActionCartSave($context)
     {
         $this->logDebug('hookActionCartSAve');
-//        if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
-//            $cookie = $context['cookie']->getAll();
-//        } else {
-//            $cookie = $context['cookie']->getFamily($context['cookie']->id);
-//        }
-//        // Validate if we should track
-//        if (!isset($cookie['email'])
-//            || !Validate::isLoadedObject($context['cart'])
-//            || (!Configuration::get('SPM_ALLOW_TRACK_CARTS')
-//                && isset($cookie['logged']) && $cookie['logged'])
-//            || (!Configuration::get('SPM_ALLOW_GUEST_TRACK')
-//                && isset($cookie['is_guest']) && $cookie['is_guest'])
-//            || !Configuration::get('SPM_IS_MODULE_ACTIVE')
-//            || $this->context->controller instanceof OrderController) {
-//            $this->logDebug('hookActionCartSave first condition failed');
-//            return;
-//        }
-//
-//        $encodedEmail = base64_encode($cookie['email']);
-//        if ($isSubscriber = $this->apiClient()->isAlreadySubscriber($encodedEmail)){
-//            if ($isSubscriber->unsubscribed){
-//                $this->logDebug('Subscriber is NOT active in SENDER wont track customer cart');
-//                return;
-//            }
-//            $this->logDebug('Subscriber active in SENDER');
-//        }
-//
-//        $this->logDebug('#hookActionCartSave START');
-//
-//        $this->syncCart($context['cart'], $cookie, $isSubscriber);
-//
-//        $this->logDebug('#hookActionCartSave END');
+
+        if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
+            $cookie = $context['cookie']->getAll();
+        } else {
+            $cookie = $context['cookie']->getFamily($context['cookie']->id);
+        }
+//         Validate if we should track
+        if (!isset($cookie['email'])
+            || !Validate::isLoadedObject($context['cart'])
+            || (!Configuration::get('SPM_ALLOW_TRACK_CARTS')
+                && isset($cookie['logged']) && $cookie['logged'])
+            || (!Configuration::get('SPM_ALLOW_GUEST_TRACK')
+                && isset($cookie['is_guest']) && $cookie['is_guest'])
+            || !Configuration::get('SPM_IS_MODULE_ACTIVE')
+            || $this->context->controller instanceof OrderController) {
+            $this->logDebug('hookActionCartSave first condition failed');
+            return;
+        }
+
+        if ($isSubscriber = $this->apiClient()->isAlreadySubscriber($cookie['email'])){
+            if ($isSubscriber->unsubscribed){
+                $this->logDebug('Subscriber is NOT active in SENDER wont track customer cart');
+                return;
+            }else{
+                if (!empty($context['cart'])) {
+                    #Check if not already tracked
+
+
+                    $this->syncCart($context['cart'], $cookie);
+                }
+            }
+        }
+        $this->logDebug('#hookActionCartSave END');
+        return true;
     }
 
     /**
@@ -740,6 +742,7 @@ class SenderAutomatedEmails extends Module
     {
         $imageType = ImageType::getFormatedName('home');
         $this->logDebug($imageType);
+
         $cartHash = $cart->id;
         $this->logDebug('This is the cart hash ' . $cartHash);
 

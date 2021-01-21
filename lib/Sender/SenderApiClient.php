@@ -491,8 +491,8 @@ class SenderApiClient
             }
             return true;
         } catch (Exception $exception) {
-            $this->module->logDebug('Unable to add fields to subscriber');
-            $this->module->logDebug(json_encode($fields));
+            $this->logDebug('Unable to add fields to subscriber');
+            $this->logDebug(json_encode($fields));
         }
 
     }
