@@ -624,7 +624,7 @@ class SenderAutomatedEmails extends Module
             "price" => $price,
             "special_price" => $special_price,
             "currency" => $this->context->currency->iso_code,
-            "quantity" => $product['quantity'],
+            "quantity" => $product['minimal_quantity'],
             "discount" => $discount
         );
 
