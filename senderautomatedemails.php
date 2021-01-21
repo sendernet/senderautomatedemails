@@ -389,6 +389,10 @@ class SenderAutomatedEmails extends Module
     public function hookActionCartSave($context)
     {
         $this->logDebug('hookActionCartSAve');
+        if (!Validate::isLoadedObject($context['cart'])){
+            $this->logDebug('cart object not loaded, exiting cartSave');
+            return;
+        }
 
         if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
             $cookie = $context['cookie']->getAll();
@@ -397,7 +401,6 @@ class SenderAutomatedEmails extends Module
         }
 //         Validate if we should track
         if (!isset($cookie['email'])
-            || !Validate::isLoadedObject($context['cart'])
             || (!Configuration::get('SPM_ALLOW_TRACK_CARTS')
                 && isset($cookie['logged']) && $cookie['logged'])
             || (!Configuration::get('SPM_ALLOW_GUEST_TRACK')
@@ -415,14 +418,13 @@ class SenderAutomatedEmails extends Module
             }else{
                 if (!empty($context['cart'])) {
                     #Check if not already tracked
-
-
                     $this->syncCart($context['cart'], $cookie);
+                    return;
                 }
             }
         }
         $this->logDebug('#hookActionCartSave END');
-        return true;
+        return;
     }
 
     /**
@@ -796,12 +798,11 @@ class SenderAutomatedEmails extends Module
         // Keep recipient up to date with Sender.net list
         // Generate cart data array for api call
         $cartData = $this->mapCartData($cart, $cookie['email']);
-
+        
         if (!empty($cartData['products'])) {
             $cartTrackResult = $this->apiClient()->trackCart($cartData);
-            $this->logDebug('Cart track request:' . json_encode($cartData));
             $this->logDebug('Cart track response: ' . json_encode($cartTrackResult));
-        } elseif (empty($cartData['products']) && isset($cookie['id_cart'])) {
+        } elseif (empty($cartData['products'])) {
             $cartDeleteResult = $this->apiClient()->cartDelete($cookie['id_cart']);
             $this->logDebug('Cart delete response:' . json_encode($cartDeleteResult));
         }
@@ -892,7 +893,6 @@ class SenderAutomatedEmails extends Module
         strlen($glue) > 0 and $glued_string = substr($glued_string, 0, -strlen($glue));
         // Trim ALL whitespace
 //        $trim_all and $glued_string = preg_replace("/(\s)/ixsm", '', $glued_string);
-//        dump($glued_string);
         $result = str_replace('{"subscribers":', '', $glued_string);
         return (string) $result;
     }

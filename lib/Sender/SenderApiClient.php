@@ -174,6 +174,10 @@ class SenderApiClient
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $formedData);
                 break;
+            case "delete":
+                curl_setopt($ch, CURLOPT_URL, $this->senderBaseUrl . $requestConfig['method']);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+                break;
         }
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -198,7 +202,7 @@ class SenderApiClient
             'http' => 'post',
             'method' => 'carts'
         ];
-        $data2 = [$params];
+
         $data = $params;
 
         return $response = $this->makeApiRequest($requestConfig, $data);
@@ -254,25 +258,18 @@ class SenderApiClient
     }
 
     /**
-     * Delete cart
-     *
-     * @param type $cartId
-     * @return type
+     * @param $cartId
      */
     public function cartDelete($cartId)
     {
         $requestConfig = [
-            'http' => "delete/$cartId",
-            'method' => 'carts'
+            'http' => 'delete',
+            'method' => "carts/$cartId",
         ];
 
         $data = [];
 
-        $response = $this->makeApiRequest($requestConfig, $data);
-        dump($response);
-        exit();
-
-//        return $this->makeCommerceRequest($params, 'cart_delete');
+        return $response = $this->makeApiRequest($requestConfig, $data);
     }
 
     /**
