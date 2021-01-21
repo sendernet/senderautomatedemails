@@ -285,25 +285,29 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        $isSubscriber = $this->checkSubscriberState($this->context->customer->email, $context);
+        $customer = $this->context->customer;
 
-        #Form the recipient or sync it
+        if (!$customer->newsletter){
+            $this->logDebug('Wont be a subscriber');
+            return;
+        }
+        $isSubscriber = $this->checkSubscriberState($customer->email, $customer->newsletter);
+
+        #Form the recipient
         if ($isSubscriber){
             $this->logDebug('Already exists subscriber');
             #Track cart details
-            $recipient = $this->formDefaultsRecipientSubscriber($this->context->customer);
+            $recipient = $this->formDefaultsRecipientSubscriber($customer);
         }else{
+            if (!$customer->newsletter){
+                $this->logDebug('Customer wont recieve news or get tracked');
+                return;
+            }
             $this->logDebug('Forming the new subscriber');
-            $recipient = $this->formDefaultsRecipient($this->context->customer);
+            $recipient = $this->formDefaultsRecipient($customer);
         }
 
-        $customFields = $this->getCustomFields($this->context);
-
-        if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
-            $cookie = $this->context->cookie->getAll();
-        } else {
-            $cookie = $context['cookie']->getFamily($context['cookie']->id);
-        }
+        $customFields = $this->getCustomFields($customer);
 
         #Creating/Update subscriber on the required list
         try {
@@ -324,8 +328,17 @@ class SenderAutomatedEmails extends Module
                 $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
             }
 
-            $this->syncCart($context['cart'], $cookie);
+            $cart = $this->context->cart;
+
+            if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
+                $cookie = $this->context->cookie->getAll();
+            } else {
+                $cookie = $context['cookie']->getFamily($context['cookie']->id);
+            }
+
+            $this->syncCart($cart, $cookie);
             $this->logDebug('#hookactionCustomerAccountAdd END');
+
         }catch (Exception $e){
             $this->logDebug('Error hookactionCustomer ' . json_encode($e->getMessage()));
         }
@@ -460,54 +473,61 @@ class SenderAutomatedEmails extends Module
     public function hookactionObjectCustomerUpdateAfter($context)
     {
         $this->logDebug('hookactionObjectCustomerUpdateAfter');
-        return $this->hookactionCustomerAccountUpdate($context);
+
+        $customer = $context['object'];
+
+        return $this->hookactionCustomerAccountUpdate($customer);
     }
 
     /**
      * Here we handle customer info where he update his account
      * and we delete or add him to the prefered list
      *
-     * @param  array $context
+     * @param array $context
+     * @param bool $interface
      * @return array $context
      */
-    public function hookactionCustomerAccountUpdate($context)
+    public function hookactionCustomerAccountUpdate($customer)
     {
         $this->logDebug('hookactionCustomerAccountUpdate');
         $this->logDebug('Updating personal details');
-
-        $customer = $this->context->customer;
-
         //Validate if we should
-        if (!Validate::isLoadedObject($customer)
-            || !Configuration::get('SPM_IS_MODULE_ACTIVE')
+        if (!Validate::isLoadedObject($customer) ||
+            !Configuration::get('SPM_IS_MODULE_ACTIVE')
             || !Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
             $this->logDebug('exiting update customer');
-            return $customer;
+            return true;
         }
+
         $this->logDebug('#hookactionCustomerAccountUpdate START');
 
-        $listId = Configuration::get('SPM_CUSTOMERS_LIST_ID');
-        $recipient = $this->formDefaultsRecipientSubscriber($this->context->customer);
-        $isSubscriber = $this->checkSubscriberState($this->context->customer->email, $context);
+        $recipient = $this->formDefaultsRecipientSubscriber($customer);
+        $isSubscriber = $this->checkSubscriberState($customer->email, $customer->newsletter);
+        $customFields = $this->getCustomFields($customer);
 
-        // Check if user opted in for a newsletter
-        if (!$customer->newsletter && !$customer->optin) {
-            $this->logDebug('Customer did not checked newsletter or optin!');
-            $deleteFromListResult = $this->apiClient()->listRemove(
-                $recipient,
-                $listId
-            );
-            $this->logDebug('Delete the recipient ' .
-                json_encode($recipient) . ' from the ' . json_encode($listId) . ' list is ' . json_encode($deleteFromListResult) . '.');
-        } else {
+        if (!$isSubscriber){
+            if (!$customer->newsletter){
+                $this->logDebug('Wont be created new subscriber');
+                return;
+            }
+            $listToAdd = !empty(Configuration::get('SPM_CUSTOMERS_LIST_NAME')) ? [Configuration::get('SPM_CUSTOMERS_LIST_NAME')] : [];
+            $newSubscriber = $this->apiClient()->addSubscriberAndList($recipient, $listToAdd);
+            $subscriberId = $newSubscriber->id;
+            $this->logDebug('New subscriber created');
+        }else{
             $tagId = Configuration::get('SPM_CUSTOMERS_LIST_ID');
-            $addToListResult = $this->syncRecipient($recipient, $isSubscriber->id, $tagId);
-            $this->logDebug('Add this recipient: ' .
-                json_encode($recipient));
-            $this->logDebug('Add to list response:' .
-                json_encode($addToListResult));
+            $subscriberId = $isSubscriber->id;
+            $this->syncRecipient($recipient, $isSubscriber->id, $tagId);
+            $this->logDebug('Updated subscriber');
         }
+
+        if (!empty($customFields)) {
+            $this->apiClient()->addFields($subscriberId, $customFields);
+            $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
+        }
+
         $this->logDebug('#hookactionCustomerAccountUpdate END');
+        return true;
     }
 
     /**
@@ -614,32 +634,45 @@ class SenderAutomatedEmails extends Module
      * @param $context
      * @return false|void
      */
-    public function checkSubscriberState($email, $context)
+    public function checkSubscriberState($email, $newsletter)
     {
+//        if ($isSubscriber = $this->apiClient()->isAlreadySubscriber($email)){
+//            if (!$isSubscriber->unsubscribed){
+//                $this->logDebug('Active subscriber');
+//                #
+//            }else{
+//                $this->logDebug('Unsubscribed subscriber');
+//                if (array_key_exists('newCustomer', $context) && $context['newCustomer']->newsletter){
+//                    #Changes over website
+//                    $this->apiClient()->reactivateSubscriber($isSubscriber->id);
+//                    $this->logDebug('context -> newCustomer');
+//                    $this->logDebug('Subscriber reactivated');
+//                }elseif (array_key_exists('object', $context) && $context['object']->newsletter) {
+//                    #Changes over interface
+//                    $this->apiClient()->reactivateSubscriber($isSubscriber->id);
+//                    $this->logDebug('context -> object');
+//                    $this->logDebug('Subscriber reactivated');
+//                } else{
+//                    return false;
+//                }
+//            }
+//            #Update subscriber details with shop checkout information
+//            return $isSubscriber;
+//            #Sync recipient
+//        }
+//        return false;
         if ($isSubscriber = $this->apiClient()->isAlreadySubscriber($email)){
             if (!$isSubscriber->unsubscribed){
                 $this->logDebug('Active subscriber');
                 #
             }else{
                 $this->logDebug('Unsubscribed subscriber');
-                if (array_key_exists('newCustomer', $context) && $context['newCustomer']->newsletter){
-                    #Changes over website
-                    $this->apiClient()->reactivateSubscriber($isSubscriber->id);
-                    $this->logDebug('context -> newCustomer');
-                    $this->logDebug('Subscriber reactivated');
-                }elseif (array_key_exists('object', $context) && $context['object']->newsletter) {
-                    #Changes over interface
-                    $this->apiClient()->reactivateSubscriber($isSubscriber->id);
-                    $this->logDebug('context -> object');
-                    $this->logDebug('Subscriber reactivated');
-                } else{
-                    return false;
-                }
             }
             #Update subscriber details with shop checkout information
             return $isSubscriber;
             #Sync recipient
         }
+        $this->logDebug('New');
         return false;
     }
 
@@ -647,12 +680,12 @@ class SenderAutomatedEmails extends Module
      * @param $context
      * @return array
      */
-    public function getCustomFields($context)
+    public function getCustomFields($customer)
     {
         $fields = [];
 
-        (Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY_ID')) != 0 ? $fields[Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY_ID')] = $context->customer->birthday : false;
-        (Configuration::get('SPM_CUSTOMER_FIELD_GENDER_ID')) != 0 ? $fields[Configuration::get('SPM_CUSTOMER_FIELD_GENDER_ID')] = ($context->customer->id_gender == 1 ? $this->l('Male') : $this->l('Female')) : false;
+        (Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY_ID')) != 0 ? $fields[Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY_ID')] = $customer->birthday : false;
+        (Configuration::get('SPM_CUSTOMER_FIELD_GENDER_ID')) != 0 ? $fields[Configuration::get('SPM_CUSTOMER_FIELD_GENDER_ID')] = ($customer->id_gender == 1 ? $this->l('Male') : $this->l('Female')) : false;
 
         return $fields;
     }
@@ -682,17 +715,14 @@ class SenderAutomatedEmails extends Module
      * @param $context
      * @return mixed
      */
-    public function formDefaultsRecipientSubscriber($context)
+    public function formDefaultsRecipientSubscriber($customer)
     {
         $this->logDebug('Forming recipient suscriber');
 
-        $recipient = array(
-            'email' => $context->email,
-        );
-
         #Default fields
-        (Configuration::get('SPM_CUSTOMER_FIELD_FIRSTNAME')) == 1 ? $recipient['firstname'] = $context->firstname : false;
-        (Configuration::get('SPM_CUSTOMER_FIELD_LASTNAME')) == 1 ? $recipient['lastname'] = $context->lastname : false;
+        $recipient['email'] = $customer->email;
+        (Configuration::get('SPM_CUSTOMER_FIELD_FIRSTNAME')) == 1 ? $recipient['firstname'] = $customer->firstname : false;
+        (Configuration::get('SPM_CUSTOMER_FIELD_LASTNAME')) == 1 ? $recipient['lastname'] = $customer->lastname : false;
 
         return $recipient;
     }
@@ -783,6 +813,9 @@ class SenderAutomatedEmails extends Module
      * For customers that return to the site
      * Syncs recipient with the proper Sender.net list
      *
+     * @param $recipient
+     * @param $subscriberId
+     * @param $tagId
      * @return void
      */
     private function syncRecipient($recipient, $subscriberId, $tagId)
