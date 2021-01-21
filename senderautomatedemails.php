@@ -60,7 +60,8 @@ class SenderAutomatedEmails extends Module
         $this->name = 'senderautomatedemails';
         $this->tab = 'emailing';
         $this->version = '2.0.0';
-        $this->author = 'Sender.net';
+        $this->author = '<a target="_blank" href="https://www.sender.net/">Sender.net</a>';
+        $this->author_uri = 'https://www.sender.net/';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = array(
             'min' => '1.6.0.5',
@@ -788,10 +789,8 @@ class SenderAutomatedEmails extends Module
 
     /**
      * Sync current cart with sender cart track
-     *
-     * @param  object $cart prestashop Cart
-     * @param  array $cookie
-     * @return void
+     * @param $cart
+     * @param $cookie
      */
     public function syncCart($cart, $cookie)
     {
@@ -849,10 +848,13 @@ class SenderAutomatedEmails extends Module
      */
     public function getContent()
     {
-        $this->logDebug('getContent');
         Tools::redirectAdmin($this->context->link->getAdminLink('AdminSenderAutomatedEmails'));
     }
 
+    /**
+     * CustomersExport
+     * @return array
+     */
     public function syncList()
     {
         try {
