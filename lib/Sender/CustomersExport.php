@@ -1,8 +1,8 @@
 <?php
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
-
+/**
+ * Class CustomersExport
+ */
 class CustomersExport extends SenderApiClient
 {
     public function textImport($customers, $columns)
@@ -12,16 +12,40 @@ class CustomersExport extends SenderApiClient
             "method" => "subscribers/text_import",
         ];
 
-        $data['customers'] = $customers;
-        $columnsFormed = $this->prepareStartImportColumns($columns);
-
-        $textImport = $this->makeTextImportRequest($requestConfig, $data['customers']);
+        $data = ['subscribers' => $customers];
+        $textImport = json_decode($this->makeExportCurlRequest($requestConfig, $data));
+        if (!$textImport){
+            return $data = [
+                'success' => false,
+                'message' => 'Unable to export customers',
+            ];
+        }
 
         $this->logDebug('Text import completed');
 
-        $dataStartImport = $this->formStartImportData($columnsFormed, $textImport['fileName'], $textImport['rowCount']);
+        $columnsFormed = $this->prepareStartImportColumns($columns);
+        $dataStartImport = $this->formStartImportData($columnsFormed, $textImport->fileName , $textImport->rowCount);
 
-        return $this->startImport($dataStartImport);
+        $requestConfigStartImport = [
+            'http' => 'post',
+            'method' => 'subscribers/start_import'
+        ];
+
+        if (!$this->makeExportCurlRequest($requestConfigStartImport, $dataStartImport)){
+            return $data = [
+                'success' => false,
+                'message' => 'Unable to export customers',
+            ];
+        }
+
+        $now = date("Y-m-d H:i:s");
+        Configuration::updateValue('SPM_SENDERAPP_SYNC_LIST_DATE', $now);
+
+        $this->logDebug('Completed import to Sender.net');
+        return $data = [
+            'success' => true,
+            'message' => $now,
+        ];
     }
 
     public function formStartImportData($columns, $fileName, $rowCount)
@@ -44,24 +68,6 @@ class CustomersExport extends SenderApiClient
             'rowCount' => $rowCount,
             'tags' => isset($tag) ? $tag : [],
         ];
-    }
-
-    public function makeTextImportRequest($requestConfig, $data)
-    {
-        $client = new Client();
-        try {
-            $response = $client->post($this->senderBaseUrl . $requestConfig['method'], [
-                'headers' => $this->getSenderHeaders(),
-                'json' => [
-                    'subscribers' => $data
-                ],
-            ]);
-
-            return $responseData = json_decode($response->getBody()->getContents(), true);
-        }catch (Exception $e){
-            $this->logDebug($e->getMessage());
-            exit();
-        }
     }
 
     public function prepareStartImportColumns($columns)
@@ -90,41 +96,39 @@ class CustomersExport extends SenderApiClient
         return $columnsTypes;
     }
 
-    public function getSenderHeaders()
+    /**
+     * @param $requestConfig
+     * @param $data
+     * @return bool|mixed|string
+     */
+    private function makeExportCurlRequest($requestConfig, $data)
     {
-        $headers = [
-            'Authorization' => $this->prefixAuth . Configuration::get('SPM_API_KEY'),
-            'Accept' => 'Application/json',
-            'Content-type' => 'Application/json'
-        ];
+        #Forming data for curl request
+        $formedData = json_encode($data);
 
-        return $headers;
-    }
+        #Init curl
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Authorization: ' . $this->prefixAuth . Configuration::get('SPM_API_KEY'),
+            'Accept: Application/json',
+            'Content-type: Application/json'
+        ));
 
-    public function startImport($data)
-    {
-        $method = 'subscribers/start_import';
+        curl_setopt($ch, CURLOPT_URL, $this->senderBaseUrl . $requestConfig['method']);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $formedData);
 
-        try {
-            $client = new Client();
-            $client->post($this->senderBaseUrl . $method, [
-                'headers' => $this->getSenderHeaders(),
-                'json' => $data,
-            ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-            $now = date("Y-m-d H:i:s");
-            Configuration::updateValue('SPM_SENDERAPP_SYNC_LIST_DATE', $now);
+        $server_output = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-            $this->logDebug('Completed import to Sender.net');
-            return $data = [
-                'success' => true,
-                'message' => $now,
-            ];
-        } catch (RequestException $e) {
-            return $data = [
-                'success' => false,
-                'message' => $e->getResponse()->getReasonPhrase(),
-            ];
+        if($status === 200){
+            curl_close($ch);
+            return $server_output;
+        }else{
+            curl_close($ch);
+            return false;
         }
     }
 
