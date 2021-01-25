@@ -26,6 +26,7 @@ if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->na
             } catch (Exception $e) {
                 die(json_encode(['result' => $response]));
             }
+            //no break
         case 'exportList':
             if (Tools::getValue('list_id') === 0) {
                 Configuration::updateValue('SPM_SENDERAPP_SYNC_LIST_ID', Tools::getValue('list_id'));

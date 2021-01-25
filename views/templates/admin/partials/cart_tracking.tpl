@@ -61,7 +61,7 @@
                                 {l s='Select a list' mod='senderautomatedemails'}
                             </option>
                             {foreach $allLists as $list}
-                                <option id="{$list->title|escape|lower:'htmlall':'UTF-8'}"
+                                <option id="{$list->title|escape:'htmlall':'UTF-8'}"
                                         {if $list->id eq $customerListId}selected="selected"{/if}
                                         value="{$list->id|escape:'htmlall':'UTF-8'}">
                                     {$list->title|escape:'htmlall':'UTF-8'}
@@ -135,7 +135,7 @@
                                     {l s='Select a list' mod='senderautomatedemails'}
                                 </option>
                                 {foreach $allLists as $list}
-                                    <option id="{$list->title|escape|lower:'htmlall':'UTF-8'}"
+                                    <option id="{$list->title|escape:'htmlall':'UTF-8'}"
                                             {if $list->id eq $guestListId}selected="selected"{/if}
                                             value="{$list->id|escape:'htmlall':'UTF-8'}">
                                         {$list->title|escape:'htmlall':'UTF-8'}

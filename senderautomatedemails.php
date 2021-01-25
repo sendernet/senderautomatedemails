@@ -60,7 +60,7 @@ class SenderAutomatedEmails extends Module
         $this->name = 'senderautomatedemails';
         $this->tab = 'emailing';
         $this->version = '2.0.0';
-        $this->author = '<a target="_blank" href="https://www.sender.net/">Sender.net</a>';
+        $this->author = 'Sender.net';
         $this->author_uri = 'https://www.sender.net/';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = array(
@@ -116,9 +116,6 @@ class SenderAutomatedEmails extends Module
             'SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID' => 0,
             'SPM_SENDERAPP_SYNC_LIST_ID' => 0,
         );
-//           [ 'SPM_CUSTOMER_NEWSLETTER' => 1,
-//            'SPM_CUSTOMER_GENDER' => 1,];
-
     }
 
     /**
@@ -213,8 +210,6 @@ class SenderAutomatedEmails extends Module
         Configuration::updateValue('SPM_ALLOW_TRACK_CARTS', 0);
         Configuration::updateValue('SPM_CUSTOMER_FIELD_FIRSTNAME', 0);
         Configuration::updateValue('SPM_CUSTOMER_FIELD_LASTNAME', 0);
-
-
     }
 
     /**
@@ -281,26 +276,26 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if (Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS') != 1){
+        if (Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS') != 1) {
             $this->logDebug('New customer wont be track. Tracking cart is not enable');
             return;
         }
 
         $customer = $this->context->customer;
 
-        if (!$customer->newsletter){
+        if (!$customer->newsletter) {
             $this->logDebug('Wont be a subscriber');
             return;
         }
         $isSubscriber = $this->checkSubscriberState($customer->email, $customer->newsletter);
 
         #Form the recipient
-        if ($isSubscriber){
+        if ($isSubscriber) {
             $this->logDebug('Already exists subscriber');
             #Track cart details
             $recipient = $this->formDefaultsRecipientSubscriber($customer);
-        }else{
-            if (!$customer->newsletter){
+        } else {
+            if (!$customer->newsletter) {
                 $this->logDebug('Customer wont recieve news or get tracked');
                 return;
             }
@@ -312,12 +307,12 @@ class SenderAutomatedEmails extends Module
 
         #Creating/Update subscriber on the required list
         try {
-            if ($isSubscriber){
+            if ($isSubscriber) {
                 $tagId = Configuration::get('SPM_GUEST_LIST_ID');
                 $subscriberId = $isSubscriber->id;
                 $this->syncRecipient($recipient, $isSubscriber->id, $tagId);
                 $this->logDebug('Subscriber sync and added to guest track list option');
-            }else{
+            } else {
                 $listToAdd = !empty(Configuration::get('SPM_GUEST_LIST_NAME')) ? [Configuration::get('SPM_GUEST_LIST_NAME')] : '';
                 $newSubscriber = $this->apiClient()->addSubscriberAndList($recipient, $listToAdd);
                 $subscriberId = $newSubscriber->id;
@@ -340,7 +335,7 @@ class SenderAutomatedEmails extends Module
             $this->syncCart($cart, $cookie);
             $this->logDebug('#hookactionCustomerAccountAdd END');
 
-        }catch (Exception $e){
+        } catch (Exception $e) {
             $this->logDebug('Error hookactionCustomer ' . json_encode($e->getMessage()));
         }
     }
@@ -425,7 +420,6 @@ class SenderAutomatedEmails extends Module
             }
         }
         $this->logDebug('#hookActionCartSave END');
-        return;
     }
 
     /**
@@ -835,6 +829,7 @@ class SenderAutomatedEmails extends Module
 
         $this->apiClient()->updateSubscriber($recipient, $subscriberId);
         $addToListResult = $this->apiClient()->addToList($subscriberId, $tagId);
+        $customFields = $this->getCustomFields($this->context->customer);
 
         if (!empty($customFields)) {
             $this->apiClient()->addFields($addToListResult->id, $customFields);

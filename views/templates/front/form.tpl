@@ -12,7 +12,7 @@
     <div>
         <div class="col-xs-4" id="senderFormContainer">
             {if $embedForm}
-                <div class="sender-form-field" data-sender-form-id="{$embedHash}"></div>
+                <div class="sender-form-field" data-sender-form-id="{$embedHash|escape:'htmlall':'UTF-8'}"></div>
             {/if}
             <script>
                 (function (s, e, n, d, er) {
@@ -26,7 +26,7 @@
                     a.src = d;
                     m.parentNode.insertBefore(a, m)
                 })(window, document, 'script', 'https://cdn.sender.net/accounts_resources/universal.js', 'sender');
-                sender('{$resourceKey}')
+                sender('{$resourceKey|escape:'htmlall':'UTF-8'}')
             </script>
         </div>
     </div>

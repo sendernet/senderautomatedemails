@@ -38,7 +38,7 @@
 		</div>
 		<div class="row">
 			<div class="col-xs-12" style="padding: 10px;">
-				<form action="{$link->getAdminLink('AdminSenderAutomatedEmails')|escape:'htmlall':'utf-8'}"
+				<form action="{$link->getAdminLink('AdminSenderAutomatedEmails')|escape:'htmlall':'UTF-8'}"
 					  method="post">
 					<label for="apiKey">Api access token:</label>
 					<input type="text" id="apiKey" name="apiKey" placeholder="{l s='Paste here the copied Api token' mod='senderautomatedemails'}"><br><br>

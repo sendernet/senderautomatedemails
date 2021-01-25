@@ -53,14 +53,14 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             $this->disconnect();
         }
 
-        if (!empty(Configuration::get('SPM_API_KEY'))){
+        if (!empty(Configuration::get('SPM_API_KEY'))) {
             return $this->renderConfigurationMenu();
         }
 
         $senderApiKey = Tools::getValue('apiKey');
-        if(!$senderApiKey){
+        if (!$senderApiKey) {
             return $this->renderAuth();
-        }else{
+        } else {
             $this->connect($senderApiKey);
         }
 
@@ -116,8 +116,8 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
     {
         $options = array(
             'moduleVersion' => $this->module->version,
-            'imageUrl'      => $this->module->getPathUri() . 'views/img/sender_logo.png',
-            'link'          => $this->context->link,
+            'imageUrl' => $this->module->getPathUri() . 'views/img/sender_logo.png',
+            'link' => $this->context->link,
         );
 
         $this->context->smarty->assign($options);
@@ -132,7 +132,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
     public function renderConfigurationMenu()
     {
         if (version_compare(_PS_VERSION_, '1.6.0.0', '>=')) {
-            $disconnectUrl = $this->context->link->getAdminLink('AdminSenderAutomatedEmails').'&disconnect=true';
+            $disconnectUrl = $this->context->link->getAdminLink('AdminSenderAutomatedEmails') . '&disconnect=true';
         } else {
             $disconnectUrl = $this->context->shop->getBaseUrl()
                 . basename(_PS_ADMIN_DIR_)
@@ -154,44 +154,44 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
 
         #Removing the default fields
         $customFieldsToHide = ['email', 'firstname', 'lastname'];
-        foreach ($customFields as $key => $field){
-            if (in_array(Tools::strtolower(str_replace(' ','', $field->title)), $customFieldsToHide)){
+        foreach ($customFields as $key => $field) {
+            if (in_array(Tools::strtolower(str_replace(' ', '', $field->title)), $customFieldsToHide)) {
                 unset($customFields[$key]);
             }
         }
 
 
         $this->context->smarty->assign(array(
-            'imageUrl'               => $this->module->getPathUri() . 'views/img/sender_logo.png',
+            'imageUrl' => $this->module->getPathUri() . 'views/img/sender_logo.png',
             //Which user show here as auth been done over apiKey, no user involve
-            'connectedAccount'       => $this->module->apiClient()->getCurrentAccount(),
-            'connectedUser'          => $this->module->apiClient()->getCurrentUser(),
-            'apiKey'                 => $this->module->apiClient()->getApiKey(),
-            'disconnectUrl'          => $disconnectUrl,
-            'baseUrl'                => $this->module->apiClient()->getBaseUrl(),
-            'appUrl'                 => $this->module->apiClient()->getAppUrl(),
-            'moduleVersion'          => $this->module->version,
-            'allForms'              => $this->module->apiClient()->getAllForms(),
-            'allLists'               => $this->module->apiClient()->getAllLists(),
-            'allowNewSignups'        => Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS'),
-            'allowCartTrack'         => Configuration::get('SPM_ALLOW_TRACK_CARTS'),
-            'allowForms'             => Configuration::get('SPM_ALLOW_FORMS'),
+            'connectedAccount' => $this->module->apiClient()->getCurrentAccount(),
+            'connectedUser' => $this->module->apiClient()->getCurrentUser(),
+            'apiKey' => $this->module->apiClient()->getApiKey(),
+            'disconnectUrl' => $disconnectUrl,
+            'baseUrl' => $this->module->apiClient()->getBaseUrl(),
+            'appUrl' => $this->module->apiClient()->getAppUrl(),
+            'moduleVersion' => $this->module->version,
+            'allForms' => $this->module->apiClient()->getAllForms(),
+            'allLists' => $this->module->apiClient()->getAllLists(),
+            'allowNewSignups' => Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS'),
+            'allowCartTrack' => Configuration::get('SPM_ALLOW_TRACK_CARTS'),
+            'allowForms' => Configuration::get('SPM_ALLOW_FORMS'),
             'allowGuestCartTracking' => Configuration::get('SPM_ALLOW_GUEST_TRACK'),
-            'allowCartTracking'      => Configuration::get('SPM_ALLOW_TRACK_CARTS'),
-            'cartsAjaxurl'           => $this->module->module_url . '/ajax/carts_ajax.php?token=' . Tools::getAdminToken($this->module->name),
-            'formsAjaxurl'           => $this->module->module_url . '/ajax/forms_ajax.php?token=' . Tools::getAdminToken($this->module->name),
-            'listsAjaxurl'           => $this->module->module_url . '/ajax/lists_ajax.php?token=' . Tools::getAdminToken($this->module->name),
-            'dataAjaxurl'            => $this->module->module_url . '/ajax/data_ajax.php?token=' . Tools::getAdminToken($this->module->name),
-            'syncListAjaxUrl'        => $this->module->module_url . '/ajax/sync_list.php?token=' . Tools::getAdminToken($this->module->name),
-            'formId'                 => Configuration::get('SPM_FORM_ID'),
-            'partnerOfferId'         => Configuration::get('SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID'),
-            'guestListId'            => Configuration::get('SPM_GUEST_LIST_ID'),
-            'customerListId'         => Configuration::get('SPM_CUSTOMERS_LIST_ID'),
-            'exportListId'           => Configuration::get('SPM_SENDERAPP_SYNC_LIST_ID'),
-            'genderFieldId'          => Configuration::get('SPM_CUSTOMER_FIELD_GENDER_ID'),
-            'birthdayFieldId'          => Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY_ID'),
-            'customFields'           => $customFields,
-            'syncedList'             => Configuration::get('SPM_SENDERAPP_SYNC_LIST_DATE') ? Configuration::get('SPM_SENDERAPP_SYNC_LIST_DATE') : '',
+            'allowCartTracking' => Configuration::get('SPM_ALLOW_TRACK_CARTS'),
+            'cartsAjaxurl' => $this->module->module_url . '/ajax/carts_ajax.php?token=' . Tools::getAdminToken($this->module->name),
+            'formsAjaxurl' => $this->module->module_url . '/ajax/forms_ajax.php?token=' . Tools::getAdminToken($this->module->name),
+            'listsAjaxurl' => $this->module->module_url . '/ajax/lists_ajax.php?token=' . Tools::getAdminToken($this->module->name),
+            'dataAjaxurl' => $this->module->module_url . '/ajax/data_ajax.php?token=' . Tools::getAdminToken($this->module->name),
+            'syncListAjaxUrl' => $this->module->module_url . '/ajax/sync_list.php?token=' . Tools::getAdminToken($this->module->name),
+            'formId' => Configuration::get('SPM_FORM_ID'),
+            'partnerOfferId' => Configuration::get('SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID'),
+            'guestListId' => Configuration::get('SPM_GUEST_LIST_ID'),
+            'customerListId' => Configuration::get('SPM_CUSTOMERS_LIST_ID'),
+            'exportListId' => Configuration::get('SPM_SENDERAPP_SYNC_LIST_ID'),
+            'genderFieldId' => Configuration::get('SPM_CUSTOMER_FIELD_GENDER_ID'),
+            'birthdayFieldId' => Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY_ID'),
+            'customFields' => $customFields,
+            'syncedList' => Configuration::get('SPM_SENDERAPP_SYNC_LIST_DATE') ? Configuration::get('SPM_SENDERAPP_SYNC_LIST_DATE') : '',
 //            'information'            => $this->module->displayInformation() ? $this->module->displayInformation() : '',
         ));
 
@@ -249,7 +249,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
                 . $this->context->link->getAdminLink('AdminSenderAutomatedEmails');
         }
 
-        if ($message){
+        if ($message) {
             Tools::redirect($url . $message);
         }
 

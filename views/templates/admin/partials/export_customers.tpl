@@ -48,7 +48,7 @@
                                 {l s='Select a list' mod='senderautomatedemails'}
                             </option>
                             {foreach $allLists as $list}
-                                <option id="{$list->title|escape|lower:'htmlall':'UTF-8'}"
+                                <option id="{$list->title|escape:'htmlall':'UTF-8'}"
                                         {if $list->id eq $exportListId}selected="selected"{/if}
                                         value="{$list->id|escape:'htmlall':'UTF-8'}">
                                     {$list->title|escape:'htmlall':'UTF-8'}
@@ -69,9 +69,9 @@
 
                 <div class="panel-body">
                     <button id="syncList"
-                            class="btn btn-lg btn-warning">{l s="Synchronize this list with Sender" mod='senderautomatedemails'}</button>
+                            class="btn btn-lg btn-warning">{l s='nchronize this list with Sender' mod='senderautomatedemails'}</button>
                     <p style="margin-top: 15px">
-                        <small>Last time synchronized: <span id="syncDate">{$syncedList}</span></small>
+                        <small>Last time synchronized: <span id="syncDate">{$syncedList|escape:'htmlall':'UTF-8'}</span></small>
                     </p>
                     <p style="margin-top: 15px">
                         <small class="alert alert-danger" id="syncError" style="display: none"></small>
