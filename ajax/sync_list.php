@@ -23,11 +23,11 @@ if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->na
             try {
                 $response = $senderautomatedemails->syncList();
                 die(json_encode(['result' => $response]));
-            }catch (Exception $e){
+            } catch (Exception $e) {
                 die(json_encode(['result' => $response]));
             }
         case 'exportList':
-            if (Tools::getValue('list_id') === 0 ){
+            if (Tools::getValue('list_id') === 0) {
                 Configuration::updateValue('SPM_SENDERAPP_SYNC_LIST_ID', Tools::getValue('list_id'));
                 die(json_encode(['result' => 'No export list selected, will import without saving to list']));
             }

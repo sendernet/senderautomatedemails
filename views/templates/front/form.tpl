@@ -1,17 +1,13 @@
 {*
- * 2010-2018 Sender.net
+ * 2010-2021 Sender.net
  *
  * Sender.net Automated Emails
  *
  * @author Sender.net <info@sender.net>
- * @copyright 2010-2018 Sender.net
+ * @copyright 2010-2021 Sender.net
  * @license https://opensource.org/licenses/osl-3.0.php Open Software License v. 3.0 (OSL-3.0)
  * Sender.net
  *}
-{*Issue of popup and embed showing together, when selected form has been embed,
-it will also displayt the pop up if any available, block it so it would only show
-the embed*}
-
 {if $showForm and $formUrl}
     <div>
         <div class="col-xs-4" id="senderFormContainer">

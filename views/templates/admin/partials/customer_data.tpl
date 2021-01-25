@@ -1,13 +1,12 @@
 {*
- * 2010-2018 Sender.net
+ * 2010-2021 Sender.net
  *
  * Sender.net Automated Emails
  *
  * @author Sender.net <info@sender.net>
- * @copyright 2010-2018 Sender.net
+ * @copyright 2010-2021 Sender.net
  * @license https://opensource.org/licenses/osl-3.0.php Open Software License v. 3.0 (OSL-3.0)
  * Sender.net
- * Customer data
  *}
 <div id="spm-customer-data" class="spm-tab-content">
     <div class="panel panel-default">
