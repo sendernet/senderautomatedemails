@@ -725,6 +725,7 @@ class SenderAutomatedEmails extends Module
         $this->logDebug('Forming recipient suscriber');
 
         #Default fields
+        $recipient = [];
         $recipient['email'] = $customer->email;
         (Configuration::get('SPM_CUSTOMER_FIELD_FIRSTNAME')) == 1 ? $recipient['firstname'] = $customer->firstname : false;
         (Configuration::get('SPM_CUSTOMER_FIELD_LASTNAME')) == 1 ? $recipient['lastname'] = $customer->lastname : false;
@@ -892,7 +893,7 @@ class SenderAutomatedEmails extends Module
             }
         });
         // Removes last $glue from string
-        strlen($glue) > 0 and $glued_string = substr($glued_string, 0, -strlen($glue));
+        Tools::strlen($glue) > 0 and $glued_string = Tools::substr($glued_string, 0, -Tools::strlen($glue));
         // Trim ALL whitespace
 //        $trim_all and $glued_string = preg_replace("/(\s)/ixsm", '', $glued_string);
         $result = str_replace('{"subscribers":', '', $glued_string);

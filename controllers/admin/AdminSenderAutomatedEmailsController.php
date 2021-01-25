@@ -98,7 +98,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
     public function postProcess()
     {
         if (Tools::isSubmit('actionApiKey')) {
-            if (isset($_POST['apiKey']) && !empty($_POST['apiKey'])) {
+            if (Tools::getIsset('apiKey') && Tools::getValue('apiKey')) {
                 $this->renderOptions();
             } else {
                 $this->redirectToAdminMenu('&error=101');
@@ -155,7 +155,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         #Removing the default fields
         $customFieldsToHide = ['email', 'firstname', 'lastname'];
         foreach ($customFields as $key => $field){
-            if (in_array(strtolower(str_replace(' ','', $field->title)), $customFieldsToHide)){
+            if (in_array(Tools::strtolower(str_replace(' ','', $field->title)), $customFieldsToHide)){
                 unset($customFields[$key]);
             }
         }
