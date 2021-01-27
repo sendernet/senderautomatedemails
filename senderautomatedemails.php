@@ -144,7 +144,7 @@ class SenderAutomatedEmails extends Module
             || !$this->registerHook('registerUnsubscribedWebhook')
             || !$this->registerHook('actionCartSummary')
             || !$this->registerHook('actionCartSave') // Getting it on all pages
-            || !$this->registerHook('displayHome')
+            || !$this->registerHook('displayFooterBefore')
             || !$this->registerHook('actionCustomerAccountAdd')  //Adding customer and tracking the customer track
             || !$this->registerHook('actionCustomerAccountUpdate')
             || !$this->registerHook('actionObjectCustomerUpdateAfter')
@@ -213,9 +213,10 @@ class SenderAutomatedEmails extends Module
     }
 
     /**
-     * Loading form when selected form is active
+     * Showing the form on all pages
+     * If embed will append to before the footer
      */
-    public function hookDisplayHome()
+    public function hookDisplayFooterBefore()
     {
         // Check if we should
         if (!Configuration::get('SPM_IS_MODULE_ACTIVE') || (!Configuration::get('SPM_ALLOW_FORMS'))
@@ -671,7 +672,6 @@ class SenderAutomatedEmails extends Module
             return $isSubscriber;
             #Sync recipient
         }
-        $this->logDebug('New');
         return false;
     }
 
