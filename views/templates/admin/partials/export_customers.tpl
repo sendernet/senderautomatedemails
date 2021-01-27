@@ -69,7 +69,7 @@
 
                 <div class="panel-body">
                     <button id="syncList"
-                            class="btn btn-lg btn-warning">{l s='nchronize this list with Sender' mod='senderautomatedemails'}</button>
+                            class="btn btn-lg btn-warning">{l s='Synchronize this list with Sender' mod='senderautomatedemails'}</button>
                     <p style="margin-top: 15px">
                         <small>Last time synchronized: <span id="syncDate">{$syncedList|escape:'htmlall':'UTF-8'}</span></small>
                     </p>
