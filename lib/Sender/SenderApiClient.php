@@ -525,7 +525,7 @@ class SenderApiClient
         $response = $this->makeApiRequest($requestConfig, $data);
 
         if ($response) {
-            return $response;
+            return $response->data;
         }
         return false;
     }
