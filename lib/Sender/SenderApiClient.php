@@ -98,7 +98,6 @@ class SenderApiClient
             $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
 
-            $this->logDebug($status);
             if($status === 200){
                 return true;
             }

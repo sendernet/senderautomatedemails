@@ -143,12 +143,21 @@ class SenderAutomatedEmails extends Module
             || !$this->registerHook('registerUnsubscribedWebhook')
             || !$this->registerHook('actionCartSummary')
             || !$this->registerHook('actionCartSave') // Getting it on all pages
-            || !$this->registerHook('displayFooterBefore')
             || !$this->registerHook('actionCustomerAccountAdd')  //Adding customer and tracking the customer track
             || !$this->registerHook('actionCustomerAccountUpdate')
             || !$this->registerHook('actionObjectCustomerUpdateAfter')
             || !$this->registerHook('displayFooterProduct')) {
             return false;
+        }
+
+        if (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
+            if (!$this->registerHook('displayFooterBefore')) {
+                return false;
+            }
+        } else {
+            if (!$this->registerHook('displayFooter')) {
+                return false;
+            }
         }
 
         return true;
@@ -252,9 +261,63 @@ class SenderAutomatedEmails extends Module
             $options['embedHash'] = isset($embedHash) ? $embedHash : '';
         }
 
+//        $this->hookDisplayHeader($resourceKey);
+
         $this->context->smarty->assign($options);
         return $this->context->smarty->fetch($this->views_url . '/templates/front/form.tpl');
     }
+
+    /**
+     * Showing the form on all pages
+     * If embed will append to before the footer
+     */
+    public function hookDisplayFooter()
+    {
+        // Check if we should
+        if (!Configuration::get('SPM_IS_MODULE_ACTIVE') || (!Configuration::get('SPM_ALLOW_FORMS'))
+            || Configuration::get('SPM_FORM_ID') == $this->defaultSettings['SPM_FORM_ID']) {
+            return;
+        }
+
+        $options = array(
+            'showForm' => false
+        );
+
+        $form = $this->apiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
+        #Check if form is disabled
+        if (!$form->is_active) {
+            return;
+        }
+
+        $currentAccount = $this->apiClient()->getCurrentAccount();
+        $resourceKey = $currentAccount ? $currentAccount->resource_key : '';
+        if (empty($resourceKey)) {
+            return;
+        }
+
+        if ($form->type === 'embed') {
+            $embedHash = $form->settings->embed_hash;
+        }
+
+        // Add forms
+        if (Configuration::get('SPM_ALLOW_FORMS')) {
+            $options['formUrl'] = isset($form->settings->resource_path) ? $form->settings->resource_path : '';
+            $options['resourceKey'] = $resourceKey;
+            $options['showForm'] = true;
+            $options['embedForm'] = isset($embedHash);
+            $options['embedHash'] = isset($embedHash) ? $embedHash : '';
+        }
+
+//        $this->hookDisplayHeader($resourceKey);
+
+        $this->context->smarty->assign($options);
+        return $this->context->smarty->fetch($this->views_url . '/templates/front/form.tpl');
+    }
+
+//    public function hookDisplayHeader($resourceKey)
+//    {
+//        $this->context->controller->registerJavascript($resourceKey, $this->views_url . '/js/form_default.js', ['position' => 'head', 'priority' => 1]);
+//    }
 
     /**
      * Here we handle new signups, we fetch customer info
