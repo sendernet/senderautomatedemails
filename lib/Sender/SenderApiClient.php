@@ -16,12 +16,8 @@ class SenderApiClient
     protected $prefixAuth = 'Bearer ';
     protected $apiKey;
 
-    private $commerceEndpoint;
     private $limit = '?limit=100';
     private $appUrl = 'https://app.sender.net';
-
-    public $apiEndpoint;
-
 
     public function __construct($apiKey = null)
     {
