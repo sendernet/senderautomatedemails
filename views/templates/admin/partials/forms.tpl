@@ -90,7 +90,7 @@
                 </a>
 
                 <div style="margin-top: 30px" class="alert alert-info">
-                    {l s='The form is used in displayHome hook' mod='senderautomatedemails'}
+                    {l s='The form would be showing above the footer.' mod='senderautomatedemails'}
                 </div>
             </div>
 

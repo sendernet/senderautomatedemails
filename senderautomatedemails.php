@@ -792,12 +792,11 @@ class SenderAutomatedEmails extends Module
         // Keep recipient up to date with Sender.net list
         // Generate cart data array for api call
         $cartData = $this->mapCartData($cart, $cookie['email']);
-        
         if (!empty($cartData['products'])) {
             $cartTrackResult = $this->apiClient()->trackCart($cartData);
             $this->logDebug('Cart track response: ' . json_encode($cartTrackResult));
         } elseif (empty($cartData['products'])) {
-            $cartDeleteResult = $this->apiClient()->cartDelete($cookie['id_cart']);
+            $cartDeleteResult = $this->apiClient()->cartDelete($cart->id);
             $this->logDebug('Cart delete response:' . json_encode($cartDeleteResult));
         }
     }
@@ -829,12 +828,6 @@ class SenderAutomatedEmails extends Module
 
         $this->apiClient()->updateSubscriber($recipient, $subscriberId);
         $addToListResult = $this->apiClient()->addToList($subscriberId, $tagId);
-        $customFields = $this->getCustomFields($this->context->customer);
-
-        if (!empty($customFields)) {
-            $this->apiClient()->addFields($addToListResult->id, $customFields);
-            $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
-        }
 
         return $addToListResult;
     }
