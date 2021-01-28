@@ -86,8 +86,11 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             // Redirect back to module admin page
             $this->redirectToAdminMenu('&conf=200');
         } else {
-            $this->redirectToAdminMenu('&error=100');
-//            $this->errors[] = Tools::displayError($this->l('Could not authenticate. Please try again.'));
+            if (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
+                $this->redirectToAdminMenu('&error=100');
+            } else {
+                $this->errors[] = Tools::displayError($this->l('$error=100'));
+            }
         }
     }
 
@@ -101,10 +104,13 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             if (Tools::getIsset('apiKey') && Tools::getValue('apiKey')) {
                 $this->renderOptions();
             } else {
-                $this->redirectToAdminMenu('&error=101');
+                if (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
+                    $this->redirectToAdminMenu('&error=101');
+                } else {
+                    $this->errors[] = Tools::displayError('&error=101');
+                }
             }
         }
-
     }
 
     /**

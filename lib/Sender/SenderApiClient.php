@@ -8,8 +8,6 @@
  * @copyright 2010-2021 Sender.net
  */
 
-use GuzzleHttp\Client;
-
 class SenderApiClient
 {
     protected $senderBaseUrl = 'https://api.sender.net/v2/';
@@ -83,16 +81,30 @@ class SenderApiClient
     {
         try {
             $method = 'me';
-            $client = new Client();
-            $response = $client->get($this->senderBaseUrl . $method, [
-                'headers' => ['Authorization' => $this->prefixAuth . $this->apiKey]
-            ]);
+            #Init curl
 
-            if ($response->getStatusCode() === 200) {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                'Authorization: ' . $this->prefixAuth . $this->apiKey,
+                'Accept: Application/json',
+                'Content-type: Application/json'
+            ));
+
+            curl_setopt($ch, CURLOPT_URL, $this->senderBaseUrl . $method);
+            curl_setopt($ch, CURLOPT_HTTPGET, 1);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_exec($ch);
+
+            $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            $this->logDebug($status);
+            if($status === 200){
                 return true;
             }
-
-        } catch (Exception $e) {
+        }catch (Exception $e)
+        {
+            $this->logDebug($e->getMessage());
             return false;
         }
     }
