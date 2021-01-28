@@ -89,7 +89,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             if (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
                 $this->redirectToAdminMenu('&error=100');
             } else {
-                $this->errors[] = Tools::displayError($this->l('$error=100'));
+                $this->errors[] = Tools::displayError($this->_error[100]);
             }
         }
     }
@@ -107,7 +107,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
                 if (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
                     $this->redirectToAdminMenu('&error=101');
                 } else {
-                    $this->errors[] = Tools::displayError('&error=101');
+                    $this->errors[] = Tools::displayError($this->_error[100]);
                 }
             }
         }
