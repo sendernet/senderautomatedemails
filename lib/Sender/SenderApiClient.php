@@ -110,22 +110,6 @@ class SenderApiClient
     }
 
     /**
-     * Setup commerce request
-     * @param array $params
-     * @param string $method
-     * @return array
-     */
-    private function makeCommerceRequest($requestConfig, $params, $method)
-    {
-        $params['api_key'] = $this->getApiKey();
-        if (function_exists('curl_version')) {
-            return $this->makeCurlRequest($requestConfig, $params, $this->apiEndpoint);
-//            return $this->makeCurlRequest(http_build_query(array('data' => $params)), $this->commerceEndpoint . '/' . $method);
-        }
-        return $this->makeHttpRequest($params, $this->commerceEndpoint . '/' . $method);
-    }
-
-    /**
      * Setup api request
      * @param array $params
      * @return array
