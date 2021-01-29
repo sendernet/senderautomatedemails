@@ -215,7 +215,6 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         Configuration::updateValue('SPM_IS_MODULE_ACTIVE', true);
         Configuration::updateValue('SPM_ALLOW_IMPORT', true);
         Configuration::updateValue('SPM_ALLOW_TRACK_NEW_SIGNUPS', true);
-        Configuration::updateValue('SPM_ALLOW_TRACK_CARTS', true);
         Configuration::updateValue('SPM_CUSTOMER_FIELD_FIRSTNAME', true);
         Configuration::updateValue('SPM_CUSTOMER_FIELD_LASTNAME', true);
     }
