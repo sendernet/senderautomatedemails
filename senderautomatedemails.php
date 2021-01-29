@@ -150,7 +150,9 @@ class SenderAutomatedEmails extends Module
         }
 
         if (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
-            if (!$this->registerHook('displayFooterBefore')) {
+            if (!$this->registerHook('displayFooterBefore')
+                || !$this->registerHook('additionalCustomerFormFields')
+            ) {
                 return false;
             }
         } else {
@@ -401,6 +403,37 @@ class SenderAutomatedEmails extends Module
         } catch (Exception $e) {
             $this->logDebug('Error hookactionCustomer ' . json_encode($e->getMessage()));
         }
+    }
+
+    /**
+     * Add an extra FormField to ask for newsletter registration.
+     *
+     * @param $params
+     *
+     * @return bool
+     */
+    public function hookAdditionalCustomerFormFields($params)
+    {
+        if (Module::isEnabled('ps_emailsubscription')){
+            $this->logDebug('Using the newsletter checkbox from newsletter plugin');
+            return;
+        }
+        $label = $this->trans(
+            'Sign up for our newsletter[1][2]%conditions%[/2]',
+            array(
+                '[1]' => '<br>',
+                '[2]' => '<em>',
+                '%conditions%' => Configuration::get('NW_CONDITIONS', $this->context->language->id),
+                '[/2]' => '</em>',
+            ),
+            'Modules.Emailsubscription.Shop'
+        );
+
+        return array(
+            (new FormField())
+                ->setName('newsletter')
+                ->setType('checkbox')
+                ->setLabel($label), );
     }
 
     /**

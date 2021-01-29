@@ -213,7 +213,6 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
     {
         Configuration::updateValue('SPM_API_KEY', $apiKey);
         Configuration::updateValue('SPM_IS_MODULE_ACTIVE', true);
-        Configuration::updateValue('SPM_ALLOW_FORMS', true);
         Configuration::updateValue('SPM_ALLOW_IMPORT', true);
         Configuration::updateValue('SPM_ALLOW_TRACK_NEW_SIGNUPS', true);
         Configuration::updateValue('SPM_ALLOW_TRACK_CARTS', true);
