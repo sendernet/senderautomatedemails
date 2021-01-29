@@ -23,7 +23,6 @@ if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->na
         case 'saveCustomerListId':
             if (Configuration::updateValue('SPM_CUSTOMERS_LIST_ID', Tools::getValue('list_id'))) {
                 Configuration::updateValue('SPM_CUSTOMERS_LIST_NAME', Tools::getValue('list_name'));
-//                Configuration::updateValue('SPM_ALLOW_CUSTOMERS_TRACK', 1);
                 die(json_encode(array( 'result' => true)));
             }
             Configuration::updateValue('SPM_CUSTOMERS_LIST_ID', 0);
@@ -32,7 +31,6 @@ if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->na
         case 'saveGuestListId':
             if (Configuration::updateValue('SPM_GUEST_LIST_ID', Tools::getValue('list_id'))) {
                 Configuration::updateValue('SPM_GUEST_LIST_NAME', Tools::getValue('list_name'));
-//                Configuration::updateValue('SPM_ALLOW_GUEST_TRACK', 1);
                 die(json_encode(array( 'result' => true)));
             }
             Configuration::updateValue('SPM_GUEST_LIST_ID', 0);

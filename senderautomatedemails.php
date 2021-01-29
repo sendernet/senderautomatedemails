@@ -106,7 +106,6 @@ class SenderAutomatedEmails extends Module
             'SPM_GUEST_LIST_ID' => 0,
             'SPM_GUEST_LIST_NAME' => null,
             'SPM_FORM_ID' => 0,
-            'SPM_ALLOW_GUEST_TRACK' => 0,
             'SPM_CUSTOMER_FIELD_FIRSTNAME' => 0,
             'SPM_CUSTOMER_FIELD_LASTNAME' => 0,
             'SPM_CUSTOMER_FIELD_LOCATION' => 0,
@@ -331,16 +330,11 @@ class SenderAutomatedEmails extends Module
     {
         $this->logDebug('#hookactionCustomerAccountAdd START');
         $this->logDebug('Guest on checkout filled personal information');
+
         // Validate if we should
-        if (!Validate::isLoadedObject($context['newCustomer']) ||
-            (!Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS') && !Configuration::get('SPM_ALLOW_GUEST_TRACK'))
+        if (!Validate::isLoadedObject($context['newCustomer'])
             || !Configuration::get('SPM_IS_MODULE_ACTIVE')) {
             $this->logDebug('Something went wrong');
-            return;
-        }
-
-        if (Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS') != 1) {
-            $this->logDebug('New customer wont be track. Tracking cart is not enable');
             return;
         }
 
@@ -387,6 +381,12 @@ class SenderAutomatedEmails extends Module
                 $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
             }
 
+            // Validate if we should
+            if (!Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS') || !Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
+                $this->logDebug('Track cart option is not enable for Guest/New customers');
+                return;
+            }
+
             $cart = $this->context->cart;
 
             if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
@@ -414,6 +414,12 @@ class SenderAutomatedEmails extends Module
      */
     public function hookActionCartSummary($context)
     {
+        // Validate if we should
+        if (!Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS') || !Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
+            $this->logDebug('Track cart option is not enable for Guest/New customers');
+            return;
+        }
+
         if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
             $cookie = $context['cookie']->getAll();
         } else {
@@ -425,8 +431,7 @@ class SenderAutomatedEmails extends Module
             || !Validate::isLoadedObject($context['cart'])
             || (!Configuration::get('SPM_ALLOW_TRACK_CARTS')
                 && isset($cookie['logged']) && $cookie['logged'])
-            || (!Configuration::get('SPM_ALLOW_GUEST_TRACK')
-                && isset($cookie['is_guest']) && $cookie['is_guest'])
+            || (isset($cookie['is_guest']) && $cookie['is_guest'])
             || !Configuration::get('SPM_IS_MODULE_ACTIVE')
             || $this->context->controller instanceof OrderController != true) {
             $this->logDebug('hookActionCartSummary stop');
@@ -462,8 +467,7 @@ class SenderAutomatedEmails extends Module
         if (!isset($cookie['email'])
             || (!Configuration::get('SPM_ALLOW_TRACK_CARTS')
                 && isset($cookie['logged']) && $cookie['logged'])
-            || (!Configuration::get('SPM_ALLOW_GUEST_TRACK')
-                && isset($cookie['is_guest']) && $cookie['is_guest'])
+            || (isset($cookie['is_guest']) && $cookie['is_guest'])
             || !Configuration::get('SPM_IS_MODULE_ACTIVE')
             || $this->context->controller instanceof OrderController) {
             $this->logDebug('hookActionCartSave first condition failed');
@@ -498,7 +502,7 @@ class SenderAutomatedEmails extends Module
         $this->logDebug('hookDisplayOrderConfirmation');
         #First check if we should capture these details
         $this->logDebug('When the order would be finish');
-        if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
+        if (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
             $order = $context['order'];
         } else {
             $order = $context['objOrder'];
@@ -800,9 +804,6 @@ class SenderAutomatedEmails extends Module
      */
     private function mapCartData($cart, $email)
     {
-        $imageType = ImageType::getFormatedName('home');
-        $this->logDebug($imageType);
-
         $cartHash = $cart->id;
         $this->logDebug('This is the cart hash ' . $cartHash);
 
@@ -834,7 +835,7 @@ class SenderAutomatedEmails extends Module
                 'image' => $this->context->link->getImageLink(
                     $product['link_rewrite'],
                     $Product->getCoverWs(),
-                    $imageType
+                    ImageType::getFormatedName('home')
                 )
             );
             $this->logDebug(json_encode($prod));
@@ -883,7 +884,7 @@ class SenderAutomatedEmails extends Module
         // Validate if we should
         if (!Validate::isLoadedObject($this->context->customer)
             || (!Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS')
-                && !Configuration::get('SPM_ALLOW_GUEST_TRACK'))
+                && !Configuration::get('SPM_ALLOW_TRACK_CARTS'))
             || !Configuration::get('SPM_IS_MODULE_ACTIVE')) {
             return false;
         }

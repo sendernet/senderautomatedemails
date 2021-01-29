@@ -182,8 +182,6 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             'allowNewSignups' => Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS'),
             'allowCartTrack' => Configuration::get('SPM_ALLOW_TRACK_CARTS'),
             'allowForms' => Configuration::get('SPM_ALLOW_FORMS'),
-            'allowGuestCartTracking' => Configuration::get('SPM_ALLOW_GUEST_TRACK'),
-            'allowCartTracking' => Configuration::get('SPM_ALLOW_TRACK_CARTS'),
             'cartsAjaxurl' => $this->module->module_url . '/ajax/carts_ajax.php?token=' . Tools::getAdminToken($this->module->name),
             'formsAjaxurl' => $this->module->module_url . '/ajax/forms_ajax.php?token=' . Tools::getAdminToken($this->module->name),
             'listsAjaxurl' => $this->module->module_url . '/ajax/lists_ajax.php?token=' . Tools::getAdminToken($this->module->name),

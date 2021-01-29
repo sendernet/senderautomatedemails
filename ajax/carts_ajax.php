@@ -20,11 +20,6 @@ if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->na
     die(json_encode(array( 'result' => false )));
 } else {
     switch (Tools::getValue('action')) {
-        case 'saveAllowGuestCartTracking':
-            if (Configuration::updateValue('SPM_ALLOW_GUEST_TRACK', !Configuration::get('SPM_ALLOW_GUEST_TRACK'))) {
-                die(json_encode(['result' => Configuration::get('SPM_ALLOW_GUEST_TRACK')]));
-            }
-            die(json_encode(['result' => false]));
         case 'saveAllowCartTracking':
             if (Configuration::updateValue('SPM_ALLOW_TRACK_CARTS', !Configuration::get('SPM_ALLOW_TRACK_CARTS'))) {
                 die(json_encode(array('result' => Configuration::get('SPM_ALLOW_TRACK_CARTS'))));
