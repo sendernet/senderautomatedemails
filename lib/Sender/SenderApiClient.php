@@ -195,6 +195,19 @@ class SenderApiClient
         return false;
     }
 
+    public function visitorRegistered($params)
+    {
+        $requestConfig = [
+            'http' => 'post',
+            'method' => 'attach_visitor',
+            'stats' => true,
+        ];
+
+        $data = $params;
+
+        return $response = $this->makeApiRequest($requestConfig, $data);
+    }
+
     public function trackCart($params)
     {
         $requestConfig = [
@@ -209,19 +222,17 @@ class SenderApiClient
     }
 
     /**
-     * Convert cart
-     *
+     * @param $data
      * @param $cartId
-     * @return array
+     * @return array|false
      */
-    public function cartConvert($cartId)
+    public function cartConvert($data, $cartId)
     {
         $requestConfig = [
             'http' => 'post',
             'method' => "carts/$cartId/convert",
             'stats' => true,
         ];
-        $data = [];
 
         return $response = $this->makeApiRequest($requestConfig, $data);
     }
