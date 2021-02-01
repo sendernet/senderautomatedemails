@@ -88,14 +88,13 @@
             <div class="panel-body">
                 <blockquote>
                     <p>
-                        {l s='To avoid pop-up forms from showing, they must be hidden to show on this website. Go
-to your Sender account, Forms > Edit desired form > Behaviour > Visibility' mod='senderautomatedemails'}
+                        {l s='To avoid pop-up forms from showing, they must be hidden to show on this website. To hide pop-up forms, go to your Sender account, Forms' mod='senderautomatedemails'}
                     </p>
                 </blockquote>
             </div>
             <div class="panel-body">
                 <a class="btn btn-lg btn-info" href="{$appUrl|escape:'htmlall':'UTF-8'}/forms" target="_blank" rel="help">
-                    {l s='Manager your forms in Sender.net' mod='senderautomatedemails'}
+                    {l s='Manage your forms in Sender.net' mod='senderautomatedemails'}
                 </a>
 
                 <div style="margin-top: 30px" class="alert alert-info">
