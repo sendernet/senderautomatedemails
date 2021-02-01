@@ -73,10 +73,12 @@
                                 {l s='Select a form' mod='senderautomatedemails'}
                             </option>
                             {foreach $allForms as $form}
+                                {if $form->type === 'embed'}
                                 <option {if $form->id eq $formId}selected="selected"{/if}value="{$form->id|escape:'htmlall':'UTF-8'}"
                                         {if !$form->is_active} disabled{/if}>
                                     {$form->title|escape:'htmlall':'UTF-8'} {if !$form->is_active} <strong>| {l s='Form not active' mod='senderautomatedemails'}</strong>  {/if}
                                 </option>
+                                {/if}
                             {/foreach}
                         </select>
                     </div>

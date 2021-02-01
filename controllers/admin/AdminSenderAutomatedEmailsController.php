@@ -217,6 +217,19 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         Configuration::updateValue('SPM_ALLOW_TRACK_NEW_SIGNUPS', true);
         Configuration::updateValue('SPM_CUSTOMER_FIELD_FIRSTNAME', true);
         Configuration::updateValue('SPM_CUSTOMER_FIELD_LASTNAME', true);
+
+        $resourceKey = $this->getResourceKey();
+        Configuration::updateValue('SPM_SENDERAPP_RESOURCE_KEY_CLIENT', $resourceKey);
+    }
+
+    public function getResourceKey()
+    {
+        $currentAccount = $this->module->apiClient->getCurrentAccount();
+        $resourceKey = $currentAccount ? $currentAccount->resource_key : '';
+        if (empty($resourceKey)) {
+            return;
+        }
+        return $resourceKey;
     }
 
     /**
@@ -230,8 +243,22 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
     {
         $this->module->logDebug('Removing api key');
         Configuration::deleteByName('SPM_API_KEY');
+        Configuration::deleteByName('SPM_SENDERAPP_RESOURCE_KEY_CLIENT');
+        $this->removeSenderKeys();
         // Redirect back to module admin page
         $this->redirectToAdminMenu();
+    }
+
+    private function removeSenderKeys()
+    {
+        Configuration::updateValue('SPM_IS_MODULE_ACTIVE', 0);
+        Configuration::updateValue('SPM_ALLOW_FORMS', '');
+        Configuration::updateValue('SPM_ALLOW_IMPORT', 0);
+        Configuration::updateValue('SPM_ALLOW_TRACK_NEW_SIGNUPS', 0);
+        Configuration::updateValue('SPM_ALLOW_TRACK_CARTS', 0);
+        Configuration::updateValue('SPM_CUSTOMER_FIELD_FIRSTNAME', 0);
+        Configuration::updateValue('SPM_CUSTOMER_FIELD_LASTNAME', 0);
+        Configuration::updateValue('SPM_FORM_ID', 0);
     }
 
     /**

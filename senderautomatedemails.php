@@ -113,6 +113,7 @@ class SenderAutomatedEmails extends Module
             'SPM_CUSTOMER_FIELD_GENDER_ID' => 0,
             'SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID' => 0,
             'SPM_SENDERAPP_SYNC_LIST_ID' => 0,
+            'SPM_SENDERAPP_RESOURCE_KEY_CLIENT' => 0,
         );
     }
 
@@ -141,6 +142,7 @@ class SenderAutomatedEmails extends Module
             || !$this->registerHook('displayOrderConfirmation')
             || !$this->registerHook('registerUnsubscribedWebhook')
             || !$this->registerHook('actionCartSummary')
+            || !$this->registerHook('displayHeader')
             || !$this->registerHook('actionCartSave') // Getting it on all pages
             || !$this->registerHook('actionCustomerAccountAdd')  //Adding customer and tracking the customer track
             || !$this->registerHook('actionCustomerAccountUpdate')
@@ -171,6 +173,7 @@ class SenderAutomatedEmails extends Module
      */
     public function uninstall()
     {
+        $this->logDebug('UNISTALLING');
         if (parent::uninstall()) {
             foreach (array_keys($this->defaultSettings) as $defaultSettingKey) {
                 if (!Configuration::deleteByName($defaultSettingKey)) {
@@ -208,9 +211,6 @@ class SenderAutomatedEmails extends Module
      */
     private function disableModule()
     {
-        #Should we disable all keys when authentication is gone?
-        $this->logDebug('Disable module!');
-        //Disabling as per AdminSenderAutomatedEmails -> enableDefaults
         Configuration::updateValue('SPM_API_KEY', '');
         Configuration::updateValue('SPM_IS_MODULE_ACTIVE', 0);
         Configuration::updateValue('SPM_ALLOW_FORMS', '');
@@ -219,6 +219,8 @@ class SenderAutomatedEmails extends Module
         Configuration::updateValue('SPM_ALLOW_TRACK_CARTS', 0);
         Configuration::updateValue('SPM_CUSTOMER_FIELD_FIRSTNAME', 0);
         Configuration::updateValue('SPM_CUSTOMER_FIELD_LASTNAME', 0);
+        Configuration::updateValue('SPM_SENDERAPP_RESOURCE_KEY_CLIENT', 0);
+        Configuration::updateValue('SPM_FORM_ID', 0);
     }
 
     /**
@@ -238,14 +240,8 @@ class SenderAutomatedEmails extends Module
         );
 
         $form = $this->apiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
-        #Check if form is disabled
-        if (!$form->is_active) {
-            return;
-        }
-
-        $currentAccount = $this->apiClient()->getCurrentAccount();
-        $resourceKey = $currentAccount ? $currentAccount->resource_key : '';
-        if (empty($resourceKey)) {
+        #Check if form is disabled or pop-up
+        if (!$form->is_active || $form->type != 'embed') {
             return;
         }
 
@@ -256,13 +252,10 @@ class SenderAutomatedEmails extends Module
         // Add forms
         if (Configuration::get('SPM_ALLOW_FORMS')) {
             $options['formUrl'] = isset($form->settings->resource_path) ? $form->settings->resource_path : '';
-            $options['resourceKey'] = $resourceKey;
             $options['showForm'] = true;
             $options['embedForm'] = isset($embedHash);
             $options['embedHash'] = isset($embedHash) ? $embedHash : '';
         }
-
-//        $this->hookDisplayHeader($resourceKey);
 
         $this->context->smarty->assign($options);
         return $this->context->smarty->fetch($this->views_url . '/templates/front/form.tpl');
@@ -285,14 +278,8 @@ class SenderAutomatedEmails extends Module
         );
 
         $form = $this->apiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
-        #Check if form is disabled
-        if (!$form->is_active) {
-            return;
-        }
-
-        $currentAccount = $this->apiClient()->getCurrentAccount();
-        $resourceKey = $currentAccount ? $currentAccount->resource_key : '';
-        if (empty($resourceKey)) {
+        #Check if form is disabled or pop-up
+        if (!$form->is_active || $form->type != 'embed') {
             return;
         }
 
@@ -303,22 +290,47 @@ class SenderAutomatedEmails extends Module
         // Add forms
         if (Configuration::get('SPM_ALLOW_FORMS')) {
             $options['formUrl'] = isset($form->settings->resource_path) ? $form->settings->resource_path : '';
-            $options['resourceKey'] = $resourceKey;
             $options['showForm'] = true;
             $options['embedForm'] = isset($embedHash);
             $options['embedHash'] = isset($embedHash) ? $embedHash : '';
         }
 
-//        $this->hookDisplayHeader($resourceKey);
-
         $this->context->smarty->assign($options);
         return $this->context->smarty->fetch($this->views_url . '/templates/front/form.tpl');
     }
 
-//    public function hookDisplayHeader($resourceKey)
-//    {
-//        $this->context->controller->registerJavascript($resourceKey, $this->views_url . '/js/form_default.js', ['position' => 'head', 'priority' => 1]);
-//    }
+    public function hookDisplayHeader()
+    {
+        // Check if we should
+        if (!Configuration::get('SPM_IS_MODULE_ACTIVE') || (!Configuration::get('SPM_ALLOW_FORMS'))
+            || Configuration::get('SPM_FORM_ID') == $this->defaultSettings['SPM_FORM_ID']) {
+            return;
+        }
+        if (Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT') == $this->defaultSettings['SPM_SENDERAPP_RESOURCE_KEY_CLIENT']){
+            return;
+        }
+
+        $resourceKey = Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT');
+
+        $html = '';
+        $html .= "
+			<script>
+			  (function (s, e, n, d, er) {
+				s['Sender'] = er;
+				s[er] = s[er] || function () {
+				  (s[er].q = s[er].q || []).push(arguments)
+				}, s[er].l = 1 * new Date();
+				var a = e.createElement(n),
+					m = e.getElementsByTagName(n)[0];
+				a.async = 1;
+				a.src = d;
+				m.parentNode.insertBefore(a, m)
+			  })(window, document, 'script', 'https://cdn.sender.net/accounts_resources/universal.js', 'sender');
+			  sender('{$resourceKey}');
+			</script>
+			";
+        return $html;
+    }
 
     /**
      * Here we handle new signups, we fetch customer info

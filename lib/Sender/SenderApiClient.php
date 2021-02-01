@@ -544,7 +544,6 @@ class SenderApiClient
         $response = $this->makeApiRequest($requestConfig, $data);
 
         return $response->data;
-//        return $response->data;
     }
 
     public function ping()
