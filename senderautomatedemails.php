@@ -704,10 +704,10 @@ class SenderAutomatedEmails extends Module
             }
 
             // Get image
-            $image_url = $product['images']['0']['small']['url'];
+            $image_url = $product['images']['0']['large']['url'];
 
-            if ($product['images']['0']['small']['url']) {
-                $image_url = $product['images']['0']['small']['url'];
+            if ($product['images']['0']['large']['url']) {
+                $image_url = $product['images']['0']['large']['url'];
             }
 
             //Get discount
