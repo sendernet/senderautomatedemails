@@ -16,6 +16,7 @@ class SenderApiClient
 
     private $limit = '?limit=100';
     private $appUrl = 'https://app.sender.net';
+    private $senderStatsBaseUrl = 'https://stats.sender.net/';
 
     public function __construct($apiKey = null)
     {
@@ -142,6 +143,13 @@ class SenderApiClient
         if (!empty($data)) {
             $formedData = http_build_query($data);
         }
+
+        if (isset($requestConfig['stats']) && $requestConfig['stats']){
+            $connectionUrl = $this->senderStatsBaseUrl;
+        }else{
+            $connectionUrl = $this->senderBaseUrl;
+        }
+
         #Init curl
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
@@ -152,21 +160,21 @@ class SenderApiClient
         $httpMethod = $requestConfig['http'] ? $requestConfig['http'] : 'get';
         switch ($httpMethod) {
             case "get":
-                curl_setopt($ch, CURLOPT_URL, $this->senderBaseUrl . $requestConfig['method'] . $this->limit);
+                curl_setopt($ch, CURLOPT_URL, $connectionUrl . $requestConfig['method'] . $this->limit);
                 curl_setopt($ch, CURLOPT_HTTPGET, 1);
                 break;
             case "post":
-                curl_setopt($ch, CURLOPT_URL, $this->senderBaseUrl . $requestConfig['method']);
+                curl_setopt($ch, CURLOPT_URL, $connectionUrl . $requestConfig['method']);
                 curl_setopt($ch, CURLOPT_POST, 1);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $formedData);
                 break;
             case "patch":
-                curl_setopt($ch, CURLOPT_URL, $this->senderBaseUrl . $requestConfig['method']);
+                curl_setopt($ch, CURLOPT_URL, $connectionUrl . $requestConfig['method']);
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $formedData);
                 break;
             case "delete":
-                curl_setopt($ch, CURLOPT_URL, $this->senderBaseUrl . $requestConfig['method']);
+                curl_setopt($ch, CURLOPT_URL, $connectionUrl . $requestConfig['method']);
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
                 break;
         }
@@ -191,7 +199,8 @@ class SenderApiClient
     {
         $requestConfig = [
             'http' => 'post',
-            'method' => 'carts'
+            'method' => 'carts',
+            'stats' => true,
         ];
 
         $data = $params;
@@ -209,10 +218,11 @@ class SenderApiClient
     {
         $requestConfig = [
             'http' => 'post',
-            'method' => "carts/$cartId/convert"
+            'method' => "carts/$cartId/convert",
+            'stats' => true,
         ];
         $data = [];
-//        return $this->makeCommerceRequest($params, 'cart_convert');
+
         return $response = $this->makeApiRequest($requestConfig, $data);
     }
 
@@ -227,6 +237,7 @@ class SenderApiClient
         $requestConfig = [
             'http' => "get",
             'method' => "carts/$cartHash",
+            'stats' => true,
         ];
 
         $data = [];
@@ -239,7 +250,6 @@ class SenderApiClient
 
         return $response;
 
-//        return $response->data;
 
 
 //        $params = array(
@@ -256,6 +266,7 @@ class SenderApiClient
         $requestConfig = [
             'http' => 'delete',
             'method' => "carts/$cartId",
+            'stats' => true,
         ];
 
         $data = [];

@@ -301,11 +301,14 @@ class SenderAutomatedEmails extends Module
 
     public function hookDisplayHeader()
     {
+        #Allow script
+        #If forms are active or if track cart is active
         // Check if we should
         if (!Configuration::get('SPM_IS_MODULE_ACTIVE') || (!Configuration::get('SPM_ALLOW_FORMS'))
-            || Configuration::get('SPM_FORM_ID') == $this->defaultSettings['SPM_FORM_ID']) {
+            && !Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
             return;
         }
+
         if (Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT') == $this->defaultSettings['SPM_SENDERAPP_RESOURCE_KEY_CLIENT']){
             return;
         }
@@ -329,6 +332,10 @@ class SenderAutomatedEmails extends Module
 			  sender('{$resourceKey}');
 			</script>
 			";
+
+        $html .= "<script>
+			  sender('trackVisitors')
+			</script>";
         return $html;
     }
 
@@ -847,13 +854,14 @@ class SenderAutomatedEmails extends Module
      * @param  string $email
      * @return array
      */
-    private function mapCartData($cart, $email)
+    private function mapCartData($cart, $email, $visitorId)
     {
         $cartHash = $cart->id;
         $this->logDebug('This is the cart hash ' . $cartHash);
 
         $data = array(
             "email" => $email,
+            'visitor_id' => $visitorId,
             "external_id" => $cart->id,
             "url" => _PS_BASE_URL_ . __PS_BASE_URI__
                 . 'index.php?fc=module&module='
@@ -899,7 +907,7 @@ class SenderAutomatedEmails extends Module
     {
         // Keep recipient up to date with Sender.net list
         // Generate cart data array for api call
-        $cartData = $this->mapCartData($cart, $cookie['email']);
+        $cartData = $this->mapCartData($cart, $cookie['email'], $_COOKIE['sender_site_visitor']);
         if (!empty($cartData['products'])) {
             $cartTrackResult = $this->apiClient()->trackCart($cartData);
             $this->logDebug('Cart track response: ' . json_encode($cartTrackResult));
