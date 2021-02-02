@@ -14,7 +14,6 @@ require_once(dirname(__FILE__) . '/../../../config/config.inc.php');
 require_once(dirname(__FILE__) . '/../senderautomatedemails.php');
 
 $senderautomatedemails = new SenderAutomatedEmails();
-$senderApiClient = new SenderApiClient();
 
 
 if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->name)) {

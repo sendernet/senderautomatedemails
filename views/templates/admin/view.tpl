@@ -111,7 +111,7 @@
                             {l s='Disconnect' mod='senderautomatedemails'}
                         </a>
 
-                        <div style="margin-top: 30px" class="alert alert-message">
+                        <div style="margin-top: 30px;" class="alert alert-message">
                             <p>
                                 {l s='Feel free to contact us directly regarding the module on support@sender.net' mod='senderautomatedemails'}
                             </p>

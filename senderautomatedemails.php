@@ -354,8 +354,6 @@ class SenderAutomatedEmails extends Module
     public function hookactionCustomerAccountAdd($context)
     {
         $this->logDebug('#hookactionCustomerAccountAdd START');
-        $this->logDebug('Guest on checkout filled personal information');
-
         // Validate if we should
         if (!Validate::isLoadedObject($context['newCustomer'])
             || !Configuration::get('SPM_IS_MODULE_ACTIVE')) {
@@ -385,12 +383,18 @@ class SenderAutomatedEmails extends Module
             ];
             $this->apiClient()->visitorRegistered($visitorRegistration);
 
+            #Checking the status of the subscriber. On unsubscribed we wont continue
             $subscriber = $this->checkSubscriberState($customer->email);
             $customFields = $this->getCustomFields($customer);
 
             if (!empty($customFields)) {
                 $this->apiClient()->addFields($subscriber->id, $customFields);
                 $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
+            }
+
+            if (isset($subscriber->onlyUpdateFields)){
+                $this->logDebug('Unsubscribed subscriber, no more actions');
+                return;
             }
 
             $cart = $this->context->cart;
@@ -506,7 +510,7 @@ class SenderAutomatedEmails extends Module
                 && isset($cookie['logged']) && $cookie['logged'])
             || (isset($cookie['is_guest']) && $cookie['is_guest'])
             || !Configuration::get('SPM_IS_MODULE_ACTIVE')) {
-            $this->logDebug('hookActionCartSave first condition failed');
+            $this->logDebug('Cannot save cart');
             return;
         }
 
@@ -752,13 +756,11 @@ class SenderAutomatedEmails extends Module
     {
         if ($isSubscriber = $this->apiClient()->isAlreadySubscriber($email)) {
             if (!$isSubscriber->unsubscribed) {
-                $this->logDebug('Active subscriber');
+                return $isSubscriber;
             } else {
-                $this->logDebug('Unsubscribed subscriber');
+                $isSubscriber->onlyUpdateFields = true;
+                return $isSubscriber;
             }
-            #Update subscriber details with shop checkout information
-            return $isSubscriber;
-            #Sync recipient
         }
         return false;
     }
