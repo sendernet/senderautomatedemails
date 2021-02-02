@@ -983,20 +983,22 @@ class SenderAutomatedEmails extends Module
 
         $langs = Language::getLanguages();
 
-        $new_tab = new Tab();
-        $new_tab->class_name = "AdminSenderAutomatedEmails";
-        $new_tab->module = "senderautomatedemails";
+        $newTab = new Tab();
+        $newTab->class_name = "AdminSenderAutomatedEmails";
+        $newTab->module = "senderautomatedemails";
         if (version_compare(_PS_VERSION_, '1.7', '>=')) {
-            $new_tab->icon = "mail";
+            $newTab->icon = "mail";
         }
 
-        $new_tab->id_parent = Tab::getIdFromClassName('CONFIGURE');
-        $new_tab->active = 1;
+        $newTab->position = 1;
 
+        $newTab->id_parent = Tab::getIdFromClassName('CONFIGURE');
+        $newTab->active = 1;
+        $this->logDebug(json_encode($newTab));
         foreach ($langs as $l) {
-            $new_tab->name[$l['id_lang']] = $this->l('Sender.net Settings');
+            $newTab->name[$l['id_lang']] = $this->l('Sender.net Settings');
         }
-        $new_tab->save();
+        $newTab->save();
         return true;
     }
 
