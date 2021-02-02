@@ -204,6 +204,11 @@ class SenderAutomatedEmails extends Module
         $this->context->controller->addCss($this->_path . 'views/css/tab.css');
     }
 
+    public function hookDisplayHome()
+    {
+        return $this->hookDisplayFooterBefore();
+    }
+
     /**
      * Reset all Sender.net related settings
      *
@@ -248,7 +253,6 @@ class SenderAutomatedEmails extends Module
         if ($form->type === 'embed') {
             $embedHash = $form->settings->embed_hash;
         }
-
         // Add forms
         if (Configuration::get('SPM_ALLOW_FORMS')) {
             $options['formUrl'] = isset($form->settings->resource_path) ? $form->settings->resource_path : '';

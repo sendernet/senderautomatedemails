@@ -93,12 +93,17 @@
                 </blockquote>
             </div>
             <div class="panel-body">
-                <a class="btn btn-lg btn-info" href="{$appUrl|escape:'htmlall':'UTF-8'}/forms" target="_blank" rel="help">
+                <a class="btn btn-lg btn-info" href="{$appUrl|escape:'htmlall':'UTF-8'}/forms" target="_blank"
+                   rel="help">
                     {l s='Manage your forms in Sender.net' mod='senderautomatedemails'}
                 </a>
 
                 <div style="margin-top: 30px" class="alert alert-info">
-                    {l s='The form would be showing above the footer.' mod='senderautomatedemails'}
+                    <h4>{l s='About the form location.' mod='senderautomatedemails' }</h4>
+                    <p>
+                        {l s='Initially the embed form would be hook to "DisplayFooterBefore or DisplayFooter" (ps-1.7, ps-1.6).
+But it can be transplant to "DisplayHome", this will allow you to move your form, from your website bottom to show only on the homepage.' mod='senderautomatedemails'}
+                    </p>
                 </div>
             </div>
 
