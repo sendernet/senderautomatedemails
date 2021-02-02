@@ -495,7 +495,7 @@ class SenderAutomatedEmails extends Module
     {
         $this->logDebug('hookActionCartSAve');
         if (!Validate::isLoadedObject($context['cart'])){
-            $this->logDebug('cart object not loaded, exiting cartSave');
+            $this->logDebug('Cart object not loaded, exiting cartSave');
             return;
         }
 
@@ -504,17 +504,26 @@ class SenderAutomatedEmails extends Module
         } else {
             $cookie = $context['cookie']->getFamily($context['cookie']->id);
         }
-
+        $this->logDebug(json_encode($cookie));
         if (!isset($cookie['email'])
             || (!Configuration::get('SPM_ALLOW_TRACK_CARTS')
                 && isset($cookie['logged']) && $cookie['logged'])
             || (isset($cookie['is_guest']) && $cookie['is_guest'])
+            || (!isset($cookie['email']) && $_COOKIE['sender_site_visitor'])
+            || empty($this->context->cart->id_customer)
             || !Configuration::get('SPM_IS_MODULE_ACTIVE')) {
-            $this->logDebug('Cannot save cart');
+            $this->logDebug('Wont save cart');
             return;
         }
 
+        if(!$this->compareDateTime($this->context->customer->date_add)){
+            $this->logDebug('New customer should be handle over accountAddHook');
+            return;
+        };
+
+        #Check if the customer is already on system, as on new customer should not come here.
         #Setting up the customer for later tracking the cart
+        $this->logDebug('We will call the hookActionCUstomerAccountUpdate');
         if($this->hookactionCustomerAccountUpdate($this->context->customer)){
             if (!empty($context['cart'])) {
                 #Check if not already tracked
@@ -523,6 +532,27 @@ class SenderAutomatedEmails extends Module
             }
         }
         $this->logDebug('#hookActionCartSave END');
+    }
+
+
+    public function compareDateTime($dateAdd)
+    {
+        $currentTime = strtotime(date('Y-m-d H:i:s'));
+
+        $duration = 4;
+        $dateAddConverted = strtotime($dateAdd);
+        $dateAddConvertedAndDuration = $dateAddConverted + $duration;
+
+        $this->logDebug('This is the currentTime: ' . $currentTime);
+        $this->logDebug('This is the dateAdded + 4 seconds: ' . $dateAddConvertedAndDuration);
+
+        if ($currentTime < $dateAddConvertedAndDuration || $currentTime === $dateAddConvertedAndDuration){
+            $this->logDebug('New customer account');
+            return false;
+        }else{
+            $this->logDebug('Returning customer connected back');
+            return true;
+        }
     }
 
     /**
@@ -590,16 +620,13 @@ class SenderAutomatedEmails extends Module
     public function hookactionCustomerAccountUpdate($customer)
     {
         $this->logDebug('hookactionCustomerAccountUpdate');
-        $this->logDebug('Updating personal details');
         //Validate if we should
         if (!Validate::isLoadedObject($customer) ||
-            !Configuration::get('SPM_IS_MODULE_ACTIVE')
-            || !Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
-            $this->logDebug('exiting update customer');
+            !Configuration::get('SPM_IS_MODULE_ACTIVE')) {
+            $this->logDebug('Exiting update customer');
             return true;
         }
 
-        $this->logDebug('#hookactionCustomerAccountUpdate START');
         #Checking if we should go forward
         if (!$customer->newsletter) {
             if(!Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
@@ -627,18 +654,6 @@ class SenderAutomatedEmails extends Module
                 $this->apiClient()->addFields($subscriber->id, $customFields);
                 $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
             }
-
-//            exit();
-//            $cart = $this->context->cart;
-//
-//            if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
-//                $cookie = $this->context->cookie->getAll();
-//            } else {
-//                $cookie = $this->context['cookie']->getFamily($this->context['cookie']->id);
-//            }
-//
-//            $this->syncCart($cart, $cookie);
-            $this->logDebug('#hookactionCustomerAccountAdd END');
 
         } catch (Exception $e) {
             $this->logDebug('Error hook hookactionCustomerAccountUpdate' . json_encode($e->getMessage()));
@@ -749,15 +764,20 @@ class SenderAutomatedEmails extends Module
 
     /**
      * @param $email
-     * @param $context
-     * @return false|void
+     * @param false $reactivate
+     * @return false
      */
-    public function checkSubscriberState($email)
+    public function checkSubscriberState($email, $reactivate = false)
     {
         if ($isSubscriber = $this->apiClient()->isAlreadySubscriber($email)) {
             if (!$isSubscriber->unsubscribed) {
                 return $isSubscriber;
             } else {
+                if ($reactivate){
+                    $this->apiClient()->reactivateSubscriber($isSubscriber->id);
+                    $this->logDebug('Subscriber reactivated');
+                    return $isSubscriber;
+                }
                 $isSubscriber->onlyUpdateFields = true;
                 return $isSubscriber;
             }
