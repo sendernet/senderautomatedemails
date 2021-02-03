@@ -28,7 +28,8 @@
         <div class="panel-body">
             <div class="spm-details-settings">
                 <div class="alert alert-addons">
-                    {l s='Enable Sender track system to track your customers cart' mod='senderautomatedemails'}
+                    {l s='Enable Sender track system to track your customers cart.' mod='senderautomatedemails'}
+                    <a href="https://landing.sender.net/abandoned-cart-email-template" target="_blank">{l s='Learn how to set up abandoned carts automation' mod='senderautomatedemails'}</a>
                 </div>
                 <button id="swToggleCartTrack"
                         class="btn btn-lg {if not $allowCartTrack}btn-success{else}btn-danger{/if}">

@@ -919,6 +919,13 @@ class SenderAutomatedEmails extends Module
      */
     public function syncCart($cart, $cookie)
     {
+        #Check if we should
+        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS')
+            || !Configuration::get('SPM_IS_MODULE_ACTIVE')) {
+            $this->logDebug('Track wont get track, please enable option from admin-menu');
+            return false;
+        }
+
         // Keep recipient up to date with Sender.net list
         // Generate cart data array for api call
         $cartData = $this->mapCartData($cart, $cookie['email'], $_COOKIE['sender_site_visitor']);
