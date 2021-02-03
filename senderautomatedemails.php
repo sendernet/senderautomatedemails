@@ -373,6 +373,7 @@ class SenderAutomatedEmails extends Module
 
         #Try to create the visitor, if subscriber exists will be getting updated
         #Else it would create the new subscriber
+
         try {
             $visitorRegistration = [
                 'email' => $customer->email,
@@ -381,6 +382,11 @@ class SenderAutomatedEmails extends Module
                 'visitor_id' => $_COOKIE['sender_site_visitor'],
                 'list_id' => Configuration::get('SPM_GUEST_LIST_ID'),
             ];
+
+            if (Configuration::get('SPM_GUEST_LIST_ID') != $this->defaultSettings['SPM_GUEST_LIST_ID']){
+                $visitorRegistration['list_id'] = Configuraiton::get('SPM_GUEST_LIS_ID');
+            }
+
             $this->apiClient()->visitorRegistered($visitorRegistration);
 
             #Checking the status of the subscriber. On unsubscribed we wont continue
@@ -655,8 +661,11 @@ class SenderAutomatedEmails extends Module
                 'firstname' => $customer->firstname,
                 'lastname' => $customer->lastname,
                 'visitor_id' => $_COOKIE['sender_site_visitor'],
-                'list_id' => Configuration::get('SPM_CUSTOMERS_LIST_ID'),
             ];
+
+            if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']){
+                $visitorRegistration['list_id'] = Configuraiton::get('SPM_CUSTOMERS_LIST_ID');
+            }
 
             $this->apiClient()->visitorRegistered($visitorRegistration);
             $subscriber = $this->checkSubscriberState($customer->email);
