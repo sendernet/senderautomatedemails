@@ -1,6 +1,6 @@
 <?php
 /**
- * 2010-2018 Sender.net
+ * 2010-2021 Sender.net
  *
  * Sender.net Automated Emails
  *
@@ -653,6 +653,12 @@ class SenderAutomatedEmails extends Module
 
             $this->apiClient()->visitorRegistered($visitorRegistration);
             $subscriber = $this->checkSubscriberState($customer->email);
+
+            #Handling subscriber deleted
+            if (!$subscriber){
+                $this->logDebug('Subscriber was deleted');
+                return;
+            }
 
             $customFields = $this->getCustomFields($customer);
 
