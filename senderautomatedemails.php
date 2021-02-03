@@ -385,6 +385,13 @@ class SenderAutomatedEmails extends Module
 
             #Checking the status of the subscriber. On unsubscribed we wont continue
             $subscriber = $this->checkSubscriberState($customer->email);
+
+            #Handling subscriber deleted
+            if (!$subscriber){
+                $this->logDebug('Subscriber was deleted');
+                return;
+            }
+
             $customFields = $this->getCustomFields($customer);
 
             if (!empty($customFields)) {
