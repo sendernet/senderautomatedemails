@@ -384,7 +384,8 @@ class SenderAutomatedEmails extends Module
             $this->apiClient()->visitorRegistered($visitorRegistration);
 
             #Checking the status of the subscriber. On unsubscribed we wont continue
-            $subscriber = $this->checkSubscriberState($customer->email);
+            $newsletter = $customer->newsletter ? true : false;
+            $subscriber = $this->checkSubscriberState($customer->email, $newsletter);
 
             #Handling subscriber deleted
             if (!$subscriber){
@@ -512,7 +513,6 @@ class SenderAutomatedEmails extends Module
             $cookie = $context['cookie']->getFamily($context['cookie']->id);
         }
 
-        $this->logDebug(json_encode($cookie));
         if (!isset($cookie['email'])
             || (!Configuration::get('SPM_ALLOW_TRACK_CARTS')
                 && isset($cookie['logged']) && $cookie['logged'])
