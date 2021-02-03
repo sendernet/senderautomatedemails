@@ -103,6 +103,7 @@
                     <p>
                         {l s='Initially the embed form would be hook to "DisplayFooterBefore or DisplayFooter" (ps-1.7, ps-1.6).
 But it can be transplant to "DisplayHome", this will allow you to move your form, from your website bottom to show only on the homepage.' mod='senderautomatedemails'}
+                        <a href="http://doc.prestashop.com/display/PS17/Positions" target="_blank">{l s='Prestashop documentation' mod='senderautomatedemails'}</a>
                     </p>
                 </div>
             </div>
