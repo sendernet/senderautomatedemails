@@ -8,6 +8,16 @@
  * @license https://opensource.org/licenses/osl-3.0.php Open Software License v. 3.0 (OSL-3.0)
  * Sender.net
  *}
+<style>
+	.alert-danger{
+		max-width: max-content!important;
+		margin-bottom: 10px!important;
+		margin: 0 auto;
+	}
+	.alert-danger > .close{
+		margin-left: 5px!important;
+	}
+</style>
 
 <div class="row" style="text-align: center;">
 	<div class="well col-lg-6 col-lg-offset-3">
