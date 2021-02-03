@@ -27,7 +27,7 @@
         </div>
         <div class="panel-body">
             <div class="spm-details-settings">
-                <div class="alert alert-info">
+                <div class="alert alert-addons">
                     {l s='Enable Sender track system to track your customers cart' mod='senderautomatedemails'}
                 </div>
                 <button id="swToggleCartTrack"
@@ -109,6 +109,15 @@
                         </select>
                     </div>
                 {/if}
+            </div>
+            <div style="margin-top: 30px" class="alert alert-info">
+                <h4>{l s='About this feature.' mod='senderautomatedemails' }</h4>
+                <p>
+                    {l s='In the scenario when track cart feature is NOT enable. The selected lists for returning customers and new signups
+will still work and save those customers as subscribers on that list, when selecting to receive newsletter on checkout screen.' mod='senderautomatedemails'}
+                    <br>
+                    {l s='To not assign no any list your customers, just mark the default option "Select a list"' mod='senderautomatedemails'}
+                </p>
             </div>
         </div>
     </div>

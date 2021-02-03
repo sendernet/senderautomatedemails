@@ -378,11 +378,9 @@ class SenderAutomatedEmails extends Module
                 'visitor_id' => $_COOKIE['sender_site_visitor'],
                 'list_id' => Configuration::get('SPM_GUEST_LIST_ID'),
             ];
-
             if (Configuration::get('SPM_GUEST_LIST_ID') != $this->defaultSettings['SPM_GUEST_LIST_ID']){
-                $visitorRegistration['list_id'] = Configuraiton::get('SPM_GUEST_LIS_ID');
+                $visitorRegistration['list_id'] = Configuration::get('SPM_GUEST_LIST_ID');
             }
-
             $this->apiClient()->visitorRegistered($visitorRegistration);
 
             #Checking the status of the subscriber. On unsubscribed we wont continue
@@ -660,7 +658,7 @@ class SenderAutomatedEmails extends Module
             ];
 
             if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']){
-                $visitorRegistration['list_id'] = Configuraiton::get('SPM_CUSTOMERS_LIST_ID');
+                $visitorRegistration['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
             }
 
             $this->apiClient()->visitorRegistered($visitorRegistration);
