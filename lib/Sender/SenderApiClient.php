@@ -21,7 +21,6 @@ class SenderApiClient
     public function __construct($apiKey = null)
     {
         $this->apiKey = null;
-//        $this->commerceEndpoint = self::$baseUrl . '/commerce/v1';
 
         if ($apiKey) {
             $this->apiKey = $apiKey;
@@ -176,6 +175,7 @@ class SenderApiClient
             case "delete":
                 curl_setopt($ch, CURLOPT_URL, $connectionUrl . $requestConfig['method']);
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $formedData);
                 break;
         }
 
@@ -270,9 +270,11 @@ class SenderApiClient
     }
 
     /**
+     * @param $resourceKey
      * @param $cartId
+     * @return array|false
      */
-    public function cartDelete($cartId)
+    public function cartDelete($resourceKey, $cartId)
     {
         $requestConfig = [
             'http' => 'delete',
@@ -280,7 +282,9 @@ class SenderApiClient
             'stats' => true,
         ];
 
-        $data = [];
+        $data = [
+            'resource_key' => $resourceKey
+        ];
 
         return $response = $this->makeApiRequest($requestConfig, $data);
     }

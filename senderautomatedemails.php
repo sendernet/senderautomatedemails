@@ -504,6 +504,7 @@ class SenderAutomatedEmails extends Module
         } else {
             $cookie = $context['cookie']->getFamily($context['cookie']->id);
         }
+
         $this->logDebug(json_encode($cookie));
         if (!isset($cookie['email'])
             || (!Configuration::get('SPM_ALLOW_TRACK_CARTS')
@@ -519,7 +520,7 @@ class SenderAutomatedEmails extends Module
         if(!$this->compareDateTime($this->context->customer->date_add)){
             $this->logDebug('New customer should be handle over accountAddHook');
             return;
-        };
+        }
 
         #Check if the customer is already on system, as on new customer should not come here.
         #Setting up the customer for later tracking the cart
@@ -534,7 +535,12 @@ class SenderAutomatedEmails extends Module
         $this->logDebug('#hookActionCartSave END');
     }
 
-
+    /**
+     * Fixing issue on 1.7 on guest buying
+     * Looping directly to actionCartSave instead of actionCustomerAccountAdd
+     * @param $dateAdd
+     * @return bool
+     */
     public function compareDateTime($dateAdd)
     {
         $currentTime = strtotime(date('Y-m-d H:i:s'));
