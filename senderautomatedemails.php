@@ -308,12 +308,8 @@ class SenderAutomatedEmails extends Module
         #Allow script
         #If forms are active or if track cart is active
         // Check if we should
-        if (!Configuration::get('SPM_IS_MODULE_ACTIVE') || (!Configuration::get('SPM_ALLOW_FORMS'))
-            && !Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
-            return;
-        }
-
-        if (Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT') == $this->defaultSettings['SPM_SENDERAPP_RESOURCE_KEY_CLIENT']){
+        if (!Configuration::get('SPM_IS_MODULE_ACTIVE') || !Configuration::get('SPM_API_KEY')
+        || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
             return;
         }
 
