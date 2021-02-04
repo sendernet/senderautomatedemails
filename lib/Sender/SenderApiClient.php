@@ -487,6 +487,22 @@ class SenderApiClient
         return;
     }
 
+    public function unsubscribe($subscriberId)
+    {
+        $requestConfig = [
+            'http' => "post",
+            'method' => "unsubscribes",
+        ];
+
+        $data['subscribers'] = [$subscriberId];
+        $response = $this->makeApiRequest($requestConfig, $data);
+
+        if ($response) {
+            return $response;
+        }
+        return;
+    }
+
     /**
      * @param $subscriberId
      * @param $fields

@@ -639,9 +639,12 @@ class SenderAutomatedEmails extends Module
             $this->logDebug('Exiting update customer');
             return true;
         }
-
         #Checking if we should go forward
         if (!$customer->newsletter) {
+            #Check if this person is already a subscriber
+            if ($subscriber = $this->checkSubscriberState($customer->email)){
+                $this->apiClient()->unsubscribe($subscriber->id);
+            }
             if(!Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
                 $this->logDebug('No action required');
                 return;
@@ -662,8 +665,12 @@ class SenderAutomatedEmails extends Module
             }
 
             $this->apiClient()->visitorRegistered($visitorRegistration);
-            $subscriber = $this->checkSubscriberState($customer->email);
 
+            $newsletter = $customer->newsletter ? true : false;
+            $subscriber = $this->checkSubscriberState($customer->email, $newsletter);
+
+            $this->logDebug('Subscriber variable');
+            $this->logDebug(json_encode($subscriber));
             #Handling subscriber deleted
             if (!$subscriber){
                 $this->logDebug('Subscriber was deleted');
