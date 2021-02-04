@@ -829,44 +829,6 @@ class SenderAutomatedEmails extends Module
     }
 
     /**
-     * Forming subscriber details (default ones - email, firstname, lastname)
-     * @param $context
-     * @return mixed
-     */
-    public function formDefaultsRecipient($context)
-    {
-        $this->logDebug('Forming recipient');
-
-        $recipient = array(
-            'email' => $context->email,
-        );
-
-        #Default fields
-        (Configuration::get('SPM_CUSTOMER_FIELD_FIRSTNAME')) == 1 ? $recipient['firstname'] = $context->firstname : false;
-        (Configuration::get('SPM_CUSTOMER_FIELD_LASTNAME')) == 1 ? $recipient['lastname'] = $context->lastname : false;
-
-        return $recipient;
-    }
-
-    /**
-     * Forming subscriber details (default ones - email, firstname, lastname)
-     * @param $context
-     * @return mixed
-     */
-    public function formDefaultsRecipientSubscriber($customer)
-    {
-        $this->logDebug('Forming recipient suscriber');
-
-        #Default fields
-        $recipient = [];
-        $recipient['email'] = $customer->email;
-        (Configuration::get('SPM_CUSTOMER_FIELD_FIRSTNAME')) == 1 ? $recipient['firstname'] = $customer->firstname : false;
-        (Configuration::get('SPM_CUSTOMER_FIELD_LASTNAME')) == 1 ? $recipient['lastname'] = $customer->lastname : false;
-
-        return $recipient;
-    }
-
-    /**
      * Helper method to
      * generate cart array for Sender api call
      * It also retrieves products with images
