@@ -593,8 +593,12 @@ class SenderAutomatedEmails extends Module
                 'email' => $this->context->customer->email,
                 'firstname' => $this->context->customer->firstname,
                 'lastname' => $this->context->customer->lastname,
-                'list_id' => Configuration::get('SPM_CUSTOMERS_LIST_ID')
             ];
+
+            if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
+                $visitorRegistration['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+            }
+
             $converCart = $this->apiClient()->cartConvert($dataConvert, $order->id_cart);
 
             $this->logDebug('Cart convert response: '
