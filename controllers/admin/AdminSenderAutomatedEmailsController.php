@@ -73,10 +73,6 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
      */
     private function connect($apiKey)
     {
-        if (!$apiKey) {
-            $this->redirectToAdminMenu('&error=101');
-        }
-
         $this->module->apiClient = new SenderApiClient();
         $this->module->apiClient->setApiKey($apiKey);
 
@@ -198,7 +194,6 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             'syncedList' => Configuration::get('SPM_SENDERAPP_SYNC_LIST_DATE') ? Configuration::get('SPM_SENDERAPP_SYNC_LIST_DATE') : '',
 //            'information'            => $this->module->displayInformation() ? $this->module->displayInformation() : '',
         ));
-
         #loading templates
         $output .= $this->context->smarty->fetch($this->module->views_url . '/templates/admin/view.tpl');
 
