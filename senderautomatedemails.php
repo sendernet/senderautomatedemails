@@ -643,10 +643,6 @@ class SenderAutomatedEmails extends Module
         }
         #Checking if we should go forward
         if (!$customer->newsletter) {
-            #Check if this person is already a subscriber
-            if ($subscriber = $this->checkSubscriberState($customer->email)) {
-                $this->apiClient()->unsubscribe($subscriber->id);
-            }
             if (!Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
                 $this->logDebug('No action required');
                 return;
