@@ -80,9 +80,7 @@ class SenderApiClient
     public function checkApiKey()
     {
         try {
-            $method = 'me';
             #Init curl
-
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_HTTPHEADER, array(
                 'Authorization: ' . $this->prefixAuth . $this->apiKey,
@@ -90,7 +88,7 @@ class SenderApiClient
                 'Content-type: Application/json'
             ));
 
-            curl_setopt($ch, CURLOPT_URL, $this->senderBaseUrl . $method);
+            curl_setopt($ch, CURLOPT_URL, $this->generateAuthUrl());
             curl_setopt($ch, CURLOPT_HTTPGET, 1);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_exec($ch);
@@ -111,7 +109,7 @@ class SenderApiClient
     /**
      * @return string
      */
-    public function generateAuthUrl()
+    private function generateAuthUrl()
     {
         return $this->senderBaseUrl . 'me';
     }
