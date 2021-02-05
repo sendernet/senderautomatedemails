@@ -8,6 +8,9 @@
  * @copyright 2010-2021 Sender.net
  */
 
+/**
+ * Class SenderApiClient
+ */
 class SenderApiClient
 {
     protected $senderBaseUrl = 'https://api.sender.net/v2/';

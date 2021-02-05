@@ -1,4 +1,12 @@
 <?php
+/**
+ * 2010-2021 Sender.net
+ *
+ * Sender.net Api Client
+ *
+ * @author Sender.net <info@sender.net>
+ * @copyright 2010-2021 Sender.net
+ */
 
 /**
  * Class CustomersExport
