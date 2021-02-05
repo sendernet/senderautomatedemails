@@ -563,18 +563,6 @@ class SenderApiClient
         return false;
     }
 
-    public function getExtraCustomFields()
-    {
-        $data = [];
-        $extraCustomFields = ['BIRTHDAY', 'GENDER', 'PARTNER'];
-        foreach ($extraCustomFields as $field) {
-            if (Configuration::get('SPM_CUSTOMER_FIELD_' . $field)) {
-                array_push($data, strtolower($field));
-            }
-        }
-        return $data;
-    }
-
     public function getCustomFields()
     {
         $requestConfig = [
@@ -586,18 +574,6 @@ class SenderApiClient
         $response = $this->makeApiRequest($requestConfig, $data);
 
         return $response->data;
-    }
-
-    public function ping()
-    {
-        $data = array(
-            "method" => "campaigns",
-            "params" => array(
-                "Authentication" => 'Bearer ' . $this->apiKey,
-
-            )
-        );
-        return $this->makeApiRequest($data);
     }
 
     //Temp logger
