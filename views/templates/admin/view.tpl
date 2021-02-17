@@ -24,7 +24,7 @@
             </span>
         </div>
     </div>
-    <div class="panel panel-default col-sm-2 col-xs-12" style="margin-top: 15px;">
+    <div class="panel panel-default col-sm-3 col-xs-12" style="margin-top: 15px;">
         <div class="panel-heading">
             <i class="zmdi zmdi-notifications-active"></i>
             {l s='Menu' mod='senderautomatedemails'}
@@ -68,7 +68,7 @@
     </div>
 
 
-    <div class="col-sm-10 col-xs-12 sender-prestashop-content">
+    <div class="col-sm-9 col-xs-12 sender-prestashop-content">
         {* HOME TAB *}
         <div id="spm-home" class="spm-tab-content spm-current">
             <div class="panel panel-default">
