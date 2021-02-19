@@ -384,12 +384,11 @@ class SenderAutomatedEmails extends Module
             $this->apiClient()->visitorRegistered($visitorRegistration);
 
             #Checking the status of the subscriber. On unsubscribed we wont continue
-            $newsletter = $customer->newsletter ? true : false;
-            $subscriber = $this->checkSubscriberState($customer->email, $newsletter);
+            $subscriber = $this->checkSubscriberState($customer->email);
 
             #Handling subscriber deleted
             if (!$subscriber) {
-                $this->logDebug('Subscriber was deleted');
+                $this->logDebug('NO subscriber');
                 return;
             }
 
