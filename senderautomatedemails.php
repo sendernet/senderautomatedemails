@@ -660,6 +660,8 @@ class SenderAutomatedEmails extends Module
                 if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
                     $visitorRegistration['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
                 }
+            }else{
+                $visitorRegistration['list_id'] = Configuration::get('SPM_GUEST_LIST_ID');
             }
 
             $this->apiClient()->visitorRegistered($visitorRegistration);
@@ -689,20 +691,10 @@ class SenderAutomatedEmails extends Module
         return true;
     }
 
-    /**
-     * @param $customerId
-     * @return bool
-     */
     public function checkOrderHistory($customerId)
     {
-        $order= Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow('
-		SELECT o.id_order
-		FROM '._DB_PREFIX_.'orders o
-		LEFT JOIN '._DB_PREFIX_.'order_detail od ON (od.id_order = o.id_order)
-		WHERE o.valid = 1 
-		ANd o.id_customer='.(int)$customerId);
-
-        if ($order && count($order) > 0){
+        $customerOrders = Order::getCustomerOrders($customerId);
+        if ($customerOrders && count($customerOrders) > 0){
             return true;
         }
         return false;
