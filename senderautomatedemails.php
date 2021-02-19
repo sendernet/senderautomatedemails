@@ -702,7 +702,7 @@ class SenderAutomatedEmails extends Module
 		WHERE o.valid = 1 
 		ANd o.id_customer='.(int)$customerId);
 
-        if (count($order) > 0){
+        if ($order && count($order) > 0){
             return true;
         }
         return false;
