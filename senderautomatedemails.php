@@ -569,8 +569,6 @@ class SenderAutomatedEmails extends Module
     /**
      * Hook into order confirmation. Mark cart as converted since order is made.
      * Keep in mind that it doesn't mean that payment has been made
-     *
-     *
      * @param object $context
      * @return object $context
      */
@@ -595,13 +593,13 @@ class SenderAutomatedEmails extends Module
             ];
 
             if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
-                $visitorRegistration['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+                $dataConvert['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
             }
 
-            $converCart = $this->apiClient()->cartConvert($dataConvert, $order->id_cart);
+            $convertCart = $this->apiClient()->cartConvert($dataConvert, $order->id_cart);
 
             $this->logDebug('Cart convert response: '
-                . json_encode($converCart));
+                . json_encode($convertCart));
         } catch (Exception $e) {
             $this->logDebug($e->getMessage());
         }
@@ -657,8 +655,11 @@ class SenderAutomatedEmails extends Module
                 'visitor_id' => $_COOKIE['sender_site_visitor'],
             ];
 
-            if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
-                $visitorRegistration['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+            #Check if has any orders
+            if($this->checkOrderHistory($customer->id)) {
+                if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
+                    $visitorRegistration['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+                }
             }
 
             $this->apiClient()->visitorRegistered($visitorRegistration);
@@ -687,6 +688,26 @@ class SenderAutomatedEmails extends Module
         $this->logDebug('#hookactionCustomerAccountUpdate END');
         return true;
     }
+
+    /**
+     * @param $customerId
+     * @return bool
+     */
+    public function checkOrderHistory($customerId)
+    {
+        $order= Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow('
+		SELECT o.id_order
+		FROM '._DB_PREFIX_.'orders o
+		LEFT JOIN '._DB_PREFIX_.'order_detail od ON (od.id_order = o.id_order)
+		WHERE o.valid = 1 
+		ANd o.id_customer='.(int)$customerId);
+
+        if (count($order) > 0){
+            return true;
+        }
+        return false;
+    }
+
 
     /**
      * On this hook we setup product
