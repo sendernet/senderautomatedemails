@@ -646,33 +646,7 @@ class SenderAutomatedEmails extends Module
 
         return $subscriber;
     }
-
-    /**
-     * Fixing issue on 1.7 on guest buying
-     * Looping directly to actionCartSave instead of actionCustomerAccountAdd
-     * @param $dateAdd
-     * @return bool
-     */
-    public function compareDateTime($dateAdd)
-    {
-        $currentTime = strtotime(date('Y-m-d H:i:s'));
-
-        $duration = 4;
-        $dateAddConverted = strtotime($dateAdd);
-        $dateAddConvertedAndDuration = $dateAddConverted + $duration;
-
-        $this->logDebug('This is the currentTime: ' . $currentTime);
-        $this->logDebug('This is the dateAdded + 4 seconds: ' . $dateAddConvertedAndDuration);
-
-        if ($currentTime < $dateAddConvertedAndDuration || $currentTime === $dateAddConvertedAndDuration) {
-            $this->logDebug('New customer account');
-            return false;
-        } else {
-            $this->logDebug('Returning customer connected back');
-            return true;
-        }
-    }
-
+    
     public function compareCartDateTime($dateAdd, $duration = 2)
     {
         $currentTime = strtotime(date('Y-m-d H:i:s'));
