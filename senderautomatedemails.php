@@ -143,9 +143,10 @@ class SenderAutomatedEmails extends Module
             || !$this->registerHook('registerUnsubscribedWebhook')
             || !$this->registerHook('actionCartSummary')
             || !$this->registerHook('displayHeader')
-            || !$this->registerHook('actionCartSave') // Getting it on all pages
+            || !$this->registerHook('actionObjectCartUpdateAfter') // Getting it on all pages
             || !$this->registerHook('actionCustomerAccountAdd')  //Adding customer and tracking the customer track
             || !$this->registerHook('actionCustomerAccountUpdate')
+            || !$this->registerHook('actionAuthentication')
             || !$this->registerHook('actionObjectCustomerUpdateAfter')
             || !$this->registerHook('displayFooterProduct')) {
             return false;
@@ -367,9 +368,6 @@ class SenderAutomatedEmails extends Module
             }
         }
 
-        #Try to create the visitor, if subscriber exists will be getting updated
-        #Else it would create the new subscriber
-
         try {
             $visitorRegistration = [
                 'email' => $customer->email,
@@ -399,24 +397,16 @@ class SenderAutomatedEmails extends Module
                 $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
             }
 
-            if (isset($subscriber->onlyUpdateFields)) {
-                $this->logDebug('Unsubscribed subscriber, no more actions');
-                return;
-            }
-
-            $cart = $this->context->cart;
-
-            if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
-                $cookie = $this->context->cookie->getAll();
-            } else {
-                $cookie = $context['cookie']->getFamily($context['cookie']->id);
-            }
-
-            $this->syncCart($cart, $cookie);
             $this->logDebug('#hookactionCustomerAccountAdd END');
         } catch (Exception $e) {
             $this->logDebug('Error hookactionCustomer ' . json_encode($e->getMessage()));
         }
+    }
+
+    public function hookActionAuthentication()
+    {
+        $customer = $this->context->customer;
+        $this->formVisitor($customer);
     }
 
     /**
@@ -461,6 +451,7 @@ class SenderAutomatedEmails extends Module
      */
     public function hookActionCartSummary($context)
     {
+        $this->logDebug('HOOK ACTION CART SUMMARY');
         // Validate if we should
         if (!Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS') || !Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
             $this->logDebug('Track cart option is not enable for Guest/New customers');
@@ -497,11 +488,12 @@ class SenderAutomatedEmails extends Module
      * Use this hook only if we have customer email
      * @return object
      */
-    public function hookActionCartSave($context)
+    public function hookActionObjectCartUpdateAfter($context)
     {
-        $this->logDebug('hookActionCartSAve');
-        if (!Validate::isLoadedObject($context['cart'])) {
-            $this->logDebug('Cart object not loaded, exiting cartSave');
+        $this->logDebug('hookActionObjectCartUpdateAfter');
+        if (!Validate::isLoadedObject($context['cart']) || !Configuration::get('SPM_IS_MODULE_ACTIVE')
+            || !Configuration::get('SPM_ALLOW_TRACK_CARTS') || !isset($_COOKIE['sender_site_visitor'])) {
+            $this->logDebug('Cart object not loaded || Module not active || Cart tracking not active || Cookies not set up');
             return;
         }
 
@@ -511,33 +503,148 @@ class SenderAutomatedEmails extends Module
             $cookie = $context['cookie']->getFamily($context['cookie']->id);
         }
 
-        if (!isset($cookie['email'])
-            || (!Configuration::get('SPM_ALLOW_TRACK_CARTS')
-                && isset($cookie['logged']) && $cookie['logged'])
-            || (isset($cookie['is_guest']) && $cookie['is_guest'])
-            || (!isset($cookie['email']) && $_COOKIE['sender_site_visitor'])
-            || empty($this->context->cart->id_customer)
-            || !Configuration::get('SPM_IS_MODULE_ACTIVE')) {
-            $this->logDebug('Wont save cart');
+        if ($this->context->cookie->__get('deleted-cart') === true){
+            $this->context->cookie->__set('deleted-cart', false);
             return;
         }
 
-        if (!$this->compareDateTime($this->context->customer->date_add)) {
-            $this->logDebug('New customer should be handle over accountAddHook');
-            return;
-        }
-
-        #Check if the customer is already on system, as on new customer should not come here.
-        #Setting up the customer for later tracking the cart
-        $this->logDebug('We will call the hookActionCUstomerAccountUpdate');
-        if ($this->hookactionCustomerAccountUpdate($this->context->customer)) {
-            if (!empty($context['cart'])) {
-                #Check if not already tracked
-                $this->syncCart($context['cart'], $cookie);
+        if ($this->context->cookie->__isset('captured-cart') && !empty($this->context->cookie->__get('captured-cart'))) {
+            if ($this->compareCartDateTime($this->context->cookie->__get('captured-cart'))) {
+                $this->logDebug('Avoiding duplicating logic of prestashop');
                 return;
             }
+            $this->logDebug('comparasion of cart time should not stop');
         }
-        $this->logDebug('#hookActionCartSave END');
+
+        $this->syncCart($context['cart'], $cookie);
+    }
+
+    /**
+     * Sync current cart with sender cart track
+     * @param $cart
+     * @param $cookie
+     */
+    public function syncCart($cart, $cookie)
+    {
+        $this->logDebug('SYNC-CART');
+
+        if (isset($cookie['email']) && !empty($cookie['email'])){
+            $email = $cookie['email'];
+        }else{
+            $email = '';
+        }
+
+        $cartData = $this->mapCartData($cart, $email, $_COOKIE['sender_site_visitor']);
+
+        if (isset($cartData) && !empty($cartData['products'])){
+            $this->apiClient()->trackCart($cartData);
+            $this->context->cookie->__set('captured-cart', strtotime(date('Y-m-d H:i:s')));
+            $this->context->cookie->write();
+        }else{
+            $this->apiClient()->cartDelete(Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'), $cart->id);
+            $this->context->cookie->__set('deleted-cart', true);
+            $this->context->cookie->write();
+        }
+    }
+
+    /**
+     * Helper method to
+     * generate cart array for Sender api call
+     * It also retrieves products with images
+     *
+     * @param object $cart
+     * @param string $email
+     * @param $visitorId
+     * @return array
+     */
+    private function mapCartData($cart, $email, $visitorId)
+    {
+        $this->logDebug('MAP-CART-DATA');
+        $cartHash = $cart->id;
+
+        $data = array(
+            "email" => $email,
+            'visitor_id' => $visitorId,
+            "external_id" => $cartHash,
+            "url" => _PS_BASE_URL_ . __PS_BASE_URI__
+                . 'index.php?fc=module&module='
+                . $this->name
+                . "&controller=recover&hash={$cartHash}",
+            "currency" => $this->context->currency->iso_code,
+            "order_total" => (string)$cart->getOrderTotal(),
+            "products" => array()
+        );
+
+        $products = $cart->getProducts();
+        if (!$products || empty($products)){
+            return;
+        }
+        foreach ($products as $product) {
+            $Product = new Product($product['id_product']);
+
+            $price = $Product->getPrice(true, null, 2);
+
+            $prod = array(
+                'name' => $product['name'],
+                'sku' => $product['reference'],
+                'price' => (string)$price,
+                'price_display' => $price . ' ' . $this->context->currency->iso_code,
+                'qty' => $product['cart_quantity'],
+                'image' => $this->context->link->getImageLink(
+                    $product['link_rewrite'],
+                    $Product->getCoverWs(),
+                    ImageType::getFormatedName('home')
+                )
+            );
+            $data['products'][] = $prod;
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param $customer
+     * @return false
+     */
+    public function formVisitor($customer)
+    {
+        $this->logDebug('FORM-VISITOR');
+        $visitorRegistration = [
+            'email' => $customer->email,
+            'firstname' => $customer->firstname,
+            'lastname' => $customer->lastname,
+            'visitor_id' => $_COOKIE['sender_site_visitor'],
+            'list_id' => Configuration::get('SPM_GUEST_LIST_ID'),
+        ];
+
+        #Check if has any orders
+        if($this->checkOrderHistory($customer->id)) {
+            if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
+                $visitorRegistration['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+            }
+        }else{
+            $visitorRegistration['list_id'] = Configuration::get('SPM_GUEST_LIST_ID');
+        }
+
+        $this->apiClient()->visitorRegistered($visitorRegistration);
+
+        #Checking the status of the subscriber. On unsubscribed we wont continue
+        $subscriber = $this->checkSubscriberState($customer->email);
+
+        #Handling subscriber deleted
+        if (!$subscriber) {
+            $this->logDebug('NO subscriber');
+            return false;
+        }
+
+        $customFields = $this->getCustomFields($customer);
+
+        if (!empty($customFields)) {
+                $this->apiClient()->addFields($subscriber->id, $customFields);
+                $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
+            }
+
+        return $subscriber;
     }
 
     /**
@@ -564,6 +671,14 @@ class SenderAutomatedEmails extends Module
             $this->logDebug('Returning customer connected back');
             return true;
         }
+    }
+
+    public function compareCartDateTime($dateAdd, $duration = 2)
+    {
+        $currentTime = strtotime(date('Y-m-d H:i:s'));
+        $dateCartAdded = $dateAdd + $duration;
+
+        return $dateCartAdded >= $currentTime; // true = avoid // false = should track logic
     }
 
     /**
@@ -699,7 +814,6 @@ class SenderAutomatedEmails extends Module
         }
         return false;
     }
-
 
     /**
      * On this hook we setup product
@@ -838,86 +952,6 @@ class SenderAutomatedEmails extends Module
             ($customer->id_gender == 1 ? $this->l('Male') : $this->l('Female')) : false;
 
         return $fields;
-    }
-
-    /**
-     * Helper method to
-     * generate cart array for Sender api call
-     * It also retrieves products with images
-     *
-     * @param object $cart
-     * @param string $email
-     * @return array
-     */
-    private function mapCartData($cart, $email, $visitorId)
-    {
-        $cartHash = $cart->id;
-        $this->logDebug('This is the cart hash ' . $cartHash);
-
-        $data = array(
-            "email" => $email,
-            'visitor_id' => $visitorId,
-            "external_id" => $cart->id,
-            "url" => _PS_BASE_URL_ . __PS_BASE_URI__
-                . 'index.php?fc=module&module='
-                . $this->name
-                . "&controller=recover&hash={$cartHash}", //cart_hash where formed?
-            "currency" => $this->context->currency->iso_code,
-            "order_total" => (string)$cart->getOrderTotal(),
-            "products" => array()
-        );
-
-        $products = $cart->getProducts();
-
-        foreach ($products as $product) {
-            $Product = new Product($product['id_product']);
-
-            $price = $Product->getPrice(true, null, 2);
-
-            $prod = array(
-                'name' => $product['name'],
-                'sku' => $product['reference'],
-                'price' => (string)$price,
-                'price_display' => $price . ' ' . $this->context->currency->iso_code,
-                'qty' => $product['cart_quantity'],
-                'image' => $this->context->link->getImageLink(
-                    $product['link_rewrite'],
-                    $Product->getCoverWs(),
-                    ImageType::getFormatedName('home')
-                )
-            );
-            $this->logDebug(json_encode($prod));
-            $data['products'][] = $prod;
-        }
-
-        return $data;
-    }
-
-    /**
-     * Sync current cart with sender cart track
-     * @param $cart
-     * @param $cookie
-     */
-    public function syncCart($cart, $cookie)
-    {
-        #Check if we should
-        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS')
-            || !Configuration::get('SPM_IS_MODULE_ACTIVE')) {
-            $this->logDebug('Track wont get track, please enable option from admin-menu');
-            return false;
-        }
-
-        // Keep recipient up to date with Sender.net list
-        // Generate cart data array for api call
-        $cartData = $this->mapCartData($cart, $cookie['email'], $_COOKIE['sender_site_visitor']);
-        if (!empty($cartData['products'])) {
-            $cartTrackResult = $this->apiClient()->trackCart($cartData);
-            $this->logDebug('Cart track response: ' . json_encode($cartTrackResult));
-        } elseif (empty($cartData['products'])) {
-            $resourceKey = Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT');
-            $cartDeleteResult = $this->apiClient()->cartDelete($resourceKey, $cart->id);
-            $this->logDebug('Cart delete response:' . json_encode($cartDeleteResult));
-        }
     }
 
     public function updateSubscriber($subscriber)
