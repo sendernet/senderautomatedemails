@@ -122,7 +122,7 @@ class SenderApiClient
      * @param array $params
      * @return array
      */
-    private function makeApiRequest($requestConfig, $params)
+    private function makeApiRequestLegacy($requestConfig, $params)
     {
         if (function_exists('curl_version')) {
             return $this->makeCurlRequest($requestConfig, $params);
@@ -136,7 +136,7 @@ class SenderApiClient
      * @param $endpoint
      * @return false|mixed
      */
-    private function makeCurlRequest($requestConfig, $data)
+    private function makeApiRequest($requestConfig, $data)
     {
         #Forming data for curl request
         $formedData = [];
@@ -155,6 +155,9 @@ class SenderApiClient
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Authorization: ' . $this->prefixAuth . $this->apiKey,
         ));
+
+        curl_setopt($ch, CURLOPT_ENCODING, '');
+        curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 
         #Cases get, post
         $httpMethod = $requestConfig['http'] ? $requestConfig['http'] : 'get';
@@ -217,9 +220,7 @@ class SenderApiClient
             'stats' => true,
         ];
 
-        $data = $params;
-
-        return $response = $this->makeApiRequest($requestConfig, $data);
+        return $response = $this->makeApiRequest($requestConfig, $params);
     }
 
     /**
