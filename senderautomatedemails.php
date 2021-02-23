@@ -32,17 +32,13 @@ class SenderAutomatedEmails extends Module
      */
     private $deprecatedFunctions = array();
 
-    /**
-     * Indicates whether module is in debug mode
-     * @var bool
-     */
     private $debug = true;
 
     /**
      * Sender.net API client
      * @var object
      */
-    public $apiClient = null;
+    public $senderApiClient = null;
 
     /**
      * FileLogger instance
@@ -229,14 +225,19 @@ class SenderAutomatedEmails extends Module
         Configuration::updateValue('SPM_FORM_ID', 0);
     }
 
-    /**
-     * Showing the form on all pages
-     * If embed will append to before the footer
-     */
-    public function hookDisplayFooterBefore()
+    public function isModuleActive()
     {
-        // Check if we should
-        if (!Configuration::get('SPM_IS_MODULE_ACTIVE') || (!Configuration::get('SPM_ALLOW_FORMS'))
+        if (!Configuration::get('SPM_IS_MODULE_ACTIVE')){
+            $this->logDebug('Module not active');
+            return false;
+        }
+        $this->logDebug('Module is active');
+        return true;
+    }
+
+    public function senderDisplayFooter()
+    {
+        if ((!Configuration::get('SPM_ALLOW_FORMS'))
             || Configuration::get('SPM_FORM_ID') == $this->defaultSettings['SPM_FORM_ID']) {
             return;
         }
@@ -245,7 +246,7 @@ class SenderAutomatedEmails extends Module
             'showForm' => false
         );
 
-        $form = $this->apiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
+        $form = $this->senderApiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
         #Check if form is disabled or pop-up
         if (!$form->is_active || $form->type != 'embed') {
             return;
@@ -264,6 +265,20 @@ class SenderAutomatedEmails extends Module
 
         $this->context->smarty->assign($options);
         return $this->context->smarty->fetch($this->views_url . '/templates/front/form.tpl');
+    }
+
+    /**
+     * Showing the form on all pages
+     * If embed will append to before the footer
+     * Option available for 1.7
+     */
+    public function hookDisplayFooterBefore()
+    {
+        $this->logDebug('hookDisplayFooterBefore');
+        if (!$this->isModuleActive()){
+            return;
+        }
+        return $this->senderDisplayFooter();
     }
 
     /**
@@ -272,45 +287,21 @@ class SenderAutomatedEmails extends Module
      */
     public function hookDisplayFooter()
     {
-        // Check if we should
-        if (!Configuration::get('SPM_IS_MODULE_ACTIVE') || (!Configuration::get('SPM_ALLOW_FORMS'))
-            || Configuration::get('SPM_FORM_ID') == $this->defaultSettings['SPM_FORM_ID']) {
+        $this->logDebug('hookDisplayFooter');
+        if (!$this->isModuleActive()){
             return;
         }
-
-        $options = array(
-            'showForm' => false
-        );
-
-        $form = $this->apiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
-        #Check if form is disabled or pop-up
-        if (!$form->is_active || $form->type != 'embed') {
-            return;
-        }
-
-        if ($form->type === 'embed') {
-            $embedHash = $form->settings->embed_hash;
-        }
-
-        // Add forms
-        if (Configuration::get('SPM_ALLOW_FORMS')) {
-            $options['formUrl'] = isset($form->settings->resource_path) ? $form->settings->resource_path : '';
-            $options['showForm'] = true;
-            $options['embedForm'] = isset($embedHash);
-            $options['embedHash'] = isset($embedHash) ? $embedHash : '';
-        }
-
-        $this->context->smarty->assign($options);
-        return $this->context->smarty->fetch($this->views_url . '/templates/front/form.tpl');
+        return $this->senderDisplayFooter();
     }
 
     public function hookDisplayHeader()
     {
-        #Allow script
-        #If forms are active or if track cart is active
-        // Check if we should
-        if (!Configuration::get('SPM_IS_MODULE_ACTIVE') || !Configuration::get('SPM_API_KEY')
-            || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
+        $this->logDebug('hookDisplayHeader');
+        if (!$this->isModuleActive()){
+            return;
+        }
+
+        if (!Configuration::get('SPM_API_KEY') || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
             return;
         }
 
@@ -350,11 +341,13 @@ class SenderAutomatedEmails extends Module
      */
     public function hookactionCustomerAccountAdd($context)
     {
-        $this->logDebug('#hookactionCustomerAccountAdd START');
-        // Validate if we should
-        if (!Validate::isLoadedObject($context['newCustomer'])
-            || !Configuration::get('SPM_IS_MODULE_ACTIVE')) {
-            $this->logDebug('Something went wrong');
+        $this->logDebug('#hookactionCustomerAccountAdd');
+        if (!$this->isModuleActive()){
+            return;
+        }
+
+        if (!Validate::isLoadedObject($context['newCustomer'])) {
+            $this->logDebug('object customer not loaded');
             return;
         }
 
@@ -379,7 +372,7 @@ class SenderAutomatedEmails extends Module
             if (Configuration::get('SPM_GUEST_LIST_ID') != $this->defaultSettings['SPM_GUEST_LIST_ID']) {
                 $visitorRegistration['list_id'] = Configuration::get('SPM_GUEST_LIST_ID');
             }
-            $this->apiClient()->visitorRegistered($visitorRegistration);
+            $this->senderApiClient()->visitorRegistered($visitorRegistration);
 
             #Checking the status of the subscriber. On unsubscribed we wont continue
             $subscriber = $this->checkSubscriberState($customer->email);
@@ -393,7 +386,7 @@ class SenderAutomatedEmails extends Module
             $customFields = $this->getCustomFields($customer);
 
             if (!empty($customFields)) {
-                $this->apiClient()->addFields($subscriber->id, $customFields);
+                $this->senderApiClient()->addFields($subscriber->id, $customFields);
                 $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
             }
 
@@ -405,6 +398,11 @@ class SenderAutomatedEmails extends Module
 
     public function hookActionAuthentication()
     {
+        $this->logDebug('hookActionAuthentication');
+        if (!$this->isModuleActive()){
+            return;
+        }
+
         $customer = $this->context->customer;
         $this->formVisitor($customer);
     }
@@ -418,6 +416,16 @@ class SenderAutomatedEmails extends Module
      */
     public function hookAdditionalCustomerFormFields($params)
     {
+        $this->logDebug('hookAdditionalCustomerFormFields');
+        if (!$this->isModuleActive()){
+            return;
+        }
+
+        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS')){
+            $this->logDebug('track carts not active');
+            return;
+        }
+
         if (Module::isEnabled('ps_emailsubscription')) {
             $this->logDebug('Using the newsletter checkbox from newsletter plugin');
             return;
@@ -451,7 +459,12 @@ class SenderAutomatedEmails extends Module
      */
     public function hookActionCartSummary($context)
     {
-        $this->logDebug('HOOK ACTION CART SUMMARY');
+        $this->logDebug('hookActionCartSummary');
+
+        if (!$this->isModuleActive()){
+            return;
+        }
+
         // Validate if we should
         if (!Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS') || !Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
             $this->logDebug('Track cart option is not enable for Guest/New customers');
@@ -491,9 +504,15 @@ class SenderAutomatedEmails extends Module
     public function hookActionObjectCartUpdateAfter($context)
     {
         $this->logDebug('hookActionObjectCartUpdateAfter');
-        if (!Validate::isLoadedObject($context['cart']) || !Configuration::get('SPM_IS_MODULE_ACTIVE')
-            || !Configuration::get('SPM_ALLOW_TRACK_CARTS') || !isset($_COOKIE['sender_site_visitor'])) {
-            $this->logDebug('Cart object not loaded || Module not active || Cart tracking not active || Cookies not set up');
+
+        if (!$this->isModuleActive()){
+            return;
+        }
+
+        if (!Validate::isLoadedObject($context['cart']) || !Configuration::get('SPM_ALLOW_TRACK_CARTS')
+            || !isset($_COOKIE['sender_site_visitor'])) {
+            $this->logDebug('Cart object not loaded || Module not active || Cart tracking not active 
+            || Cookies not set up');
             return;
         }
 
@@ -524,7 +543,7 @@ class SenderAutomatedEmails extends Module
      * @param $cart
      * @param $cookie
      */
-    public function syncCart($cart, $cookie)
+    private function syncCart($cart, $cookie)
     {
         $this->logDebug('SYNC-CART');
 
@@ -537,13 +556,15 @@ class SenderAutomatedEmails extends Module
         $cartData = $this->mapCartData($cart, $email, $_COOKIE['sender_site_visitor']);
 
         if (isset($cartData) && !empty($cartData['products'])){
-            $this->apiClient()->trackCart($cartData);
+            $a = $this->senderApiClient()->trackCart($cartData);
             $this->context->cookie->__set('captured-cart', strtotime(date('Y-m-d H:i:s')));
             $this->context->cookie->write();
+            $this->logDebug(json_encode($a));
         }else{
-            $this->apiClient()->cartDelete(Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'), $cart->id);
+            $b = $this->senderApiClient()->cartDelete(Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'), $cart->id);
             $this->context->cookie->__set('deleted-cart', true);
             $this->context->cookie->write();
+            $this->logDebug(json_encode($b));
         }
     }
 
@@ -606,7 +627,7 @@ class SenderAutomatedEmails extends Module
      * @param $customer
      * @return false
      */
-    public function formVisitor($customer)
+    private function formVisitor($customer)
     {
         $this->logDebug('FORM-VISITOR');
         $visitorRegistration = [
@@ -626,7 +647,7 @@ class SenderAutomatedEmails extends Module
             $visitorRegistration['list_id'] = Configuration::get('SPM_GUEST_LIST_ID');
         }
 
-        $this->apiClient()->visitorRegistered($visitorRegistration);
+        $this->senderApiClient()->visitorRegistered($visitorRegistration);
 
         #Checking the status of the subscriber. On unsubscribed we wont continue
         $subscriber = $this->checkSubscriberState($customer->email);
@@ -640,15 +661,16 @@ class SenderAutomatedEmails extends Module
         $customFields = $this->getCustomFields($customer);
 
         if (!empty($customFields)) {
-                $this->apiClient()->addFields($subscriber->id, $customFields);
+                $this->senderApiClient()->addFields($subscriber->id, $customFields);
                 $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
             }
 
         return $subscriber;
     }
-    
-    public function compareCartDateTime($dateAdd, $duration = 2)
+
+    private function compareCartDateTime($dateAdd, $duration = 1)
     {
+        $this->logDebug('compareCartDateTime');
         $currentTime = strtotime(date('Y-m-d H:i:s'));
         $dateCartAdded = $dateAdd + $duration;
 
@@ -665,7 +687,17 @@ class SenderAutomatedEmails extends Module
     {
         $this->logDebug('hookDisplayOrderConfirmation');
         #First check if we should capture these details
-        $this->logDebug('When the order would be finish');
+        if (!$this->isModuleActive()){
+            return;
+        }
+
+        if (!Validate::isLoadedObject($context['cart']) || !Configuration::get('SPM_ALLOW_TRACK_CARTS')
+            || !isset($_COOKIE['sender_site_visitor'])) {
+            $this->logDebug('Cart object not loaded || Module not active || Cart tracking not active 
+            || Cookies not set up');
+            return;
+        }
+
         if (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
             $order = $context['order'];
         } else {
@@ -685,7 +717,7 @@ class SenderAutomatedEmails extends Module
                 $dataConvert['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
             }
 
-            $convertCart = $this->apiClient()->cartConvert($dataConvert, $order->id_cart);
+            $convertCart = $this->senderApiClient()->cartConvert($dataConvert, $order->id_cart);
 
             $this->logDebug('Cart convert response: '
                 . json_encode($convertCart));
@@ -705,6 +737,10 @@ class SenderAutomatedEmails extends Module
     {
         $this->logDebug('hookactionObjectCustomerUpdateAfter');
 
+        if (!$this->isModuleActive()){
+            return;
+        }
+
         $customer = $context['object'];
 
         return $this->hookactionCustomerAccountUpdate($customer);
@@ -721,9 +757,11 @@ class SenderAutomatedEmails extends Module
     public function hookactionCustomerAccountUpdate($customer)
     {
         $this->logDebug('hookactionCustomerAccountUpdate');
+        if (!$this->isModuleActive()){
+            return;
+        }
         //Validate if we should
-        if (!Validate::isLoadedObject($customer) ||
-            !Configuration::get('SPM_IS_MODULE_ACTIVE')) {
+        if (!Validate::isLoadedObject($customer)) {
             $this->logDebug('Exiting update customer');
             return true;
         }
@@ -753,7 +791,7 @@ class SenderAutomatedEmails extends Module
                 $visitorRegistration['list_id'] = Configuration::get('SPM_GUEST_LIST_ID');
             }
 
-            $this->apiClient()->visitorRegistered($visitorRegistration);
+            $this->senderApiClient()->visitorRegistered($visitorRegistration);
 
             $newsletter = $customer->newsletter ? true : false;
             $subscriber = $this->checkSubscriberState($customer->email, $newsletter);
@@ -769,7 +807,7 @@ class SenderAutomatedEmails extends Module
             $customFields = $this->getCustomFields($customer);
 
             if (!empty($customFields)) {
-                $this->apiClient()->addFields($subscriber->id, $customFields);
+                $this->senderApiClient()->addFields($subscriber->id, $customFields);
                 $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
             }
         } catch (Exception $e) {
@@ -780,7 +818,7 @@ class SenderAutomatedEmails extends Module
         return true;
     }
 
-    public function checkOrderHistory($customerId)
+    private function checkOrderHistory($customerId)
     {
         $customerOrders = Order::getCustomerOrders($customerId);
         if ($customerOrders && count($customerOrders) > 0){
@@ -799,6 +837,10 @@ class SenderAutomatedEmails extends Module
     public function hookDisplayFooterProduct($params)
     {
         $this->logDebug('hookDisplayFooterProduct');
+        if (!$this->isModuleActive()){
+            return;
+        }
+
         $product = $params['product'];
         $image_url = '';
 
@@ -893,14 +935,14 @@ class SenderAutomatedEmails extends Module
      * @param false $reactivate
      * @return false
      */
-    public function checkSubscriberState($email, $reactivate = false)
+    private function checkSubscriberState($email, $reactivate = false)
     {
-        if ($isSubscriber = $this->apiClient()->isAlreadySubscriber($email)) {
+        if ($isSubscriber = $this->senderApiClient()->isAlreadySubscriber($email)) {
             if (!$isSubscriber->unsubscribed) {
                 return $isSubscriber;
             } else {
                 if ($reactivate) {
-                    $this->apiClient()->reactivateSubscriber($isSubscriber->id);
+                    $this->senderApiClient()->reactivateSubscriber($isSubscriber->id);
                     $this->logDebug('Subscriber reactivated');
                     return $isSubscriber;
                 }
@@ -930,7 +972,7 @@ class SenderAutomatedEmails extends Module
 
     public function updateSubscriber($subscriber)
     {
-        $this->apiClient()->updateSubscriber($subscriber);
+        $this->senderApiClient()->updateSubscriber($subscriber);
     }
 
     /**
@@ -953,8 +995,8 @@ class SenderAutomatedEmails extends Module
             return false;
         }
 
-        $this->apiClient()->updateSubscriber($recipient, $subscriberId);
-        $addToListResult = $this->apiClient()->addToList($subscriberId, $tagId);
+        $this->senderApiClient()->updateSubscriber($recipient, $subscriberId);
+        $addToListResult = $this->senderApiClient()->addToList($subscriberId, $tagId);
 
         return $addToListResult;
     }
@@ -971,8 +1013,9 @@ class SenderAutomatedEmails extends Module
      * CustomersExport
      * @return array
      */
-    public function syncList()
+    private function syncList()
     {
+        $this->logDebug('syncList');
         try {
             $customersRequirements = Db::getInstance()->executeS('
                 SELECT email, firstname, lastname
@@ -1080,7 +1123,7 @@ class SenderAutomatedEmails extends Module
         }
 
         foreach ($oldSubscribers as $subscriber) {
-            $this->apiClient()->addToList(array(
+            $this->senderApiClient()->addToList(array(
                 'email' => $subscriber['email'],
                 'created' => $subscriber['newsletter_date_add'],
                 'active' => $subscriber['active'],
@@ -1090,7 +1133,7 @@ class SenderAutomatedEmails extends Module
         }
 
         foreach ($oldCustomers as $subscriber) {
-            $this->apiClient()->addToList(array(
+            $this->senderApiClient()->addToList(array(
                 'email' => $subscriber['email'],
                 'firstname' => $subscriber['firstname'],
                 'lastname' => $subscriber['lastname'],
@@ -1127,27 +1170,27 @@ class SenderAutomatedEmails extends Module
      * Get Sender API Client instance
      * and make sure that everything is in order
      *
-     * @return object SenderApiClient
+     * @return object SendersenderApiClient
      * @todo  described bellow
      */
-    public function apiClient()
+    private function senderApiClient()
     {
         // Create new instance if there is none
-        if (!$this->apiClient) {
-            $this->apiClient = new SenderApiClient();
-            $this->apiClient->setApiKey(Configuration::get('SPM_API_KEY'));
+        if (!$this->senderApiClient) {
+            $this->senderApiClient = new SenderApiClient();
+            $this->senderApiClient->setApiKey(Configuration::get('SPM_API_KEY'));
         }
 
         // Check if key is valid
-        if (!$this->apiClient->checkApiKey()) {
-            $this->logDebug('apiClient(): checkApiKey failed.');
+        if (!$this->senderApiClient->checkApiKey()) {
+            $this->logDebug('senderApiClient(): checkApiKey failed.');
             $this->logDebug('Key used: ' . Configuration::get('SPM_API_KEY'));
             // Disable module
             $this->disableModule();
 
-            return $this->apiClient;
+            return $this->senderApiClient;
         }
 
-        return $this->apiClient;
+        return $this->senderApiClient;
     }
 }
