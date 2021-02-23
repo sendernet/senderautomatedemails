@@ -192,21 +192,6 @@ class SenderAutomatedEmails extends Module
     }
 
     /**
-     * Add tab css to the BackOffice
-     *
-     * @return void
-     */
-    public function hookDisplayBackOfficeHeader()
-    {
-        $this->context->controller->addCss($this->_path . 'views/css/tab.css');
-    }
-
-    public function hookDisplayHome()
-    {
-        return $this->hookDisplayFooterBefore();
-    }
-
-    /**
      * Reset all Sender.net related settings
      *
      * @return void
@@ -233,65 +218,6 @@ class SenderAutomatedEmails extends Module
         }
         $this->logDebug('Module is active');
         return true;
-    }
-
-    public function senderDisplayFooter()
-    {
-        if ((!Configuration::get('SPM_ALLOW_FORMS'))
-            || Configuration::get('SPM_FORM_ID') == $this->defaultSettings['SPM_FORM_ID']) {
-            return;
-        }
-
-        $options = array(
-            'showForm' => false
-        );
-
-        $form = $this->senderApiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
-        #Check if form is disabled or pop-up
-        if (!$form->is_active || $form->type != 'embed') {
-            return;
-        }
-
-        if ($form->type === 'embed') {
-            $embedHash = $form->settings->embed_hash;
-        }
-        // Add forms
-        if (Configuration::get('SPM_ALLOW_FORMS')) {
-            $options['formUrl'] = isset($form->settings->resource_path) ? $form->settings->resource_path : '';
-            $options['showForm'] = true;
-            $options['embedForm'] = isset($embedHash);
-            $options['embedHash'] = isset($embedHash) ? $embedHash : '';
-        }
-
-        $this->context->smarty->assign($options);
-        return $this->context->smarty->fetch($this->views_url . '/templates/front/form.tpl');
-    }
-
-    /**
-     * Showing the form on all pages
-     * If embed will append to before the footer
-     * Option available for 1.7
-     */
-    public function hookDisplayFooterBefore()
-    {
-        $this->logDebug('hookDisplayFooterBefore');
-        if (!$this->isModuleActive()){
-            return;
-        }
-        return $this->senderDisplayFooter();
-    }
-
-    /**
-     * Showing the form on all pages
-     * If embed will append to before the footer
-     */
-    public function hookDisplayFooter()
-    {
-        $this->logDebug('hookDisplayFooter');
-        if (!$this->isModuleActive()){
-            return;
-        }
-        return $this->senderDisplayFooter();
     }
 
     public function hookDisplayHeader()
@@ -332,6 +258,80 @@ class SenderAutomatedEmails extends Module
     }
 
     /**
+     * Add tab css to the BackOffice
+     *
+     * @return void
+     */
+    public function hookDisplayBackOfficeHeader()
+    {
+        $this->context->controller->addCss($this->_path . 'views/css/tab.css');
+    }
+
+    public function hookDisplayHome()
+    {
+        return $this->hookDisplayFooterBefore();
+    }
+
+    /**
+     * Showing the form on all pages
+     * If embed will append to before the footer
+     * Option available for 1.7
+     */
+    public function hookDisplayFooterBefore()
+    {
+        $this->logDebug('hookDisplayFooterBefore');
+        if (!$this->isModuleActive()){
+            return;
+        }
+        return $this->senderDisplayFooter();
+    }
+
+    /**
+     * Showing the form on all pages
+     * If embed will append to before the footer
+     */
+    public function hookDisplayFooter()
+    {
+        $this->logDebug('hookDisplayFooter');
+        if (!$this->isModuleActive()){
+            return;
+        }
+        return $this->senderDisplayFooter();
+    }
+
+    public function senderDisplayFooter()
+    {
+        if ((!Configuration::get('SPM_ALLOW_FORMS'))
+            || Configuration::get('SPM_FORM_ID') == $this->defaultSettings['SPM_FORM_ID']) {
+            return;
+        }
+
+        $options = array(
+            'showForm' => false
+        );
+
+        $form = $this->senderApiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
+        #Check if form is disabled or pop-up
+        if (!$form->is_active || $form->type != 'embed') {
+            return;
+        }
+
+        if ($form->type === 'embed') {
+            $embedHash = $form->settings->embed_hash;
+        }
+        // Add forms
+        if (Configuration::get('SPM_ALLOW_FORMS')) {
+            $options['formUrl'] = isset($form->settings->resource_path) ? $form->settings->resource_path : '';
+            $options['showForm'] = true;
+            $options['embedForm'] = isset($embedHash);
+            $options['embedHash'] = isset($embedHash) ? $embedHash : '';
+        }
+
+        $this->context->smarty->assign($options);
+        return $this->context->smarty->fetch($this->views_url . '/templates/front/form.tpl');
+    }
+
+    /**
      * Here we handle new signups, we fetch customer info
      * then if enabled tracking and user has opted in for
      * a newsletter we add him to the prefered list
@@ -362,34 +362,7 @@ class SenderAutomatedEmails extends Module
         }
 
         try {
-            $visitorRegistration = [
-                'email' => $customer->email,
-                'firstname' => $customer->firstname,
-                'lastname' => $customer->lastname,
-                'visitor_id' => $_COOKIE['sender_site_visitor'],
-                'list_id' => Configuration::get('SPM_GUEST_LIST_ID'),
-            ];
-            if (Configuration::get('SPM_GUEST_LIST_ID') != $this->defaultSettings['SPM_GUEST_LIST_ID']) {
-                $visitorRegistration['list_id'] = Configuration::get('SPM_GUEST_LIST_ID');
-            }
-            $this->senderApiClient()->visitorRegistered($visitorRegistration);
-
-            #Checking the status of the subscriber. On unsubscribed we wont continue
-            $subscriber = $this->checkSubscriberState($customer->email);
-
-            #Handling subscriber deleted
-            if (!$subscriber) {
-                $this->logDebug('NO subscriber');
-                return;
-            }
-
-            $customFields = $this->getCustomFields($customer);
-
-            if (!empty($customFields)) {
-                $this->senderApiClient()->addFields($subscriber->id, $customFields);
-                $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
-            }
-
+            $this->formVisitor($customer);
             $this->logDebug('#hookactionCustomerAccountAdd END');
         } catch (Exception $e) {
             $this->logDebug('Error hookactionCustomer ' . json_encode($e->getMessage()));
@@ -471,11 +444,7 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
-            $cookie = $context['cookie']->getAll();
-        } else {
-            $cookie = $context['cookie']->getFamily($context['cookie']->id);
-        }
+        $cookie = $this->getContextCookie($context);
 
         // Validate if we should track
         if (!isset($cookie['email'])
@@ -516,11 +485,7 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
-            $cookie = $context['cookie']->getAll();
-        } else {
-            $cookie = $context['cookie']->getFamily($context['cookie']->id);
-        }
+        $cookie = $this->getContextCookie($context);
 
         if ($this->context->cookie->__get('deleted-cart') === true){
             $this->context->cookie->__set('deleted-cart', false);
@@ -970,37 +935,6 @@ class SenderAutomatedEmails extends Module
         return $fields;
     }
 
-    public function updateSubscriber($subscriber)
-    {
-        $this->senderApiClient()->updateSubscriber($subscriber);
-    }
-
-    /**
-     * For customers that return to the site
-     * Syncs recipient with the proper Sender.net list
-     *
-     * @param $recipient
-     * @param $subscriberId
-     * @param $tagId
-     * @return void
-     */
-    private function syncRecipient($recipient, $subscriberId, $tagId)
-    {
-        $this->logDebug('syncRecipient hook');
-        // Validate if we should
-        if (!Validate::isLoadedObject($this->context->customer)
-            || (!Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS')
-                && !Configuration::get('SPM_ALLOW_TRACK_CARTS'))
-            || !Configuration::get('SPM_IS_MODULE_ACTIVE')) {
-            return false;
-        }
-
-        $this->senderApiClient()->updateSubscriber($recipient, $subscriberId);
-        $addToListResult = $this->senderApiClient()->addToList($subscriberId, $tagId);
-
-        return $addToListResult;
-    }
-
     /**
      * Generates Configuration link in modules selection view
      */
@@ -1146,6 +1080,16 @@ class SenderAutomatedEmails extends Module
 
         $this->logDebug('Sync finished.');
         return $this->l('Successfully synced!');
+    }
+
+    public function getContextCookie($context)
+    {
+        if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
+            $cookie = $context['cookie']->getAll();
+        } else {
+            $cookie = $context['cookie']->getFamily($context['cookie']->id);
+        }
+        return $cookie;
     }
 
     /**
