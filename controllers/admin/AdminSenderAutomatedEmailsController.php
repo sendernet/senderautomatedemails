@@ -151,7 +151,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         $this->context->controller->addCSS($this->module->views_url . '/css/style.css');
         $this->context->controller->addCSS($this->module->views_url . '/css/material-font.css');
 
-        $customFields = $this->module->apiClient()->getCustomFields();
+        $customFields = $this->module->senderApiClient()->getCustomFields();
 
         #Removing the default fields
         $customFieldsToHide = ['email', 'firstname', 'lastname'];
@@ -165,15 +165,15 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         $this->context->smarty->assign(array(
             'imageUrl' => $this->module->getPathUri() . 'views/img/sender_logo.png',
             //Which user show here as auth been done over apiKey, no user involve
-            'connectedAccount' => $this->module->apiClient()->getCurrentAccount(),
-            'connectedUser' => $this->module->apiClient()->getCurrentUser(),
-            'apiKey' => $this->module->apiClient()->getApiKey(),
+            'connectedAccount' => $this->module->senderApiClient()->getCurrentAccount(),
+            'connectedUser' => $this->module->senderApiClient()->getCurrentUser(),
+            'apiKey' => $this->module->senderApiClient()->getApiKey(),
             'disconnectUrl' => $disconnectUrl,
-            'baseUrl' => $this->module->apiClient()->getBaseUrl(),
-            'appUrl' => $this->module->apiClient()->getAppUrl(),
+            'baseUrl' => $this->module->senderApiClient()->getBaseUrl(),
+            'appUrl' => $this->module->senderApiClient()->getAppUrl(),
             'moduleVersion' => $this->module->version,
-            'allForms' => $this->module->apiClient()->getAllForms(),
-            'allLists' => $this->module->apiClient()->getAllLists(),
+            'allForms' => $this->module->senderApiClient()->getAllForms(),
+            'allLists' => $this->module->senderApiClient()->getAllLists(),
             'allowNewSignups' => Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS'),
             'allowCartTrack' => Configuration::get('SPM_ALLOW_TRACK_CARTS'),
             'allowForms' => Configuration::get('SPM_ALLOW_FORMS'),

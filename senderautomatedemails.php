@@ -1173,7 +1173,7 @@ class SenderAutomatedEmails extends Module
      * @return object SendersenderApiClient
      * @todo  described bellow
      */
-    private function senderApiClient()
+    public function senderApiClient()
     {
         // Create new instance if there is none
         if (!$this->senderApiClient) {
