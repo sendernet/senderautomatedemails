@@ -663,11 +663,6 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
-            $order = $context['order'];
-        } else {
-            $order = $context['objOrder'];
-        }
 
         try {
             $this->logDebug('#hookActionValidateOrder START');
