@@ -444,7 +444,7 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        $cookie = $this->getContextCookie($context);
+        $cookie = $this->getContextCookie();
 
         // Validate if we should track
         if (!isset($cookie['email'])
@@ -485,22 +485,19 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        $cookie = $this->getContextCookie($context);
-
-        if ($this->context->cookie->__get('deleted-cart') === true){
-            $this->context->cookie->__set('deleted-cart', false);
+        if ($this->context->cookie->__get('sender-deleted-cart') === true){
+            $this->context->cookie->__set('sender-deleted-cart', false);
             return;
         }
 
-        if ($this->context->cookie->__isset('captured-cart') && !empty($this->context->cookie->__get('captured-cart'))) {
-            if ($this->compareCartDateTime($this->context->cookie->__get('captured-cart'))) {
+        if ($this->context->cookie->__isset('sender-captured-cart') && !empty($this->context->cookie->__get('sender-captured-cart'))) {
+            if ($this->compareCartDateTime($this->context->cookie->__get('sender-captured-cart'))) {
                 $this->logDebug('Avoiding duplicating logic of prestashop');
                 return;
             }
-            $this->logDebug('comparasion of cart time should not stop');
         }
 
-        $this->syncCart($context['cart'], $cookie);
+        $this->syncCart($context['cart']);
     }
 
     /**
@@ -508,26 +505,20 @@ class SenderAutomatedEmails extends Module
      * @param $cart
      * @param $cookie
      */
-    private function syncCart($cart, $cookie)
+    private function syncCart($cart)
     {
         $this->logDebug('SYNC-CART');
 
-        if (isset($cookie['email']) && !empty($cookie['email'])){
-            $email = $cookie['email'];
-        }else{
-            $email = '';
-        }
-
-        $cartData = $this->mapCartData($cart, $email, $_COOKIE['sender_site_visitor']);
+        $cartData = $this->mapCartData($cart, $_COOKIE['sender_site_visitor']);
 
         if (isset($cartData) && !empty($cartData['products'])){
             $a = $this->senderApiClient()->trackCart($cartData);
-            $this->context->cookie->__set('captured-cart', strtotime(date('Y-m-d H:i:s')));
+            $this->context->cookie->__set('sender-captured-cart', strtotime(date('Y-m-d H:i:s')));
             $this->context->cookie->write();
             $this->logDebug(json_encode($a));
         }else{
             $b = $this->senderApiClient()->cartDelete(Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'), $cart->id);
-            $this->context->cookie->__set('deleted-cart', true);
+            $this->context->cookie->__set('sender-deleted-cart', true);
             $this->context->cookie->write();
             $this->logDebug(json_encode($b));
         }
@@ -543,13 +534,13 @@ class SenderAutomatedEmails extends Module
      * @param $visitorId
      * @return array
      */
-    private function mapCartData($cart, $email, $visitorId)
+    private function mapCartData($cart, $visitorId)
     {
         $this->logDebug('MAP-CART-DATA');
         $cartHash = $cart->id;
 
         $data = array(
-            "email" => $email,
+            "email" => $this->context->cookie->__get('email') ? $this->context->cookie->__get('email') : '',
             'visitor_id' => $visitorId,
             "external_id" => $cartHash,
             "url" => _PS_BASE_URL_ . __PS_BASE_URI__
@@ -1082,10 +1073,12 @@ class SenderAutomatedEmails extends Module
         return $this->l('Successfully synced!');
     }
 
-    public function getContextCookie($context)
+    public function getContextCookie()
     {
+        $context = Context::getContext();
+
         if (version_compare(_PS_VERSION_, '1.6.1.10', '>=')) {
-            $cookie = $context['cookie']->getAll();
+            $cookie = $context->cookie->getAll();
         } else {
             $cookie = $context['cookie']->getFamily($context['cookie']->id);
         }
