@@ -656,13 +656,18 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if (!Validate::isLoadedObject($context['cart']) || !Configuration::get('SPM_ALLOW_TRACK_CARTS')
+        if (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
+            $order = $context['order'];
+        } else {
+            $order = $context['objOrder'];
+        }
+
+        if (!$order || !Configuration::get('SPM_ALLOW_TRACK_CARTS')
             || !isset($_COOKIE['sender_site_visitor'])) {
             $this->logDebug('Cart object not loaded || Module not active || Cart tracking not active 
             || Cookies not set up');
             return;
         }
-
 
         try {
             $this->logDebug('#hookActionValidateOrder START');
