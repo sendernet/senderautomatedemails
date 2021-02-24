@@ -29,7 +29,8 @@
             <div class="spm-details-settings">
                 <div class="alert alert-addons">
                     {l s='Enable Sender track system to track your customers cart.' mod='senderautomatedemails'}
-                    <a href="https://landing.sender.net/abandoned-cart-email-template" target="_blank">{l s='Learn how to set up abandoned carts automation' mod='senderautomatedemails'}</a>
+                    <a href="https://landing.sender.net/abandoned-cart-email-template"
+                       target="_blank">{l s='Learn how to set up abandoned carts automation' mod='senderautomatedemails'}</a>
                 </div>
                 <button id="swToggleCartTrack"
                         class="btn btn-lg {if not $allowCartTrack}btn-success{else}btn-danger{/if}">
@@ -56,22 +57,27 @@
                             {l s='Select to which list save customers whose carts were tracked' mod='senderautomatedemails'}
                         </p>
                     </blockquote>
-                    <div id="swCustomerListSelectContainer" class="form-group">
-                        <label for="swCustomerListSelect">
-                            {l s='Select list' mod='senderautomatedemails'}
-                        </label>
-                        <select id="swCustomerListSelect" value="{$formId|escape:'htmlall':'UTF-8'}">
-                            <option value="0">
-                                {l s='Select a list' mod='senderautomatedemails'}
-                            </option>
-                            {foreach $allLists as $list}
-                                <option id="{$list->title|escape:'htmlall':'UTF-8'}"
-                                        {if $list->id eq $customerListId}selected="selected"{/if}
-                                        value="{$list->id|escape:'htmlall':'UTF-8'}">
-                                    {$list->title|escape:'htmlall':'UTF-8'}
+                    <div class="col-xs-12">
+                        <div id="swCustomerListSelectContainer" class="form-group">
+                            <label for="swCustomerListSelect">
+                                {l s='Select customer list' mod='senderautomatedemails'}
+                            </label>
+                            <select id="swCustomerListSelect" value="{$formId|escape:'htmlall':'UTF-8'}">
+                                <option value="0">
+                                    {l s='Select a list' mod='senderautomatedemails'}
                                 </option>
-                            {/foreach}
-                        </select>
+                                {foreach $allLists as $list}
+                                    <option id="{$list->title|escape:'htmlall':'UTF-8'}"
+                                            {if $list->id eq $customerListId}selected="selected"{/if}
+                                            value="{$list->id|escape:'htmlall':'UTF-8'}">
+                                        {$list->title|escape:'htmlall':'UTF-8'}
+                                    </option>
+                                {/foreach}
+                            </select>
+                        </div>
+                        <div style="visibility: hidden;" class="alert alert-success updated-first">
+                            {l s='Saved' mod='senderautomatedemails'}
+                        </div>
                     </div>
                 {/if}
             </div>
@@ -92,22 +98,27 @@
                             {l s='Select to which list save guests or new signups whose carts were tracked' mod='senderautomatedemails'}
                         </p>
                     </blockquote>
-                    <div id="swGuestListSelectContainer" class="form-group">
-                        <label for="swGuestListSelect">
-                            {l s='Select list' mod='senderautomatedemails'}
-                        </label>
-                        <select id="swGuestListSelect" value="{$formId|escape:'htmlall':'UTF-8'}">
-                            <option value="0">
-                                {l s='Select a list' mod='senderautomatedemails'}
-                            </option>
-                            {foreach $allLists as $list}
-                                <option id="{$list->title|escape:'htmlall':'UTF-8'}"
-                                        {if $list->id eq $guestListId}selected="selected"{/if}
-                                        value="{$list->id|escape:'htmlall':'UTF-8'}">
-                                    {$list->title|escape:'htmlall':'UTF-8'}
+                    <div class="col-xs-12">
+                        <div id="swGuestListSelectContainer" class="form-group">
+                            <label for="swGuestListSelect">
+                                {l s='Select guest list' mod='senderautomatedemails'}
+                            </label>
+                            <select id="swGuestListSelect" value="{$formId|escape:'htmlall':'UTF-8'}">
+                                <option value="0">
+                                    {l s='Select a list' mod='senderautomatedemails'}
                                 </option>
-                            {/foreach}
-                        </select>
+                                {foreach $allLists as $list}
+                                    <option id="{$list->title|escape:'htmlall':'UTF-8'}"
+                                            {if $list->id eq $guestListId}selected="selected"{/if}
+                                            value="{$list->id|escape:'htmlall':'UTF-8'}">
+                                        {$list->title|escape:'htmlall':'UTF-8'}
+                                    </option>
+                                {/foreach}
+                            </select>
+                        </div>
+                        <div style="visibility: hidden;" class="alert alert-success updated-second">
+                            {l s='Saved' mod='senderautomatedemails'}
+                        </div>
                     </div>
                 {/if}
             </div>

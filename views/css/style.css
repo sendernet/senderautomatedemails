@@ -231,9 +231,10 @@ td,th{
     min-width: 80px;
 }
 
-.updated{
+.updated-first, .updated-second{
     display: inline-block;
     margin-bottom: -10px!important;
+    height: 45px!important;
 }
 
 .field-create{
