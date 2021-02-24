@@ -938,7 +938,7 @@ class SenderAutomatedEmails extends Module
      * CustomersExport
      * @return array
      */
-    private function syncList()
+    public function syncList()
     {
         $this->logDebug('syncList');
         try {
