@@ -27,7 +27,7 @@ class SenderAutomatedEmailsRecoverModuleFrontController extends ModuleFrontContr
         }
         
         // Here we retrieve the cart from Sender
-        $cart = $this->module->apiClient()->cartGet(Tools::getValue('hash', 'NULL'));
+        $cart = $this->module->senderApiClient()->cartGet(Tools::getValue('hash', 'NULL'));
 
         $this->module->logDebug('Cart get by hash: ' . Tools::getValue('hash', 'NULL'));
         $this->module->logDebug('Cart data: ' . json_encode($cart));
