@@ -37,7 +37,7 @@
                         <label for="swExportClientToList">
                             {l s='Select list' mod='senderautomatedemails'}
                         </label>
-                        <select id="swExportClientToList" name="swExportListSelect"
+                        <select class="sender-lists" id="swExportClientToList" name="swExportListSelect"
                                 value="{$exportListId|escape:'htmlall':'UTF-8'}">
                             {if empty($allLists)}
                             <option value="0">
