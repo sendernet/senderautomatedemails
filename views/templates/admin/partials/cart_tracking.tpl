@@ -62,7 +62,8 @@
                             <label for="swCustomerListSelect">
                                 {l s='Select customer list' mod='senderautomatedemails'}
                             </label>
-                            <select class="sender-lists" id="swCustomerListSelect" value="{$formId|escape:'htmlall':'UTF-8'}">
+                            <select class="sender-lists" id="swCustomerListSelect"
+                                    value="{$formId|escape:'htmlall':'UTF-8'}">
                                 <option value="0">
                                     {l s='Select a list' mod='senderautomatedemails'}
                                 </option>
@@ -103,7 +104,8 @@
                             <label for="swGuestListSelect">
                                 {l s='Select guest list' mod='senderautomatedemails'}
                             </label>
-                            <select class="sender-lists" id="swGuestListSelect" value="{$formId|escape:'htmlall':'UTF-8'}">
+                            <select class="sender-lists" id="swGuestListSelect"
+                                    value="{$formId|escape:'htmlall':'UTF-8'}">
                                 <option value="0">
                                     {l s='Select a list' mod='senderautomatedemails'}
                                 </option>

@@ -11,14 +11,14 @@
 <div id="spm-customer-data" class="spm-tab-content">
     <div class="panel panel-default">
         <div class="panel-heading">
-            <i class="zmdi zmdi-shopping-cart"></i>
-            {l s='User data add to list' mod='senderautomatedemails'}
+            <i class="zmdi zmdi-accounts-alt"></i>
+            {l s='Customer data add to list' mod='senderautomatedemails'}
         </div>
         <div class="panel-body">
             <blockquote>
-                <h3 style="padding-left: 10px!important">
-                    {l s='Select which customer data add to subsriber list (email is added by default)' mod='senderautomatedemails'}
-                </h3>
+                <p>
+                    {l s='Select which customer data you would like to add to subscriber a list (email is added by default)' mod='senderautomatedemails'}
+                </p>
             </blockquote>
             <input class="spm-customer-data-input" type="checkbox"
                    value="FIRSTNAME">{l s='Firstname' mod='senderautomatedemails'}<br>

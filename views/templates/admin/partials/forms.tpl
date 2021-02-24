@@ -90,7 +90,7 @@
             <div class="panel-body">
                 <blockquote>
                     <p>
-                        {l s='To avoid pop-up forms from showing, they must be hidden to show on this website. To hide pop-up forms, go to your Sender account, Forms' mod='senderautomatedemails'}
+                        {l s='To avoid pop-up forms from showing, they must be hidden to show on this website. To hide pop-up forms, go to your Sender account, Forms.' mod='senderautomatedemails'}
                     </p>
                 </blockquote>
             </div>
