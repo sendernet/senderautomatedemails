@@ -238,7 +238,7 @@ td,th{
 }
 
 .field-create{
-    margin-top: 20px!important;
+    margin-top: 5px!important;
 }
 
 #syncList, #syncError{
@@ -246,4 +246,11 @@ td,th{
     -moz-transition: all 0.5s ease!important;
     -o-transition: all 0.5s ease!important;
     transition: all 0.5s ease!important;
+}
+
+.sender-lists{
+    width: 300px!important;
+}
+.bold{
+    font-weight: 700!important;
 }

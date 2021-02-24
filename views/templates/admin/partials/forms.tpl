@@ -67,7 +67,7 @@
                         <label for="swFormsSelect">
                             {l s='Select form' mod='senderautomatedemails'}
                         </label>
-                        <select id="swFormsSelect" name="swFormsSelect"
+                        <select class="sender-lists" id="swFormsSelect" name="swFormsSelect"
                                 value="{$formId|escape:'htmlall':'UTF-8'}">
                             <option value="0">
                                 {l s='Select a form' mod='senderautomatedemails'}
@@ -82,7 +82,7 @@
                             {/foreach}
                         </select>
                     </div>
-                    <div style="visibility: hidden;"  class="alert alert-success updated">
+                    <div style="visibility: hidden;"  class="alert alert-success updated-first">
                         {l s='Saved' mod='senderautomatedemails'}
                     </div>
                 </div>

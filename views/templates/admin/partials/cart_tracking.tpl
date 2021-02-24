@@ -54,7 +54,7 @@
                 {else}
                     <blockquote>
                         <p>
-                            {l s='Select to which list save customers whose carts were tracked' mod='senderautomatedemails'}
+                            {l s='Select to which list save customers whose carts were tracked.' mod='senderautomatedemails'}
                         </p>
                     </blockquote>
                     <div class="col-xs-12">
@@ -62,7 +62,7 @@
                             <label for="swCustomerListSelect">
                                 {l s='Select customer list' mod='senderautomatedemails'}
                             </label>
-                            <select id="swCustomerListSelect" value="{$formId|escape:'htmlall':'UTF-8'}">
+                            <select class="sender-lists" id="swCustomerListSelect" value="{$formId|escape:'htmlall':'UTF-8'}">
                                 <option value="0">
                                     {l s='Select a list' mod='senderautomatedemails'}
                                 </option>
@@ -85,7 +85,7 @@
             <div class="panel-body">
                 {if empty($allLists)}
                     <div class="alert alert-warning">
-                        {l s='To track customers carts you must have at least one list at your Sender.net`s account' mod='senderautomatedemails'}
+                        {l s='To track customers carts you must have at least one list at your Sender.net`s account.' mod='senderautomatedemails'}
                     </div>
                     <p>
                         <a class="btn btn-lg btn-info" href="{$baseUrl|escape:'htmlall':'UTF-8'}/mailinglists/add">
@@ -95,7 +95,7 @@
                 {else}
                     <blockquote>
                         <p>
-                            {l s='Select to which list save guests or new signups whose carts were tracked' mod='senderautomatedemails'}
+                            {l s='Select to which list save guests or new signups whose carts were tracked.' mod='senderautomatedemails'}
                         </p>
                     </blockquote>
                     <div class="col-xs-12">
@@ -103,7 +103,7 @@
                             <label for="swGuestListSelect">
                                 {l s='Select guest list' mod='senderautomatedemails'}
                             </label>
-                            <select id="swGuestListSelect" value="{$formId|escape:'htmlall':'UTF-8'}">
+                            <select class="sender-lists" id="swGuestListSelect" value="{$formId|escape:'htmlall':'UTF-8'}">
                                 <option value="0">
                                     {l s='Select a list' mod='senderautomatedemails'}
                                 </option>

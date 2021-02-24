@@ -20,120 +20,98 @@
                     {l s='Select which customer data add to subsriber list (email is added by default)' mod='senderautomatedemails'}
                 </h3>
             </blockquote>
-            <input class="spm-customer-data-input" type="checkbox" value="FIRSTNAME" >{l s='Firstname' mod='senderautomatedemails'}<br>
-            <input class="spm-customer-data-input" type="checkbox" value="LASTNAME" >{l s='Lastname' mod='senderautomatedemails'}<br>
-
+            <input class="spm-customer-data-input" type="checkbox"
+                   value="FIRSTNAME">{l s='Firstname' mod='senderautomatedemails'}<br>
+            <input class="spm-customer-data-input" type="checkbox"
+                   value="LASTNAME">{l s='Lastname' mod='senderautomatedemails'}<br>
             {*Mapping*}
-
-            {*Partner offers*}
-{*            <br><br>*}
-{*            <blockquote>*}
-{*                <h4>*}
-{*                    {l s='PARTNER OFFERS' mod='senderautomatedemails'}*}
-{*                </h4>*}
-{*                <p>*}
-{*                    {l s='Please select the custom field, which saves partner offers option in your Sender mailinglist' mod='senderautomatedemails'}*}
-{*                </p>*}
-{*            </blockquote>*}
-
-{*            <select id="swPartnerOffers" name="swPartnerOffers"*}
-{*                    value="{$partnerOfferId|escape:'htmlall':'UTF-8'}">*}
-{*                {if empty($customFields)}*}
-{*                <option value="0">*}
-{*                    {l s='No field created in Sender app' mod='senderautomatedemails'}*}
-{*                </option>*}
-{*                {else}*}
-{*                <option value="0">*}
-{*                    {l s='Select the partner offer custom field' mod='senderautomatedemails'}*}
-{*                </option>*}
-{*                {foreach $customFields as $field}*}
-{*                    <option {if $field->id eq $partnerOfferId }selected="selected"{/if}*}
-{*                            value="{$field->id|escape:'htmlall':'UTF-8'}">*}
-{*                        {$field->title|escape:'htmlall':'UTF-8'}*}
-{*                    </option>*}
-{*                {/foreach}*}
-{*                {/if}*}
-{*            </select>*}
-{*            {if empty($customFields)}*}
-{*                </div>*}
-{*                <div class="panel-body">*}
-{*                    <div class="alert alert-warning">*}
-{*                        {l s='No subscriber fields created on your Sender.net account. Please add new fields and refresh this page' mod='senderautomatedemails'}*}
-{*                    </div>*}
-{*                    <p>*}
-{*                        <a class="btn btn-lg btn-info" href="{$appUrl|escape:'htmlall':'UTF-8'}/subscribers/fields" target="_blank">*}
-{*                            {l s='Create field' mod='senderautomatedemails'}*}
-{*                        </a>*}
-{*                    </p>*}
-{*                </div>*}
-{*            {else}*}
             {*Gender*}
             <br><br>
+            <div class="col-xs-12">
                 <blockquote>
                     <h4>
                         {l s='GENDER' mod='senderautomatedemails'}
                     </h4>
-                    <p>
-                        {l s='Please select the custom field, which saves gender in your Sender mailinglist or create a new field' mod='senderautomatedemails'}
-                    </p>
+                    <div>
+                        {l s='Please select the custom field, which saves gender in your Sender mailinglist or create a new field.' mod='senderautomatedemails'}
+                        <p>
+                            <a class="btn btn-lg btn-info field-create"
+                               href="{$appUrl|escape:'htmlall':'UTF-8'}/subscribers/fields" target="_blank">
+                                {l s='Create new field' mod='senderautomatedemails'}
+                            </a>
+                        </p>
+                    </div>
                 </blockquote>
-                <select id="swGenderField" name="swGenderField"
-                        value="{$genderFieldId|escape:'htmlall':'UTF-8'}">
-                    {if empty($customFields)}
-                    <option value="0">
-                        {l s='No fields created in Sender app' mod='senderautomatedemails'}
-                    </option>
-                    {else}
-                    <option value="0">
-                        {l s='Select the gender custom field' mod='senderautomatedemails'}
-                    </option>
-                    {foreach $customFields as $field}
-                        <option {if $field->id eq $genderFieldId }selected="selected"{/if} value="{$field->id|escape:'htmlall':'UTF-8'}">
-                            {$field->title|escape:'htmlall':'UTF-8'}
-                        </option>
-                    {/foreach}
-                    {/if}
-                </select>
-                <p class="field-create">
-                    <a class="btn btn-lg btn-info" href="{$appUrl|escape:'htmlall':'UTF-8'}/subscribers/fields" target="_blank">
-                        {l s='Create new field' mod='senderautomatedemails'}
-                    </a>
-                </p>
-                {*Birthday*}
-                <br><br>
+                <div class="form-group">
+                    <select class="sender-lists" id="swGenderField" name="swGenderField"
+                            value="{$genderFieldId|escape:'htmlall':'UTF-8'}">
+                        <option value=""
+                                disabled>{l s='Select the gender custom field' mod='senderautomatedemails'}</option>
+                        {if empty($customFields)}
+                            <option value="0">
+                                {l s='No fields created in Sender app' mod='senderautomatedemails'}
+                            </option>
+                        {else}
+                            <option value="0">
+                                <b>{l s="Don't add to list" mod="senderautomatedemails"}</b>
+                            </option>
+                            {foreach $customFields as $field}
+                                <option {if $field->id eq $genderFieldId }selected="selected"{/if}
+                                        value="{$field->id|escape:'htmlall':'UTF-8'}">
+                                    {$field->title|escape:'htmlall':'UTF-8'}
+                                </option>
+                            {/foreach}
+                        {/if}
+                    </select>
+                </div>
+                <div style="visibility: hidden;" style="margin-top: 5px" class="alert alert-success updated-first">
+                    {l s='Saved' mod='senderautomatedemails'}
+                </div>
+            </div>
+            {*Birthday*}
+            <br><br>
+            <div class="col-xs-12" style="margin-top: 20px!important">
                 <blockquote>
                     <h4>
                         {l s='BIRTHDAY' mod='senderautomatedemails'}
                     </h4>
-                    <p>
-                        {l s='Please select the custom field, which saves birthday in your Sender mailinglist or create a new field' mod='senderautomatedemails'}
-                    </p>
+                    <div>
+                        {l s='Please select the custom field, which saves birthday in your Sender mailinglist or create a new field.' mod='senderautomatedemails'}
+                        <p>
+                            <a class="btn btn-lg btn-info field-create"
+                               href="{$appUrl|escape:'htmlall':'UTF-8'}/subscribers/fields" target="_blank">
+                                {l s='Create new field' mod='senderautomatedemails'}
+                            </a>
+                        </p>
+                    </div>
                 </blockquote>
-                <select id="swBirthdayField" name="swBirthdayField"
-                        value="{$birthdayFieldId|escape:'htmlall':'UTF-8'}">
-                    {if empty($customFields)}
-                    <option value="0">
-                        {l s='No fields created in Sender app' mod='senderautomatedemails'}
-                    </option>
-                    {else}
-                    <option value="0">
-                        {l s='Select the birthday custom field' mod='senderautomatedemails'}
-                    </option>
-                    {foreach $customFields as $field}
-                        <option {if $field->id eq $birthdayFieldId }selected="selected"{/if}
-                                value="{$field->id|escape:'htmlall':'UTF-8'}">
-                            {$field->title|escape:'htmlall':'UTF-8'}
-                        </option>
-                    {/foreach}
-                    {/if}
-                </select>
-
-                <p class="field-create">
-                    <a class="btn btn-lg btn-info" href="{$appUrl|escape:'htmlall':'UTF-8'}/subscribers/fields" target="_blank">
-                        {l s='Create new field' mod='senderautomatedemails'}
-                    </a>
-                </p>
-{*            {/if}*}
+                <div class="form-group">
+                    <select class="sender-lists" id="swBirthdayField" name="swBirthdayField"
+                            value="{$birthdayFieldId|escape:'htmlall':'UTF-8'}">
+                        <option value=""
+                                disabled>{l s='Select the gender custom field' mod='senderautomatedemails'}</option>
+                        {if empty($customFields)}
+                            <option value="0">
+                                {l s='No fields created in Sender app' mod='senderautomatedemails'}
+                            </option>
+                        {else}
+                            <option value="0">
+                                <b>{l s="Don't add to list" mod="senderautomatedemails"}</b>
+                            </option>
+                            {foreach $customFields as $field}
+                                <option {if $field->id eq $birthdayFieldId }selected="selected"{/if}
+                                        value="{$field->id|escape:'htmlall':'UTF-8'}">
+                                    {$field->title|escape:'htmlall':'UTF-8'}
+                                </option>
+                            {/foreach}
+                        {/if}
+                    </select>
+                </div>
+                <div style="visibility: hidden;" class="alert alert-success updated-second">
+                    {l s='Saved' mod='senderautomatedemails'}
+                </div>
+            </div>
+            {*            {/if}*}
         </div>
 
         <div class="panel-body">
