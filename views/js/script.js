@@ -195,9 +195,10 @@
                 if (!proceed.result) {
                     console.log('save error');
                 } else {
-                    $('.updated').fadeIn(100).delay(1500).fadeOut(300);
-                    // $('.updated').delay(200).
-                    console.log('save success');
+                    $('.updated').css('visibility','visible');
+                    setTimeout(function(){
+                        $('.updated').css('visibility', 'hidden');
+                    }, 2500);
                 }
 
                 jQuery('#swFormsSelect').removeAttr('disabled');

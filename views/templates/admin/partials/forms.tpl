@@ -82,8 +82,10 @@
                             {/foreach}
                         </select>
                     </div>
+                    <div style="visibility: hidden;"  class="alert alert-success updated">
+                        {l s='Saved' mod='senderautomatedemails'}
+                    </div>
                 </div>
-
             </div>
             <div class="panel-body">
                 <blockquote>
@@ -108,9 +110,9 @@ But it can be transplant to "DisplayHome", this will allow you to move your form
                 </div>
             </div>
 
-            <div style="display: none;"  class="alert alert-success updated">
-                {l s='Saved' mod='senderautomatedemails'}
-            </div>
+{*            <div style="display: none;"  class="alert alert-success updated">*}
+{*                {l s='Saved' mod='senderautomatedemails'}*}
+{*            </div>*}
 
         </div>
     {/if}
