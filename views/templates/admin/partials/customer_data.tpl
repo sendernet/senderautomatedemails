@@ -17,7 +17,7 @@
         <div class="panel-body">
             <blockquote>
                 <p>
-                    {l s='Select which customer data you would like to add to subscriber a list (email is added by default)' mod='senderautomatedemails'}
+                    {l s='Select which customer data you would like to add(email is added by default)' mod='senderautomatedemails'}
                 </p>
             </blockquote>
             <input class="spm-customer-data-input" type="checkbox"

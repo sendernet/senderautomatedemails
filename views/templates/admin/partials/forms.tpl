@@ -57,18 +57,14 @@
                         {l s='When enabled, a Sender.net form widget will appear in the customization menu.
                              It allows you to insert your Sender.net form.' mod='senderautomatedemails'}
                     </p>
-                    <p>
-                        {l s='Please select a form to complete the activation step' mod='senderautomatedemails'}
-                    </p>
-
                 </blockquote>
-                <div class="col-xs-12{if not $allowForms} hidden{/if}" id="forms_tab">
+                <div class="col-xs-12" id="forms_tab">
                     <div class="form-group">
                         <label for="swFormsSelect">
                             {l s='Select form' mod='senderautomatedemails'}
                         </label>
-                        <select class="sender-lists" id="swFormsSelect" name="swFormsSelect"
-                                value="{$formId|escape:'htmlall':'UTF-8'}">
+                        {$allowForms}
+                        <select {if not $allowForms}disabled{/if} class="sender-lists" id="swFormsSelect" name="swFormsSelect">
                             <option value="0">
                                 {l s='Select a form' mod='senderautomatedemails'}
                             </option>
@@ -103,17 +99,12 @@
                 <div style="margin-top: 30px" class="alert alert-info">
                     <h4>{l s='About the form location.' mod='senderautomatedemails' }</h4>
                     <p>
-                        {l s='Initially the embed form would be hook to "DisplayFooterBefore or DisplayFooter" (ps-1.7, ps-1.6).
-But it can be transplant to "DisplayHome", this will allow you to move your form, from your website bottom to show only on the homepage.' mod='senderautomatedemails'}
-                        <a href="http://doc.prestashop.com/display/PS17/Positions" target="_blank">{l s='Prestashop documentation' mod='senderautomatedemails'}</a>
+                        {l s='Initiallink-differently the embed form would be hook to "DisplayFooterBefore" or "DisplayFooter" (ps-1.7, ps-1.6). Using Prestashop functionalities it
+can be transplant to "DisplayHome", this will allow you to move your form, from your website bottom to show only on the homepage.' mod='senderautomatedemails'}
+                        <a class="link-different" href="http://doc.prestashop.com/display/PS17/Positions" target="_blank">{l s='Prestashop documentation' mod='senderautomatedemails'}</a>
                     </p>
                 </div>
             </div>
-
-{*            <div style="display: none;"  class="alert alert-success updated">*}
-{*                {l s='Saved' mod='senderautomatedemails'}*}
-{*            </div>*}
-
         </div>
     {/if}
 </div>

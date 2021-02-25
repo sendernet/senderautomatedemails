@@ -101,14 +101,14 @@
                     jQuery('#swToggleWidget').text('Enable');
                     jQuery('#swToggleWidget').removeClass('btn-danger');
                     jQuery('#swToggleWidget').addClass('btn-success');
-                    $('#forms_tab').addClass('hidden');
+                    jQuery('#swFormsSelect').attr('disabled', true);
                 } else {
                     jQuery('#swToggleWidgetTitle').text('enabled');
                     jQuery('#swToggleWidgetTitle').css('color', 'green');
                     jQuery('#swToggleWidget').text('Disable');
                     jQuery('#swToggleWidget').removeClass('btn-success');
                     jQuery('#swToggleWidget').addClass('btn-danger');
-                    $('#forms_tab').removeClass('hidden');
+                    jQuery('#swFormsSelect').removeAttr('disabled');
                 }
 
                 jQuery('#swToggleWidget').removeAttr('disabled');
@@ -184,8 +184,6 @@
 
         jQuery('#swFormsSelect').on('change', function(event) {
 
-            jQuery('#swFormsSelect').attr('disabled', true);
-
             jQuery.post(formsAjaxurl, {
                 action: 'saveFormId',
                 form_id: jQuery('#swFormsSelect').val()
@@ -200,8 +198,6 @@
                         $('.updated-first').css('visibility', 'hidden');
                     }, 2500);
                 }
-
-                jQuery('#swFormsSelect').removeAttr('disabled');
 
             });
 

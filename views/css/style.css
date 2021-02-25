@@ -1,8 +1,25 @@
 
 /* -- Additional sender styles -------------- */
+@font-face {
+    font-family: 'Roboto';
+    font-weight: 400;
+    src: url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+}
 
+.sender-prestashop-card{
+    font-family: 'Roboto', sans-serif !important;
+    font-size: 14px;
+    color: #555!important;
+}
 #content.bootstrap {
     padding-top: 10px !important;
+}
+.bootstrap blockquote{
+    color: #000;
+
+}
+.bootstrap label{
+    font-weight: normal!important;
 }
 
 .lc-block,
@@ -180,8 +197,7 @@
 .spm-main-menu>li>a {
     padding: 14px 20px 14px 52px;
     display: block;
-    color: #4C4C4C;
-    font-weight: 500;
+    color: #000;
     position: relative;
     text-decoration: none
 }
@@ -234,7 +250,6 @@ td,th{
 .updated-first, .updated-second{
     display: inline-block;
     margin-bottom: -10px!important;
-    height: 45px!important;
 }
 
 .field-create{
@@ -253,4 +268,7 @@ td,th{
 }
 .bold{
     font-weight: 700!important;
+}
+.link-different{
+    color: #5a2a7d!important;
 }
