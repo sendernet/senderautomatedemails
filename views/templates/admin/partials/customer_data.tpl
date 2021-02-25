@@ -45,8 +45,6 @@
                 <div class="form-group">
                     <select class="sender-lists" id="swGenderField" name="swGenderField"
                             value="{$genderFieldId|escape:'htmlall':'UTF-8'}">
-                        <option value=""
-                                disabled>{l s='Select the gender custom field' mod='senderautomatedemails'}</option>
                         {if empty($customFields)}
                             <option value="0">
                                 {l s='No fields created in Sender app' mod='senderautomatedemails'}
@@ -88,8 +86,6 @@
                 <div class="form-group">
                     <select class="sender-lists" id="swBirthdayField" name="swBirthdayField"
                             value="{$birthdayFieldId|escape:'htmlall':'UTF-8'}">
-                        <option value=""
-                                disabled>{l s='Select the gender custom field' mod='senderautomatedemails'}</option>
                         {if empty($customFields)}
                             <option value="0">
                                 {l s='No fields created in Sender app' mod='senderautomatedemails'}

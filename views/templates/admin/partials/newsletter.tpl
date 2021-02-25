@@ -8,19 +8,19 @@
  * @license https://opensource.org/licenses/osl-3.0.php Open Software License v. 3.0 (OSL-3.0)
  * Sender.net
  *}
-<div id="spm-carts" class="spm-tab-content">
+<div id="spm-newsletter" class="spm-tab-content">
 
-    {* ALLOW CART TRACK *}
+    {* NEWSLETTER *}
     <div class="panel panel-default">
         <div class="panel-heading">
-            <i class="zmdi zmdi-shopping-cart"></i>
-            {l s='Customer cart tracking is' mod='senderautomatedemails'}
-            {if not $allowCartTrack}
-                <span id="swToggleCartTrackTitle" style="color:red;">
+            <i class="zmdi zmdi-email"></i>
+            {l s='Newsletter' mod='senderautomatedemails'}
+            {if not $allowNewsletter}
+                <span id="swToggleNewsletterTitle" style="color:red;">
                             {l s='disabled' mod='senderautomatedemails'}
                         </span>
             {else}
-                <span id="swToggleCartTrackTitle" style="color:green;">
+                <span id="swToggleNewsletterTitle" style="color:green;">
                             {l s='enabled' mod='senderautomatedemails'}
                         </span>
             {/if}
@@ -28,13 +28,11 @@
         <div class="panel-body">
             <div class="spm-details-settings">
                 <div class="alert alert-addons">
-                    {l s='Enable Sender track system to track your customers cart.' mod='senderautomatedemails'}
-                    <a href="https://landing.sender.net/abandoned-cart-email-template"
-                       target="_blank">{l s='Learn how to set up abandoned carts automation' mod='senderautomatedemails'}</a>
+                    {l s='Newsletter. Use this option if you are not going to use the Cart tracking feature
+but still you would like to add your customers to your Sender.net application.' mod='senderautomatedemails'}
                 </div>
-                <button id="swToggleCartTrack"
-                        class="btn btn-lg {if not $allowCartTrack}btn-success{else}btn-danger{/if}">
-                    {if not $allowCartTrack}
+                <button id="swToggleNewsletter" class="btn btn-lg {if not $allowNewsletter}btn-success{else}btn-danger{/if}">
+                    {if not $allowNewsletter}
                         {l s='Enable' mod='senderautomatedemails'}
                     {else}
                         {l s='Disable' mod='senderautomatedemails'}
@@ -123,6 +121,12 @@
                         </div>
                     </div>
                 {/if}
+            </div>
+        </div>
+
+        <div class="panel-body">
+            <div style="margin-top: 30px" class="alert alert-info">
+                {l s='When Cart tracking feature would be enable, this feature would be obsolete' mod='senderautomatedemails'}
             </div>
         </div>
     </div>

@@ -50,6 +50,12 @@
                             {l s='Cart tracking' mod='senderautomatedemails'}
                         </a>
                     </li>
+                    <li class="tab-link" data-tab="spm-newsletter">
+                        <a href="#!spm-newsletter">
+                            <i class="zmdi zmdi-email"></i>
+                            {l s='Newsletter' mod='senderautomatedemails'}
+                        </a>
+                    </li>
                     <li class="tab-link" data-tab="spm-customer-data">
                         <a href="#!spm-customer-data"">
                         <i class="zmdi zmdi-accounts-alt"></i>
@@ -125,6 +131,9 @@
 
         {* CART TRACKING Tab *}
         {include file='././partials/cart_tracking.tpl'}
+
+        {* CART TRACKING Tab *}
+        {include file='././partials/newsletter.tpl'}
 
         {*Custom data - Fields partial*}
         {include file='././partials/customer_data.tpl'}

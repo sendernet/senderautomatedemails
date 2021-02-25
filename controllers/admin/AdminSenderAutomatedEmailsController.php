@@ -176,6 +176,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             'allLists' => $this->module->senderApiClient()->getAllLists(),
             'allowNewSignups' => Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS'),
             'allowCartTrack' => Configuration::get('SPM_ALLOW_TRACK_CARTS'),
+            'allowNewsletter' => Configuration::get('SPM_ALLOW_NEWSLETTERS'),
             'allowForms' => Configuration::get('SPM_ALLOW_FORMS'),
             'cartsAjaxurl' => $this->module->module_url . '/ajax/carts_ajax.php?token='
                 . Tools::getAdminToken($this->module->name),
