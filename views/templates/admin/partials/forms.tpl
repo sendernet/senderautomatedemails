@@ -63,7 +63,6 @@
                         <label for="swFormsSelect">
                             {l s='Select form' mod='senderautomatedemails'}
                         </label>
-                        {$allowForms}
                         <select {if not $allowForms}disabled{/if} class="sender-lists" id="swFormsSelect" name="swFormsSelect">
                             <option value="0">
                                 {l s='Select a form' mod='senderautomatedemails'}
