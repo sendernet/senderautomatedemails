@@ -74,6 +74,7 @@ but still you would like to add your customers to your Sender.net application.' 
                     </table>
                 </div>
             </div>
+            {*CUSTOMER LIST*}
             <div class="panel-body">
                 {if empty($allLists)}
                     <div class="alert alert-warning">
@@ -90,7 +91,7 @@ but still you would like to add your customers to your Sender.net application.' 
                             {l s='Select to which list save customers whose carts were tracked.' mod='senderautomatedemails'}
                         </p>
                     </blockquote>
-                    <div class="col-xs-12">
+                    <div class="col-xs-12" id="customer_list_tab">
                         <div id="swCustomerListSelectContainer" class="form-group">
                             <label for="swCustomerListSelect">
                                 {l s='Select customer list' mod='senderautomatedemails'}
@@ -109,9 +110,9 @@ but still you would like to add your customers to your Sender.net application.' 
                                 {/foreach}
                             </select>
                         </div>
-                        <div style="visibility: hidden;" class="alert alert-success alert-success__sender updated-first">
+                        <span style="visibility: hidden;" class="alert alert-success alert-success__sender updated-first">
                             {l s='Saved' mod='senderautomatedemails'}
-                        </div>
+                        </span>
                     </div>
                 {/if}
             </div>
@@ -132,7 +133,7 @@ but still you would like to add your customers to your Sender.net application.' 
                             {l s='Select to which list save guests or new signups whose carts were tracked.' mod='senderautomatedemails'}
                         </p>
                     </blockquote>
-                    <div class="col-xs-12">
+                    <div class="col-xs-12" id="guest_list_tab">
                         <div id="swGuestListSelectContainer" class="form-group">
                             <label for="swGuestListSelect">
                                 {l s='Select guest list' mod='senderautomatedemails'}
@@ -151,9 +152,9 @@ but still you would like to add your customers to your Sender.net application.' 
                                 {/foreach}
                             </select>
                         </div>
-                        <div style="visibility: hidden;" class="alert alert-success alert-success__sender updated-second">
+                        <span style="visibility: hidden;" class="alert alert-success alert-success__sender saved-sender">
                             {l s='Saved' mod='senderautomatedemails'}
-                        </div>
+                        </span>
                     </div>
                 {/if}
             </div>

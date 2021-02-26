@@ -237,10 +237,7 @@
                 if (!proceed.result) {
                     console.log('save error');
                 } else {
-                    $('.updated-first').css('visibility','visible');
-                    setTimeout(function(){
-                        $('.updated-first').css('visibility', 'hidden');
-                    }, 2500);
+                    actionSaved($('#forms_tab').find('span'));
                 }
 
             });
@@ -261,10 +258,7 @@
                 if (!proceed.result) {
                     console.log('save error');
                 } else {
-                    $('.updated-second').css('visibility','visible');
-                    setTimeout(function(){
-                        $('.updated-second').css('visibility', 'hidden');
-                    }, 2500);
+                    actionSaved($('#guest_list_tab').find('span'));
                 }
 
                 jQuery('#swGuestListSelect').removeAttr('disabled');
@@ -322,10 +316,7 @@
                 if (!proceed.result) {
                     console.log('save error');
                 } else {
-                    $('.updated-first').css('visibility','visible');
-                    setTimeout(function(){
-                        $('.updated-first').css('visibility', 'hidden');
-                    }, 2500);
+                    actionSaved($('#gender_tab').find('span'));
                 }
             });
 
@@ -341,10 +332,7 @@
                 if (!proceed.result) {
                     console.log('save error');
                 } else {
-                    $('.updated-second').css('visibility','visible');
-                    setTimeout(function(){
-                        $('.updated-second').css('visibility', 'hidden');
-                    }, 2500);
+                    actionSaved($('#birthday_tab').find('span'));
                 }
             });
 
@@ -366,11 +354,7 @@
                 if (!proceed.result) {
                     console.log('save error');
                 } else {
-                    console.log(proceed);
-                    $('.updated-first').css('visibility','visible');
-                    setTimeout(function(){
-                        $('.updated-first').css('visibility', 'hidden');
-                    }, 2500);
+                    actionSaved($('#customer_list_tab').find('span'));
                 }
 
                 jQuery('#swCustomerListSelect').removeAttr('disabled');
@@ -412,6 +396,7 @@
 
         jQuery('#syncList').click(function (){
             jQuery('#syncList').html('Working on it');
+            jQuery('#syncList').focusout();
             jQuery.get(syncListAjaxUrl, {
                 action: 'syncList',
             }, function(response) {
@@ -421,16 +406,23 @@
                     jQuery('#syncError').show().html(proceed.result.message);
                 } else {
                     $('#syncError').css('display', 'none');
-                    jQuery('#syncList').removeClass('btn-warning');
-                    jQuery('#syncList').addClass('btn-success');
+                    jQuery('#syncList').addClass('btn_sender_success');
                     jQuery('#syncList').html('Synchronized');
                     jQuery('#syncDate').html(proceed.result.message);
                     setTimeout(function(){
-                        $('#syncList').removeClass('btn-success').addClass('btn-warning').html('Synchronize this list with Sender.net');
+                        $('#syncList').removeClass('btn_sender_success').html('Synchronize this list with Sender.net');
                     }, 5000);
                 }
             });
         });
+
+        function actionSaved(element){
+            var duration = 130;
+            element.css({opacity: 0, visibility: "visible"}).animate({opacity: 1}, duration);
+            setTimeout(function(){
+                element.animate({opacity: 0}, duration);
+            }, 2000);
+        }
 
     });
 

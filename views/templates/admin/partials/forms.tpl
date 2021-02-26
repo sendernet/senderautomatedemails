@@ -77,9 +77,9 @@
                             {/foreach}
                         </select>
                     </div>
-                    <div style="visibility: hidden;"  class="alert alert-success alert-success__sender updated-first">
+                    <span style="visibility: hidden;"  class="alert alert-success alert-success__sender saved-sender">
                         {l s='Saved' mod='senderautomatedemails'}
-                    </div>
+                    </span>
                 </div>
             </div>
             <div class="panel-body">

@@ -14,6 +14,7 @@
             <i class="zmdi zmdi-accounts-alt"></i>
             {l s='Customer data add to list' mod='senderautomatedemails'}
         </div>
+        {*Details*}
         <div class="panel-body">
             <div class="spm-details-settings">
                 <div class="alert alert-info">
@@ -41,10 +42,9 @@ enable feature Cart tracking or Newsletter' mod='senderautomatedemails'}
                 </label>
             </div>
             <br>
-            {*Mapping*}
             {*Gender*}
             <br><br>
-            <div class="col-xs-12">
+            <div class="col-xs-12" id="gender_tab">
                 <blockquote>
                     <h4>
                         {l s='GENDER' mod='senderautomatedemails'}
@@ -79,13 +79,13 @@ enable feature Cart tracking or Newsletter' mod='senderautomatedemails'}
                         {/if}
                     </select>
                 </div>
-                <div style="visibility: hidden;" style="margin-top: 5px" class="alert alert-success alert-success__sender updated-first">
+                <span style="visibility: hidden;" style="margin-top: 5px" class="alert alert-success alert-success__sender saved-sender">
                     {l s='Saved' mod='senderautomatedemails'}
-                </div>
+                </span>
             </div>
             {*Birthday*}
             <br><br>
-            <div class="col-xs-12" style="margin-top: 20px!important">
+            <div class="col-xs-12" id="birthday_tab" style="margin-top: 20px!important">
                 <blockquote>
                     <h4>
                         {l s='BIRTHDAY' mod='senderautomatedemails'}
@@ -120,13 +120,12 @@ enable feature Cart tracking or Newsletter' mod='senderautomatedemails'}
                         {/if}
                     </select>
                 </div>
-                <div style="visibility: hidden;" class="alert alert-success alert-success__sender updated-second">
+                <span style="visibility: hidden;" class="alert alert-success alert-success__sender saved-sender">
                     {l s='Saved' mod='senderautomatedemails'}
-                </div>
+                </span>
             </div>
-            {*            {/if}*}
         </div>
-
+        {*About*}
         <div class="panel-body">
             <div style="margin-top: 30px" class="alert alert-info">
                 {l s='This data would be save in your Sender.net application as subscriber information' mod='senderautomatedemails'}
