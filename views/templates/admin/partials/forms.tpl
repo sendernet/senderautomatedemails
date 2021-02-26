@@ -77,7 +77,7 @@
                             {/foreach}
                         </select>
                     </div>
-                    <div style="visibility: hidden;"  class="alert alert-success updated-first">
+                    <div style="visibility: hidden;"  class="alert alert-success alert-success__sender updated-first">
                         {l s='Saved' mod='senderautomatedemails'}
                     </div>
                 </div>

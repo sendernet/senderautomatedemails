@@ -359,3 +359,14 @@ input.sender-checkbox[type="checkbox"]:disabled + span {
     color: black;
     opacity: 0.5;
 }
+
+.alert-success__sender{
+    background-color: #1db44e!important;
+    color: #fff!important;
+    border: none!important;
+    padding: 10px 15px!important;
+    text-align: center;
+}
+.alert-success__sender:before{
+    content: none!important;
+}

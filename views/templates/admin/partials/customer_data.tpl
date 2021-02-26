@@ -79,7 +79,7 @@ enable feature Cart tracking or Newsletter' mod='senderautomatedemails'}
                         {/if}
                     </select>
                 </div>
-                <div style="visibility: hidden;" style="margin-top: 5px" class="alert alert-success updated-first">
+                <div style="visibility: hidden;" style="margin-top: 5px" class="alert alert-success alert-success__sender updated-first">
                     {l s='Saved' mod='senderautomatedemails'}
                 </div>
             </div>
@@ -120,7 +120,7 @@ enable feature Cart tracking or Newsletter' mod='senderautomatedemails'}
                         {/if}
                     </select>
                 </div>
-                <div style="visibility: hidden;" class="alert alert-success updated-second">
+                <div style="visibility: hidden;" class="alert alert-success alert-success__sender updated-second">
                     {l s='Saved' mod='senderautomatedemails'}
                 </div>
             </div>

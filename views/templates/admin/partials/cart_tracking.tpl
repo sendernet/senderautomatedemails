@@ -49,9 +49,6 @@ but still you would like to add your customers to your Sender.net application.' 
                             <th>{l s='Activate newsletters' mod='senderautomatedemails'} <i class="zmdi zmdi-email"></i>
                             </th>
                         </tr>
-                        {*                        <label for="swCustomerListSelect">*}
-                        {*                            {l s='Activate cart tracking' mod='senderautomatedemails'}*}
-                        {*                        </label>*}
                         <tr>
                             <td>
                                 <button style="display: inline" id="swToggleCartTrack"
@@ -74,18 +71,6 @@ but still you would like to add your customers to your Sender.net application.' 
                                 </button>
                             </td>
                         </tr>
-                        {*NEWSLETTER*}
-                        {*                        <label for="swCustomerListSelect">*}
-                        {*                            {l s='Activate newsletters' mod='senderautomatedemails'}*}
-                        {*                        </label>*}
-                        {*                        <button id="swToggleNewsletter"*}
-                        {*                                class="btn btn-lg {if not $allowNewsletter}btn-success{else}btn-danger{/if}">*}
-                        {*                            {if not $allowNewsletter}*}
-                        {*                                {l s='Enable' mod='senderautomatedemails'}*}
-                        {*                            {else}*}
-                        {*                                {l s='Disable' mod='senderautomatedemails'}*}
-                        {*                            {/if}*}
-                        {*                        </button>*}
                     </table>
                 </div>
             </div>
@@ -110,7 +95,7 @@ but still you would like to add your customers to your Sender.net application.' 
                             <label for="swCustomerListSelect">
                                 {l s='Select customer list' mod='senderautomatedemails'}
                             </label>
-                            <select {if not $allowCartTrack}disabled{/if} class="sender-lists" id="swCustomerListSelect"
+                            <select {if not $allowCartTrack && not $allowNewsletter}disabled{/if} class="sender-lists" id="swCustomerListSelect"
                                     value="{$formId|escape:'htmlall':'UTF-8'}">
                                 <option value="0">
                                     {l s='No list' mod='senderautomatedemails'}
@@ -124,7 +109,7 @@ but still you would like to add your customers to your Sender.net application.' 
                                 {/foreach}
                             </select>
                         </div>
-                        <div style="visibility: hidden;" class="alert alert-success updated-first">
+                        <div style="visibility: hidden;" class="alert alert-success alert-success__sender updated-first">
                             {l s='Saved' mod='senderautomatedemails'}
                         </div>
                     </div>
@@ -152,7 +137,7 @@ but still you would like to add your customers to your Sender.net application.' 
                             <label for="swGuestListSelect">
                                 {l s='Select guest list' mod='senderautomatedemails'}
                             </label>
-                            <select {if not $allowCartTrack}disabled{/if} class="sender-lists" id="swGuestListSelect"
+                            <select {if not $allowCartTrack && not $allowNewsletter}disabled{/if} class="sender-lists" id="swGuestListSelect"
                                     value="{$formId|escape:'htmlall':'UTF-8'}">
                                 <option value="0">
                                     {l s='No list' mod='senderautomatedemails'}
@@ -166,7 +151,7 @@ but still you would like to add your customers to your Sender.net application.' 
                                 {/foreach}
                             </select>
                         </div>
-                        <div style="visibility: hidden;" class="alert alert-success updated-second">
+                        <div style="visibility: hidden;" class="alert alert-success alert-success__sender updated-second">
                             {l s='Saved' mod='senderautomatedemails'}
                         </div>
                     </div>
