@@ -77,7 +77,7 @@
 
                 } else {
                     jQuery('#swToggleCartTrackTitle').text('enabled');
-                    jQuery('#swToggleCartTrackTitle').css('color', 'green');
+                    jQuery('#swToggleCartTrackTitle').css('color', '#ff8d00');
                     jQuery('#swToggleCartTrack').text('Disable');
                     jQuery('#swToggleCartTrack').removeClass('btn-sender');
                     jQuery('#swToggleCartTrack').addClass('btn-danger__sender');
@@ -109,7 +109,7 @@
                     jQuery('#swGuestListSelect').attr('disabled', true);
                 } else {
                     jQuery('#swToggleNewsletterTitle').text('enabled');
-                    jQuery('#swToggleNewsletterTitle').css('color', 'green');
+                    jQuery('#swToggleNewsletterTitle').css('color', '#ff8d00');
                     jQuery('#swToggleNewsletter').text('Disable');
                     jQuery('#swToggleNewsletter').removeClass('btn-sender');
                     jQuery('#swToggleNewsletter').addClass('btn-danger__sender');
@@ -140,7 +140,7 @@
                     jQuery('#swFormsSelect').attr('disabled', true);
                 } else {
                     jQuery('#swToggleWidgetTitle').text('enabled');
-                    jQuery('#swToggleWidgetTitle').css('color', 'green');
+                    jQuery('#swToggleWidgetTitle').css('color', '#ff8d00');
                     jQuery('#swToggleWidget').text('Disable');
                     jQuery('#swToggleWidget').removeClass('btn-sender');
                     jQuery('#swToggleWidget').addClass('btn-danger__sender');
@@ -172,7 +172,7 @@
                     jQuery('#guests_lists').fadeOut();
                 } else {
                     jQuery('#swToggleGuestCartTrackingTitle').text('enabled');
-                    jQuery('#swToggleGuestCartTrackingTitle').css('color', 'green');
+                    jQuery('#swToggleGuestCartTrackingTitle').css('color', '#ff8d00');
                     jQuery('#swToggleGuestCartTracking').text('Disable');
                     jQuery('#swToggleGuestCartTracking').removeClass('btn-success');
                     jQuery('#swToggleGuestCartTracking').addClass('btn-danger');
@@ -204,7 +204,7 @@
                     $('#push_disabled').removeClass('hidden');
                 } else {
                     jQuery('#swTogglePushTitle').text('enabled');
-                    jQuery('#swTogglePushTitle').css('color', 'green');
+                    jQuery('#swTogglePushTitle').css('color', '#ff8d00');
                     jQuery('#swTogglePush').text('Disable');
                     jQuery('#swTogglePush').removeClass('btn-success');
                     jQuery('#swTogglePush').addClass('btn-danger');

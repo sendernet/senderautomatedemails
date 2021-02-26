@@ -76,7 +76,7 @@
                 <div class="panel-heading">
                     <i class="zmdi zmdi-notifications-active"></i>
                     {l s='Plugin status is' mod='senderautomatedemails'}
-                    <span style="color:green;">{l s='ACTIVE' mod='senderautomatedemails'}</span>
+                    <span style="color:#ff8d00;">{l s='ACTIVE' mod='senderautomatedemails'}</span>
                 </div>
                 <div class="panel-body">
                     <div class="spm-details-settings">
@@ -126,9 +126,6 @@
 
         {* CART TRACKING Tab *}
         {include file='././partials/cart_tracking.tpl'}
-
-        {* CART TRACKING Tab *}
-{*        {include file='././partials/newsletter.tpl'}*}
 
         {*Custom data - Fields partial*}
         {include file='././partials/customer_data.tpl'}

@@ -287,6 +287,11 @@ td,th{
     color: #fff!important;
 }
 .btn-danger__sender{
+    background-color: #b41d1d;
+    border-color: transparent;
+    color: #fff!important;
+}
+.btn-danger__sender:hover{
     background-color: #db2323;
     color: #fff!important;
 }

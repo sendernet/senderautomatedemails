@@ -36,7 +36,7 @@
                             {l s='disabled' mod='senderautomatedemails'}
                         </span>
                 {else}
-                    <span id="swToggleWidgetTitle" style="color:green;">
+                    <span id="swToggleWidgetTitle" style="color:#ff8d00;">
                             {l s='enabled' mod='senderautomatedemails'}
                         </span>
                 {/if}

@@ -20,7 +20,7 @@
                             {l s='disabled' mod='senderautomatedemails'}
                         </span>
             {else}
-                <span id="swToggleCartTrackTitle" style="color:green;">
+                <span id="swToggleCartTrackTitle" style="color:#ff8d00;">
                             {l s='enabled' mod='senderautomatedemails'}
                         </span>
             {/if}
