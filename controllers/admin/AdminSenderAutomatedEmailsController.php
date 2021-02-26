@@ -188,6 +188,8 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
                 . Tools::getAdminToken($this->module->name),
             'syncListAjaxUrl' => $this->module->module_url . '/ajax/sync_list.php?token='
                 . Tools::getAdminToken($this->module->name),
+            'newsletterAjaxUrl' => $this->module->module_url . '/ajax/newsletter_ajax.php?token='
+                . Tools::getAdminToken($this->module->name),
             'formId' => Configuration::get('SPM_FORM_ID'),
             'partnerOfferId' => Configuration::get('SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID'),
             'guestListId' => Configuration::get('SPM_GUEST_LIST_ID'),

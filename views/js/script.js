@@ -91,6 +91,38 @@
 
         });
 
+        jQuery('#swToggleNewsletter').on('click', function(event) {
+
+            jQuery('#swToggleNewsletter').text('Saving...');
+            jQuery('#swToggleNewsletter').attr('disabled', true);
+
+            jQuery.post(newsletterAjaxUrl, { action: 'saveAllowNewsletter' }, function(response) {
+                var proceed = jQuery.parseJSON(response);
+
+                if (!proceed.result) {
+                    jQuery('#swToggleNewsletterTitle').text('disabled');
+                    jQuery('#swToggleNewsletterTitle').css('color', 'red');
+                    jQuery('#swToggleNewsletter').text('Enable');
+                    jQuery('#swToggleNewsletter').removeClass('btn-danger');
+                    jQuery('#swToggleNewsletter').addClass('btn-success');
+                    jQuery('#swCustomerListSelect').attr('disabled', true);
+                    jQuery('#swGuestListSelect').attr('disabled', true);
+                } else {
+                    jQuery('#swToggleNewsletterTitle').text('enabled');
+                    jQuery('#swToggleNewsletterTitle').css('color', 'green');
+                    jQuery('#swToggleNewsletter').text('Disable');
+                    jQuery('#swToggleNewsletter').removeClass('btn-success');
+                    jQuery('#swToggleNewsletter').addClass('btn-danger');
+                    jQuery('#swCustomerListSelect').removeAttr('disabled');
+                    jQuery('#swGuestListSelect').removeAttr('disabled');
+                }
+
+                jQuery('#swToggleNewsletter').removeAttr('disabled');
+
+            });
+
+        });
+
         jQuery('#swToggleWidget').on('click', function(event) {
 
             jQuery('#swToggleWidget').text('Saving...');
@@ -249,7 +281,7 @@
             let elm = $(this);
             jQuery.post(dataAjaxurl, { action: 'getIfEnabled', option_name: $(this).val() }, function(response) {
                 if(response == 1){
-                    elm.prop( 'checked', true )
+                    elm.prop( 'checked', true );
                 }
 
             });

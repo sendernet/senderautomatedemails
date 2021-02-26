@@ -339,7 +339,7 @@ class SenderAutomatedEmails extends Module
      * @param array $context
      * @return array $context
      */
-    public function hookactionCustomerAccountAdd($context)
+    public function hookActionCustomerAccountAdd($context)
     {
         $this->logDebug('#hookactionCustomerAccountAdd');
         if (!$this->isModuleActive()){
@@ -689,7 +689,7 @@ class SenderAutomatedEmails extends Module
      * @param array $context
      * @return array $context
      */
-    public function hookactionObjectCustomerUpdateAfter($context)
+    public function hookActionObjectCustomerUpdateAfter($context)
     {
         $this->logDebug('hookactionObjectCustomerUpdateAfter');
 

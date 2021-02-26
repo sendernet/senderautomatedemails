@@ -6,7 +6,7 @@
     src: url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 }
 
-.sender-prestashop-card{
+.sender-prestashop-card>*{
     font-family: 'Roboto', sans-serif !important;
     font-size: 14px;
     color: #555!important;
@@ -271,4 +271,77 @@ td,th{
 }
 .link-different{
     color: #5a2a7d!important;
+}
+.sender-table>tr,th,td{
+    padding-right: 90px;
+}
+
+.btn-sender{
+    height: unset!important;
+    font-size: 14px!important;
+    font-weight: 700;
+    border-radius: 5px!important;
+    box-shadow: none!important;
+    background-color: #ff8d00!important;
+    border-color: transparent!important;
+    color: #fff!important;
+}
+.btn-sender:hover {
+    background-color: #ffae00!important;
+    border-color: transparent!important;
+    color: #fff!important;
+}
+
+input.sender-checkbox[type="checkbox"] {
+    padding: 3px;
+    position: absolute;
+    opacity: 0;
+    z-index: -1;
+}
+
+/* Text color for the label */
+input.sender-checkbox[type="checkbox"] + span {
+    cursor: pointer;
+    color: black;
+}
+
+/* Checkbox un-checked style */
+input.sender-checkbox[type="checkbox"] + span:before {
+    content: '';
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-right: 0.5em;
+    margin-top: 0.5em;
+    vertical-align: -2px;
+}
+
+/* Adding a dotted border around the active tabbed-into checkbox */
+input.sender-checkbox[type="checkbox"]:focus + span:before,
+input.sender-checkbox[type="checkbox"] + span:hover:before {
+    /* Visible in the full-color space */
+    box-shadow: none;
+    outline: none;
+}
+/* Checked checkbox style (in this case the background is green #e7ffba, change this to change the color) */
+input.sender-checkbox[type="checkbox"]:checked + span:before {
+    /* NOTE: Replace the url with a path to an SVG of a checkmark to get a checkmark icon */
+    background-image: url('../../../senderautomatedemails/views/img/white_check.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    /* The size of the checkmark icon, you may/may not need this */
+    background-size: 11px;
+    border-radius: 5px;
+    background-color: #ff8d00;
+    color: white;
+    border: 1px solid transparent;
+}
+
+/* Disabled checkbox styles */
+input.sender-checkbox[type="checkbox"]:disabled + span {
+    cursor: default;
+    color: black;
+    opacity: 0.5;
 }

@@ -60,8 +60,7 @@ but still you would like to add your customers to your Sender.net application.' 
                             <label for="swCustomerListSelect">
                                 {l s='Select customer list' mod='senderautomatedemails'}
                             </label>
-                            <select {if not $allowCartTrack}disabled{/if} class="sender-lists" id="swCustomerListSelect"
-                                    value="{$formId|escape:'htmlall':'UTF-8'}">
+                            <select {if not $allowNewsletter}disabled{/if} class="sender-lists" id="swCustomerListSelectNewsletter">
                                 <option value="0">
                                     {l s='No list' mod='senderautomatedemails'}
                                 </option>
@@ -102,8 +101,7 @@ but still you would like to add your customers to your Sender.net application.' 
                             <label for="swGuestListSelect">
                                 {l s='Select guest list' mod='senderautomatedemails'}
                             </label>
-                            <select {if not $allowCartTrack}disabled{/if} class="sender-lists" id="swGuestListSelect"
-                                    value="{$formId|escape:'htmlall':'UTF-8'}">
+                            <select {if not $allowNewsletter}disabled{/if} class="sender-lists" id="swGuestListSelectNewsletter">
                                 <option value="0">
                                     {l s='No list' mod='senderautomatedemails'}
                                 </option>

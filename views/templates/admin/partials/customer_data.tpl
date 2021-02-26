@@ -15,15 +15,32 @@
             {l s='Customer data add to list' mod='senderautomatedemails'}
         </div>
         <div class="panel-body">
+            <div class="spm-details-settings">
+                <div class="alert alert-addons">
+                    {l s='In order to save your customers information to your Sender.net account, you would need to
+enable feature Cart tracking or Newsletter' mod='senderautomatedemails'}
+                </div>
+            </div>
             <blockquote>
                 <p>
-                    {l s='Select which customer data you would like to add(email is added by default)' mod='senderautomatedemails'}
+                    {l s='Select which customer data you would like to add (email is added by default).' mod='senderautomatedemails'}
                 </p>
             </blockquote>
-            <input class="spm-customer-data-input" type="checkbox"
-                   value="FIRSTNAME">{l s='Firstname' mod='senderautomatedemails'}<br>
-            <input class="spm-customer-data-input" type="checkbox"
-                   value="LASTNAME">{l s='Lastname' mod='senderautomatedemails'}<br>
+            <div>
+                <label class="FIRSTNAME">
+                    <input class="spm-customer-data-input sender-checkbox" type="checkbox"
+                           value="FIRSTNAME" name="FIRSTNAME">
+                    <span>{l s='Firstname' mod='senderautomatedemails'}</span>
+                </label>
+            </div>
+            <div>
+                <label class="LASTNAME">
+                    <input class="spm-customer-data-input sender-checkbox" type="checkbox"
+                           value="LASTNAME" name="LASTNAME">
+                    <span>{l s='Lastname' mod='senderautomatedemails'}</span>
+                </label>
+            </div>
+            <br>
             {*Mapping*}
             {*Gender*}
             <br><br>
@@ -35,7 +52,7 @@
                     <div>
                         {l s='Please select the custom field, which saves gender in your Sender mailinglist or create a new field.' mod='senderautomatedemails'}
                         <p>
-                            <a class="btn btn-lg btn-info field-create"
+                            <a class="btn btn-lg btn-sender field-create"
                                href="{$appUrl|escape:'htmlall':'UTF-8'}/subscribers/fields" target="_blank">
                                 {l s='Create new field' mod='senderautomatedemails'}
                             </a>
@@ -76,7 +93,7 @@
                     <div>
                         {l s='Please select the custom field, which saves birthday in your Sender mailinglist or create a new field.' mod='senderautomatedemails'}
                         <p>
-                            <a class="btn btn-lg btn-info field-create"
+                            <a class="btn btn-lg btn-sender field-create"
                                href="{$appUrl|escape:'htmlall':'UTF-8'}/subscribers/fields" target="_blank">
                                 {l s='Create new field' mod='senderautomatedemails'}
                             </a>

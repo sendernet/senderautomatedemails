@@ -27,19 +27,68 @@
         </div>
         <div class="panel-body">
             <div class="spm-details-settings">
-                <div class="alert alert-addons">
-                    {l s='Enable Sender track system to track your customers cart.' mod='senderautomatedemails'}
-                    <a href="https://landing.sender.net/abandoned-cart-email-template"
-                       target="_blank">{l s='Learn how to set up abandoned carts automation' mod='senderautomatedemails'}</a>
+                <div class="alert alert-info">
+                    <p>
+                        <i class="zmdi zmdi-shopping-cart"></i>
+                        {l s='Enable Sender track system to track your customers cart.' mod='senderautomatedemails'}
+                        <a href="https://landing.sender.net/abandoned-cart-email-template"
+                           target="_blank">{l s='Learn how to set up abandoned carts automation' mod='senderautomatedemails'}</a>
+                    </p>
+                    <p>
+                        <i class="zmdi zmdi-email"></i>
+                        {l s='Newsletter. Use this option if you are not going to use the Cart tracking feature
+but still you would like to add your customers to your Sender.net application.' mod='senderautomatedemails'}
+                    </p>
+
                 </div>
-                <button id="swToggleCartTrack"
-                        class="btn btn-lg {if not $allowCartTrack}btn-success{else}btn-danger{/if}">
-                    {if not $allowCartTrack}
-                        {l s='Enable' mod='senderautomatedemails'}
-                    {else}
-                        {l s='Disable' mod='senderautomatedemails'}
-                    {/if}
-                </button>
+                <div class="form-group">
+                    {*CART-TRACKING*}
+                    <table class="sender-table" style="max-width: 600px; border: none">
+                        <tr style="border: none">
+                            <th>{l s='Activate cart tracking' mod='senderautomatedemails'} <i
+                                        class="zmdi zmdi-shopping-cart"></i></th>
+                            <th>{l s='Activate newsletters' mod='senderautomatedemails'} <i class="zmdi zmdi-email"></i>
+                            </th>
+                        </tr>
+                        {*                        <label for="swCustomerListSelect">*}
+                        {*                            {l s='Activate cart tracking' mod='senderautomatedemails'}*}
+                        {*                        </label>*}
+                        <tr>
+                            <td>
+                                <button style="display: inline" id="swToggleCartTrack"
+                                        class="btn btn-lg {if not $allowCartTrack}btn-success{else}btn-danger{/if}">
+                                    {if not $allowCartTrack}
+                                        {l s='Enable' mod='senderautomatedemails'}
+                                    {else}
+                                        {l s='Disable' mod='senderautomatedemails'}
+                                    {/if}
+                                </button>
+                            </td>
+                            <td>
+                                <button id="swToggleNewsletter"
+                                        class="btn btn-lg {if not $allowNewsletter}btn-success{else}btn-danger{/if}">
+                                    {if not $allowNewsletter}
+                                        {l s='Enable' mod='senderautomatedemails'}
+                                    {else}
+                                        {l s='Disable' mod='senderautomatedemails'}
+                                    {/if}
+                                </button>
+                            </td>
+                        </tr>
+                        {*NEWSLETTER*}
+                        {*                        <label for="swCustomerListSelect">*}
+                        {*                            {l s='Activate newsletters' mod='senderautomatedemails'}*}
+                        {*                        </label>*}
+                        {*                        <button id="swToggleNewsletter"*}
+                        {*                                class="btn btn-lg {if not $allowNewsletter}btn-success{else}btn-danger{/if}">*}
+                        {*                            {if not $allowNewsletter}*}
+                        {*                                {l s='Enable' mod='senderautomatedemails'}*}
+                        {*                            {else}*}
+                        {*                                {l s='Disable' mod='senderautomatedemails'}*}
+                        {*                            {/if}*}
+                        {*                        </button>*}
+                    </table>
+                </div>
             </div>
             <div class="panel-body">
                 {if empty($allLists)}
