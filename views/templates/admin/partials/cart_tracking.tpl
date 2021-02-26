@@ -29,13 +29,13 @@
             <div class="spm-details-settings">
                 <div class="alert alert-info">
                     <p>
-                        <i class="zmdi zmdi-shopping-cart"></i>
+                        <i class="zmdi zmdi-shopping-cart" style="font-size: 20px"></i>
                         {l s='Enable Sender track system to track your customers cart.' mod='senderautomatedemails'}
                         <a href="https://landing.sender.net/abandoned-cart-email-template"
                            target="_blank">{l s='Learn how to set up abandoned carts automation' mod='senderautomatedemails'}</a>
                     </p>
                     <p>
-                        <i class="zmdi zmdi-email"></i>
+                        <i class="zmdi zmdi-email" style="font-size: 20px"></i>
                         {l s='Newsletter. Use this option if you are not going to use the Cart tracking feature
 but still you would like to add your customers to your Sender.net application.' mod='senderautomatedemails'}
                     </p>

@@ -72,8 +72,12 @@
                     jQuery('#swToggleCartTrack').text('Enable');
                     jQuery('#swToggleCartTrack').removeClass('btn-danger__sender');
                     jQuery('#swToggleCartTrack').addClass('btn-sender');
+                    jQuery('#swToggleNewsletter').text('Enable');
+                    jQuery('#swToggleNewsletter').removeClass('btn-danger__sender');
+                    jQuery('#swToggleNewsletter').addClass('btn-sender');
                     jQuery('#swCustomerListSelect').attr('disabled', true);
                     jQuery('#swGuestListSelect').attr('disabled', true);
+                    jQuery('#swToggleNewsletter').attr('disabled', false);
 
                 } else {
                     jQuery('#swToggleCartTrackTitle').text('enabled');
@@ -81,6 +85,10 @@
                     jQuery('#swToggleCartTrack').text('Disable');
                     jQuery('#swToggleCartTrack').removeClass('btn-sender');
                     jQuery('#swToggleCartTrack').addClass('btn-danger__sender');
+                    jQuery('#swToggleNewsletter').text('Disable');
+                    jQuery('#swToggleNewsletter').removeClass('btn-sender');
+                    jQuery('#swToggleNewsletter').addClass('btn-danger__sender');
+                    jQuery('#swToggleNewsletter').attr('disabled', true);
                     jQuery('#swCustomerListSelect').removeAttr('disabled');
                     jQuery('#swGuestListSelect').removeAttr('disabled');
                 }
