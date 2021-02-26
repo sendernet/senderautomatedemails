@@ -108,7 +108,7 @@
                                 </td>
                             </tr>
                         </table>
-                        <a href="{$disconnectUrl|escape:'htmlall':'UTF-8'}" class="btn btn-lg btn-danger">
+                        <a href="{$disconnectUrl|escape:'htmlall':'UTF-8'}" class="btn btn-lg btn-sender">
                             {l s='Disconnect' mod='senderautomatedemails'}
                         </a>
 

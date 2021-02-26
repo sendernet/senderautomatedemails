@@ -39,7 +39,6 @@
                         {l s='Newsletter. Use this option if you are not going to use the Cart tracking feature
 but still you would like to add your customers to your Sender.net application.' mod='senderautomatedemails'}
                     </p>
-
                 </div>
                 <div class="form-group">
                     {*CART-TRACKING*}
@@ -56,7 +55,7 @@ but still you would like to add your customers to your Sender.net application.' 
                         <tr>
                             <td>
                                 <button style="display: inline" id="swToggleCartTrack"
-                                        class="btn btn-lg {if not $allowCartTrack}btn-success{else}btn-danger{/if}">
+                                        class="btn btn-lg {if not $allowCartTrack}btn-sender{else}btn-danger__sender{/if}">
                                     {if not $allowCartTrack}
                                         {l s='Enable' mod='senderautomatedemails'}
                                     {else}
@@ -66,7 +65,7 @@ but still you would like to add your customers to your Sender.net application.' 
                             </td>
                             <td>
                                 <button id="swToggleNewsletter"
-                                        class="btn btn-lg {if not $allowNewsletter}btn-success{else}btn-danger{/if}">
+                                        class="btn btn-lg {if not $allowNewsletter}btn-sender{else}btn-danger__sender{/if}">
                                     {if not $allowNewsletter}
                                         {l s='Enable' mod='senderautomatedemails'}
                                     {else}

@@ -276,20 +276,24 @@ td,th{
     padding-right: 90px;
 }
 
-.btn-sender{
-    height: unset!important;
-    font-size: 14px!important;
+.btn-sender, .btn-sender a{
+    height: unset;
+    font-size: 14px;
     font-weight: 700;
-    border-radius: 5px!important;
-    box-shadow: none!important;
-    background-color: #ff8d00!important;
-    border-color: transparent!important;
+    border-radius: 5px;
+    box-shadow: none;
+    background-color: #ff8d00;
+    border-color: transparent;
     color: #fff!important;
 }
-.btn-sender:hover {
-    background-color: #ffae00!important;
-    border-color: transparent!important;
+.btn-danger__sender{
+    background-color: #db2323;
     color: #fff!important;
+}
+.btn-sender:hover, .btn-sender a:hover {
+    background-color: #ffae00;
+    border-color: transparent;
+    color: #fff;
 }
 
 input.sender-checkbox[type="checkbox"] {

@@ -70,8 +70,8 @@
                     jQuery('#swToggleCartTrackTitle').text('disabled');
                     jQuery('#swToggleCartTrackTitle').css('color', 'red');
                     jQuery('#swToggleCartTrack').text('Enable');
-                    jQuery('#swToggleCartTrack').removeClass('btn-danger');
-                    jQuery('#swToggleCartTrack').addClass('btn-success');
+                    jQuery('#swToggleCartTrack').removeClass('btn-danger__sender');
+                    jQuery('#swToggleCartTrack').addClass('btn-sender');
                     jQuery('#swCustomerListSelect').attr('disabled', true);
                     jQuery('#swGuestListSelect').attr('disabled', true);
 
@@ -79,8 +79,8 @@
                     jQuery('#swToggleCartTrackTitle').text('enabled');
                     jQuery('#swToggleCartTrackTitle').css('color', 'green');
                     jQuery('#swToggleCartTrack').text('Disable');
-                    jQuery('#swToggleCartTrack').removeClass('btn-success');
-                    jQuery('#swToggleCartTrack').addClass('btn-danger');
+                    jQuery('#swToggleCartTrack').removeClass('btn-sender');
+                    jQuery('#swToggleCartTrack').addClass('btn-danger__sender');
                     jQuery('#swCustomerListSelect').removeAttr('disabled');
                     jQuery('#swGuestListSelect').removeAttr('disabled');
                 }
@@ -103,16 +103,16 @@
                     jQuery('#swToggleNewsletterTitle').text('disabled');
                     jQuery('#swToggleNewsletterTitle').css('color', 'red');
                     jQuery('#swToggleNewsletter').text('Enable');
-                    jQuery('#swToggleNewsletter').removeClass('btn-danger');
-                    jQuery('#swToggleNewsletter').addClass('btn-success');
+                    jQuery('#swToggleNewsletter').removeClass('btn-danger__sender');
+                    jQuery('#swToggleNewsletter').addClass('btn-sender');
                     jQuery('#swCustomerListSelect').attr('disabled', true);
                     jQuery('#swGuestListSelect').attr('disabled', true);
                 } else {
                     jQuery('#swToggleNewsletterTitle').text('enabled');
                     jQuery('#swToggleNewsletterTitle').css('color', 'green');
                     jQuery('#swToggleNewsletter').text('Disable');
-                    jQuery('#swToggleNewsletter').removeClass('btn-success');
-                    jQuery('#swToggleNewsletter').addClass('btn-danger');
+                    jQuery('#swToggleNewsletter').removeClass('btn-sender');
+                    jQuery('#swToggleNewsletter').addClass('btn-danger__sender');
                     jQuery('#swCustomerListSelect').removeAttr('disabled');
                     jQuery('#swGuestListSelect').removeAttr('disabled');
                 }
@@ -135,15 +135,15 @@
                     jQuery('#swToggleWidgetTitle').text('disabled');
                     jQuery('#swToggleWidgetTitle').css('color', 'red');
                     jQuery('#swToggleWidget').text('Enable');
-                    jQuery('#swToggleWidget').removeClass('btn-danger');
-                    jQuery('#swToggleWidget').addClass('btn-success');
+                    jQuery('#swToggleWidget').removeClass('btn-danger__sender');
+                    jQuery('#swToggleWidget').addClass('btn-sender');
                     jQuery('#swFormsSelect').attr('disabled', true);
                 } else {
                     jQuery('#swToggleWidgetTitle').text('enabled');
                     jQuery('#swToggleWidgetTitle').css('color', 'green');
                     jQuery('#swToggleWidget').text('Disable');
-                    jQuery('#swToggleWidget').removeClass('btn-success');
-                    jQuery('#swToggleWidget').addClass('btn-danger');
+                    jQuery('#swToggleWidget').removeClass('btn-sender');
+                    jQuery('#swToggleWidget').addClass('btn-danger__sender');
                     jQuery('#swFormsSelect').removeAttr('disabled');
                 }
 

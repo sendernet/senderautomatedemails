@@ -44,7 +44,7 @@
             <div class="panel-body">
                 <div class="spm-details-settings">
                     <button id="swToggleWidget"
-                            class="btn btn-lg {if not $allowForms}btn-success{else}btn-danger{/if}">
+                            class="btn btn-lg {if not $allowForms}btn-sender{else}btn-danger__sender{/if}">
                         {if not $allowForms}
                             {l s='Enable' mod='senderautomatedemails'}
                         {else}
