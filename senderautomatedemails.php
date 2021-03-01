@@ -227,7 +227,8 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if (!Configuration::get('SPM_API_KEY') || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
+        if (!Configuration::get('SPM_API_KEY') || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')
+            || (!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_NEWSLETTERS'))) {
             return;
         }
 
@@ -353,12 +354,9 @@ class SenderAutomatedEmails extends Module
 
         $customer = $this->context->customer;
 
-        #Checking if we should go forward
-        if (!$customer->newsletter) {
-            if (!Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
-                $this->logDebug('No action required');
-                return;
-            }
+        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_NEWSLETTERS')){
+            $this->logDebug('Carts or newsletter not enabled');
+            return;
         }
 
         try {
@@ -373,6 +371,11 @@ class SenderAutomatedEmails extends Module
     {
         $this->logDebug('hookActionAuthentication');
         if (!$this->isModuleActive()){
+            return;
+        }
+
+        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_NEWSLETTERS')){
+            $this->logDebug('Carts or newsletter not enabled');
             return;
         }
 
@@ -394,8 +397,8 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS')){
-            $this->logDebug('track carts not active');
+        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_NEWSLETTERS')){
+            $this->logDebug('track carts not active OR newsletter');
             return;
         }
 
