@@ -62,7 +62,7 @@
 
             jQuery('#swToggleCartTrack').text('Saving...');
             jQuery('#swToggleCartTrack').attr('disabled', true);
-
+            jQuery('#newsletterCheckbox').css({opacity: 0});
             jQuery.post(cartsAjaxurl, { action: 'saveAllowCartTracking' }, function(response) {
                 var proceed = jQuery.parseJSON(response);
 
@@ -78,7 +78,6 @@
                     jQuery('#swCustomerListSelect').attr('disabled', true);
                     jQuery('#swGuestListSelect').attr('disabled', true);
                     jQuery('#swToggleNewsletter').attr('disabled', false);
-
                 } else {
                     jQuery('#swToggleCartTrackTitle').text('enabled');
                     jQuery('#swToggleCartTrackTitle').css('color', '#ff8d00');
@@ -116,7 +115,6 @@
                     jQuery('#swCustomerListSelect').attr('disabled', true);
                     jQuery('#swGuestListSelect').attr('disabled', true);
                     jQuery('#newsletterCheckbox').css({opacity: 0});
-                    // jQuery('#newsletterCheckbox').css('visibility', 'hidden')
                 } else {
                     jQuery('#swToggleNewsletterTitle').text('enabled');
                     jQuery('#swToggleNewsletterTitle').css('color', '#ff8d00');
@@ -268,6 +266,27 @@
 
             });
 
+        });
+
+        jQuery('.spm-customer-data-input').on('change', function(event) {
+            if($(this).is(':checked')) {
+                jQuery.post(dataAjaxurl, { action: 'addData', option_name: $(this).val() }, function(response) {
+                    console.log(response);
+                });
+            }else{
+                jQuery.post(dataAjaxurl, { action: 'removeData', option_name: $(this).val() }, function(response) {
+                    console.log(response);
+                });
+            }
+        });
+
+        jQuery('.spm-customer-data-input').each(function () {
+            let elm = $(this);
+            jQuery.post(dataAjaxurl, {action: 'getIfEnabled', option_name: $(this).val()}, function (response) {
+                if (response == 1) {
+                    elm.prop('checked', true);
+                }
+            });
         });
 
         jQuery('#newsletterCheck').on('change', function(event) {

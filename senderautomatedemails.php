@@ -599,10 +599,12 @@ class SenderAutomatedEmails extends Module
     private function formVisitor($customer)
     {
         $this->logDebug('FORM-VISITOR');
+        $customFields = $this->getCustomFields($customer);
+
         $visitorRegistration = [
             'email' => $customer->email,
-            'firstname' => $customer->firstname,
-            'lastname' => $customer->lastname,
+            'firstname' => isset($customFields['firstname']) ? $customFields['firstname'] : '',
+            'lastname' => isset($customFields['lastname']) ? $customFields['lastname'] : '',
             'visitor_id' => $_COOKIE['sender_site_visitor'],
             'list_id' => Configuration::get('SPM_GUEST_LIST_ID'),
         ];
@@ -627,7 +629,9 @@ class SenderAutomatedEmails extends Module
             return false;
         }
 
-        $customFields = $this->getCustomFields($customer);
+        #Removing the firstname and lastname when updating custom fields
+        unset($customFields['firstname']);
+        unset($customFields['lastname']);
 
         if (!empty($customFields)) {
                 $this->senderApiClient()->addFields($subscriber->id, $customFields);
@@ -744,10 +748,11 @@ class SenderAutomatedEmails extends Module
         #Registered customer coming to site
         #Set up the visitorRegistration thing
         try {
+            $customFields = $this->getCustomFields($customer);
             $visitorRegistration = [
                 'email' => $customer->email,
-                'firstname' => $customer->firstname,
-                'lastname' => $customer->lastname,
+                'firstname' => isset($customFields['firstname']) ? $customFields['firstname'] : '',
+                'lastname' => isset($customFields['lastname']) ? $customFields['lastname'] : '',
                 'visitor_id' => $_COOKIE['sender_site_visitor'],
             ];
 
@@ -773,7 +778,9 @@ class SenderAutomatedEmails extends Module
                 return;
             }
 
-            $customFields = $this->getCustomFields($customer);
+            #Removing the firstname and lastname when updating custom fields
+            unset($customFields['firstname']);
+            unset($customFields['lastname']);
 
             if (!empty($customFields)) {
                 $this->senderApiClient()->addFields($subscriber->id, $customFields);
@@ -929,6 +936,11 @@ class SenderAutomatedEmails extends Module
     public function getCustomFields($customer)
     {
         $fields = [];
+
+        (Configuration::get('SPM_CUSTOMER_FIELD_FIRSTNAME')) != 0
+            ? $fields['firstname'] = $customer->firstname : false;
+        (Configuration::get('SPM_CUSTOMER_FIELD_LASTNAME')) != 0
+            ? $fields['lastname'] = $customer->lastname : false;
 
         (Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY_ID')) != 0
             ? $fields[Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY_ID')] = $customer->birthday : false;
