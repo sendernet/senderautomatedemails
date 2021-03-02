@@ -406,6 +406,11 @@ class SenderAutomatedEmails extends Module
             $this->logDebug('Using the newsletter checkbox from newsletter plugin');
             return;
         }
+
+        if (!Configuration::get('SPM_SHOW_NEWSLETTER_CHECKBOX')){
+            return;
+        }
+
         $label = $this->trans(
             'Sign up for our newsletter[1][2]%conditions%[/2]',
             array(
