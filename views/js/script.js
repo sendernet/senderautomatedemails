@@ -115,6 +115,8 @@
                     jQuery('#swToggleNewsletter').addClass('btn-sender');
                     jQuery('#swCustomerListSelect').attr('disabled', true);
                     jQuery('#swGuestListSelect').attr('disabled', true);
+                    jQuery('#newsletterCheckbox').css({opacity: 0});
+                    // jQuery('#newsletterCheckbox').css('visibility', 'hidden')
                 } else {
                     jQuery('#swToggleNewsletterTitle').text('enabled');
                     jQuery('#swToggleNewsletterTitle').css('color', '#ff8d00');
@@ -123,6 +125,7 @@
                     jQuery('#swToggleNewsletter').addClass('btn-danger__sender');
                     jQuery('#swCustomerListSelect').removeAttr('disabled');
                     jQuery('#swGuestListSelect').removeAttr('disabled');
+                    jQuery('#newsletterCheckbox').css({opacity: 1, visibility: "visible"});
                 }
 
                 jQuery('#swToggleNewsletter').removeAttr('disabled');

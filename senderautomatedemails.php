@@ -227,8 +227,8 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if (!Configuration::get('SPM_API_KEY') || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')
-            || (!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_NEWSLETTERS'))) {
+        if ((!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_NEWSLETTERS')
+                && !Configuration::get('SPM_ALLOW_FORMS')) || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
             return;
         }
 
@@ -397,8 +397,8 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_NEWSLETTERS')){
-            $this->logDebug('track carts not active OR newsletter');
+        if (!Configuration::get('SPM_ALLOW_NEWSLETTERS')){
+            $this->logDebug('Newsletter checkbox not active');
             return;
         }
 
