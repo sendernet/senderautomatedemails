@@ -359,6 +359,11 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
+        if (Configuration::get('SPM_SHOW_NEWSLETTER_CHECKBOX') && !$customer->newsletter){
+            $this->logDebug('Person opted out from been a subscriber');
+            return;
+        }
+
         try {
             $this->formVisitor($customer);
             $this->logDebug('#hookactionCustomerAccountAdd END');
