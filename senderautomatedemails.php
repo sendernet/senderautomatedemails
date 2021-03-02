@@ -740,7 +740,7 @@ class SenderAutomatedEmails extends Module
         }
         #Checking if we should go forward
         if (!$customer->newsletter) {
-            if (!Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
+            if (!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_NEWSLETTERS')) {
                 $this->logDebug('No action required');
                 return;
             }
