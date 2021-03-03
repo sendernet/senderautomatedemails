@@ -158,22 +158,22 @@ but still you would like to add your customers to your Sender.net application.' 
                     </div>
                 {/if}
             </div>
+                <div class="panel-body" id="newsletterCheckbox" style="opacity: 0;">
+                    <label class="">
+                        <input id="newsletterCheck" class="spm-receive-newsletters-input sender-checkbox"
+                               type="checkbox"
+                               value="" name="">
+                        <span>{l s='Add checkbox in order checkout' mod='senderautomatedemails'}</span>
+                    </label>
 
-            <div class="panel-body" id="newsletterCheckbox">
-                <label class="">
-                    <input id="newsletterCheck" class="spm-receive-newsletters-input sender-checkbox" type="checkbox"
-                           value="" name="">
-                    <span>{l s='Add checkbox in order checkout' mod='senderautomatedemails'}</span>
-                </label>
-
-                <div class="alert alert-info">
-                    <p>
-                        <i class="zmdi zmdi-email" style="font-size: 20px"></i>
-                        {l s='Choose from adding a checkbox asking for permissions to become a subscriber or
+                    <div class="alert alert-info">
+                        <p>
+                            <i class="zmdi zmdi-email" style="font-size: 20px"></i>
+                            {l s='Choose from adding a checkbox asking for permissions to become a subscriber or
 no checkbox. This would be showing up in the order checkout.' mod='senderautomatedemails'}
-                    </p>
+                        </p>
+                    </div>
                 </div>
-            </div>
         </div>
     </div>
 </div>

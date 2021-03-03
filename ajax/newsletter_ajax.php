@@ -26,10 +26,14 @@ if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->na
             }
             die(json_encode(array( 'result' => false )));
         case 'addCheckboxNewsletters':
-            Configuration::updateValue('SPM_SHOW_NEWSLETTER_CHECKBOX', 1);
+            if (Configuration::get('SPM_ALLOW_NEWSLETTERS')) {
+                Configuration::updateValue('SPM_SHOW_NEWSLETTER_CHECKBOX', 1);
+            }
             break;
         case 'removeCheckboxNewsletters':
-            Configuration::updateValue('SPM_SHOW_NEWSLETTER_CHECKBOX', 0);
+            if (Configuration::get('SPM_ALLOW_NEWSLETTERS')) {
+                Configuration::updateValue('SPM_SHOW_NEWSLETTER_CHECKBOX', 0);
+            }
             break;
         case 'getIfEnabledNewsletterCheckbox':
             $status = Configuration::get('SPM_SHOW_NEWSLETTER_CHECKBOX');
