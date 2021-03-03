@@ -11,9 +11,7 @@
 {if $showForm and $formUrl}
     <div>
         <div class="col-xs-4" id="senderFormContainer">
-            {if $embedForm}
-                <div class="sender-form-field" data-sender-form-id="{$embedHash|escape:'htmlall':'UTF-8'}"></div>
-            {/if}
+            <div class="sender-form-field" data-sender-form-id="{$embedHash|escape:'htmlall':'UTF-8'}"></div>
         </div>
     </div>
 {/if}

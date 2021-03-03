@@ -302,8 +302,9 @@ class SenderAutomatedEmails extends Module
 
     public function senderDisplayFooter()
     {
-        if ((!Configuration::get('SPM_ALLOW_FORMS'))
-            || Configuration::get('SPM_FORM_ID') == $this->defaultSettings['SPM_FORM_ID']) {
+        if (!Configuration::get('SPM_ALLOW_FORMS')
+            || Configuration::get('SPM_FORM_ID') == $this->defaultSettings['SPM_FORM_ID']
+            || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
             return;
         }
 
@@ -321,13 +322,10 @@ class SenderAutomatedEmails extends Module
             $embedHash = $form->settings->embed_hash;
         }
         // Add forms
-        if (Configuration::get('SPM_ALLOW_FORMS')) {
-            $options['formUrl'] = isset($form->settings->resource_path) ? $form->settings->resource_path : '';
-            $options['showForm'] = true;
-            $options['embedForm'] = isset($embedHash);
-            $options['embedHash'] = isset($embedHash) ? $embedHash : '';
-        }
-
+        $options['formUrl'] = isset($form->settings->resource_path) ? $form->settings->resource_path : '';
+        $options['showForm'] = true;
+        $options['embedHash'] = isset($embedHash) ? $embedHash : '';
+        
         $this->context->smarty->assign($options);
         return $this->context->smarty->fetch($this->views_url . '/templates/front/form.tpl');
     }
