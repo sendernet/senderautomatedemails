@@ -158,7 +158,8 @@ but still you would like to add your customers to your Sender.net application.' 
                     </div>
                 {/if}
             </div>
-                <div class="panel-body" id="newsletterCheckbox" style="opacity: 0;">
+                <div class="panel-body" id="newsletterCheckbox" style="{if $allowNewsletter &&
+                 not $allowCartTrack} opacity: 1;{else}opacity: 0;{/if}">
                     <label class="">
                         <input id="newsletterCheck" class="spm-receive-newsletters-input sender-checkbox"
                                type="checkbox"

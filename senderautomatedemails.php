@@ -222,7 +222,7 @@ class SenderAutomatedEmails extends Module
 
     public function hookDisplayHeader()
     {
-        $this->logDebug('hookDisplayHeader');
+//        $this->logDebug('hookDisplayHeader');
         if (!$this->isModuleActive()){
             return;
         }
@@ -280,7 +280,6 @@ class SenderAutomatedEmails extends Module
      */
     public function hookDisplayFooterBefore()
     {
-        $this->logDebug('hookDisplayFooterBefore');
         if (!$this->isModuleActive()){
             return;
         }
@@ -636,6 +635,10 @@ class SenderAutomatedEmails extends Module
                 $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
             }
 
+        #Marking the newsletter active on prestashop
+        $customer->newsletter = true;
+        $customer->save();
+
         return $subscriber;
     }
 
@@ -672,6 +675,13 @@ class SenderAutomatedEmails extends Module
             || !isset($_COOKIE['sender_site_visitor'])) {
             $this->logDebug('Cart object not loaded || Module not active || Cart tracking not active 
             || Cookies not set up');
+            if (Configuration::get('SPM_ALLOW_NEWSLETTERS')){
+                if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
+                    $subscriber = $this->senderApiClient()->isAlreadySubscriber($this->context->customer->email);
+                    $this->senderApiClient()
+                        ->addToList($subscriber ? $subscriber->id : '', Configuration::get('SPM_CUSTOMERS_LIST_ID'));
+                }
+            }
             return;
         }
 
