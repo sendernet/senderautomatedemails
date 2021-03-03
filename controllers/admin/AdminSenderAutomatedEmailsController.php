@@ -121,6 +121,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             'link' => $this->context->link,
         );
 
+        $this->context->controller->addCSS($this->module->views_url . '/css/auth.css');
         $this->context->smarty->assign($options);
 
         return $this->context->smarty->fetch($this->module->views_url . '/templates/admin/auth.tpl');

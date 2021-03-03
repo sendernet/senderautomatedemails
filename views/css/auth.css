@@ -1,0 +1,31 @@
+.sender-prestashop-card>*{
+    font-family: 'Roboto', sans-serif !important;
+    font-size: 14px!important;
+    color: #555!important;
+}
+.btn-sender{
+    height: unset;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 5px;
+    box-shadow: none;
+    background-color: #ff8d00;
+    border-color: transparent;
+    color: #fff!important;
+}
+
+.btn-sender:hover{
+    background-color: #ffae00;
+    border-color: transparent;
+    color: #fff;
+}
+
+.alert-danger{
+    max-width: max-content!important;
+    margin-bottom: 10px!important;
+    margin: 0 auto;
+}
+
+.alert-danger > .close{
+    margin-left: 5px!important;
+}

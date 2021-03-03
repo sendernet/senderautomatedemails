@@ -8,18 +8,7 @@
  * @license https://opensource.org/licenses/osl-3.0.php Open Software License v. 3.0 (OSL-3.0)
  * Sender.net
  *}
-<style>
-	.alert-danger{
-		max-width: max-content!important;
-		margin-bottom: 10px!important;
-		margin: 0 auto;
-	}
-	.alert-danger > .close{
-		margin-left: 5px!important;
-	}
-</style>
-
-<div class="row" style="text-align: center;">
+<div class="row sender-prestashop-card" style="text-align: center;">
 	<div class="well col-lg-6 col-lg-offset-3">
 		<div class="row">
 			<div class="col-xs-12">
@@ -53,7 +42,7 @@
 					<label for="apiKey">Api access token:</label>
 					<input type="text" id="apiKey" name="apiKey" placeholder="{l s='Paste here the copied Api token' mod='senderautomatedemails'}"><br><br>
 					<input type="submit" value="{l s='Authenticate' mod='senderautomatedemails'}"
-						   name="actionApiKey" class="btn btn-lg" style="background-color: #009587; color: #fff;"
+						   name="actionApiKey" class="btn btn-lg btn-sender" style="color: #fff;"
 					>
 				</form>
 			</div>
