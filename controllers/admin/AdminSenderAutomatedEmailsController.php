@@ -154,6 +154,9 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
 
         $customFields = $this->module->senderApiClient()->getCustomFields();
 
+        $customFieldsText = [];
+        $customFieldsDatetime = [];
+
         #Removing the default fields
         $customFieldsToHide = ['email', 'firstname', 'lastname'];
         foreach ($customFields as $key => $field) {
@@ -162,6 +165,14 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             }
         }
 
+        foreach ($customFields as $field){
+            if ($field->type === 'text'){
+                $customFieldsText[] = $field;
+            }
+            if ($field->type === 'datetime'){
+                $customFieldsDatetime[] = $field;
+            }
+        }
 
         $this->context->smarty->assign(array(
             'imageUrl' => $this->module->getPathUri() . 'views/img/sender_logo.png',
@@ -198,7 +209,8 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             'exportListId' => Configuration::get('SPM_SENDERAPP_SYNC_LIST_ID'),
             'genderFieldId' => Configuration::get('SPM_CUSTOMER_FIELD_GENDER_ID'),
             'birthdayFieldId' => Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY_ID'),
-            'customFields' => $customFields,
+            'customFieldsText' => $customFieldsText,
+            'customFieldsDatetime' => $customFieldsDatetime,
             'syncedList' => Configuration::get('SPM_SENDERAPP_SYNC_LIST_DATE')
                 ? Configuration::get('SPM_SENDERAPP_SYNC_LIST_DATE') : '',
         ));

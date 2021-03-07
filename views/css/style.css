@@ -21,6 +21,7 @@
 }
 .bootstrap blockquote{
     color: #000;
+    border-left: 5px solid #dbdbdb;
 
 }
 .bootstrap label{
@@ -322,7 +323,7 @@ input.sender-checkbox[type="checkbox"] + span {
 /* Checkbox un-checked style */
 input.sender-checkbox[type="checkbox"] + span:before {
     content: '';
-    border: 1px solid #ddd;
+    border: 1px solid #cdcdcd;
     border-radius: 3px;
     display: inline-block;
     width: 20px;

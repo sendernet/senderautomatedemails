@@ -38,7 +38,7 @@ if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->na
             Configuration::updateValue('SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID', Tools::getValue('field_id'));
             break;
         case 'genderField':
-            if (Tools::getValue('field_id') === 0) {
+            if (Tools::getValue('field_id') == 0) {
                 Configuration::updateValue('SPM_CUSTOMER_FIELD_GENDER_ID', Tools::getValue('field_id'));
                 die(json_encode(['result' => true]));
             }
@@ -46,7 +46,7 @@ if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->na
             die(json_encode(['result' => true]));
             break;
         case 'birthdayField':
-            if (Tools::getValue('field_id') === 0) {
+            if (Tools::getValue('field_id') == 0) {
                 Configuration::updateValue('SPM_CUSTOMER_FIELD_BIRTHDAY_ID', Tools::getValue('field_id'));
                 die(json_encode(['result' => true]));
             }

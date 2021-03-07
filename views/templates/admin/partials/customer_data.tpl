@@ -62,15 +62,15 @@ enable feature Cart tracking or Newsletter' mod='senderautomatedemails'}
                 <div class="form-group">
                     <select class="sender-lists" id="swGenderField" name="swGenderField"
                             value="{$genderFieldId|escape:'htmlall':'UTF-8'}">
-                        {if empty($customFields)}
+                        {if empty($customFieldsText)}
                             <option value="0">
-                                {l s='No fields created in Sender app' mod='senderautomatedemails'}
+                                {l s='No fields of type text created in Sender app' mod='senderautomatedemails'}
                             </option>
                         {else}
                             <option value="0">
                                 <b>{l s="Don't add to list" mod="senderautomatedemails"}</b>
                             </option>
-                            {foreach $customFields as $field}
+                            {foreach $customFieldsText as $field}
                                 <option {if $field->id eq $genderFieldId }selected="selected"{/if}
                                         value="{$field->id|escape:'htmlall':'UTF-8'}">
                                     {$field->title|escape:'htmlall':'UTF-8'}
@@ -103,15 +103,15 @@ enable feature Cart tracking or Newsletter' mod='senderautomatedemails'}
                 <div class="form-group">
                     <select class="sender-lists" id="swBirthdayField" name="swBirthdayField"
                             value="{$birthdayFieldId|escape:'htmlall':'UTF-8'}">
-                        {if empty($customFields)}
+                        {if empty($customFieldsDatetime)}
                             <option value="0">
-                                {l s='No fields created in Sender app' mod='senderautomatedemails'}
+                                {l s='No fields of type datetime created in Sender app' mod='senderautomatedemails'}
                             </option>
                         {else}
                             <option value="0">
                                 <b>{l s="Don't add to list" mod="senderautomatedemails"}</b>
                             </option>
-                            {foreach $customFields as $field}
+                            {foreach $customFieldsDatetime as $field}
                                 <option {if $field->id eq $birthdayFieldId }selected="selected"{/if}
                                         value="{$field->id|escape:'htmlall':'UTF-8'}">
                                     {$field->title|escape:'htmlall':'UTF-8'}
