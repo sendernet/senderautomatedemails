@@ -23,6 +23,7 @@ if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->na
         case 'saveAllowCartTracking':
             if (Configuration::updateValue('SPM_ALLOW_TRACK_CARTS', !Configuration::get('SPM_ALLOW_TRACK_CARTS'))) {
                 Configuration::updateValue('SPM_ALLOW_NEWSLETTERS', Configuration::get('SPM_ALLOW_TRACK_CARTS'));
+                Configuration::updateValue('SPM_SHOW_NEWSLETTER_CHECKBOX', 0);
                 die(json_encode(array('result' => Configuration::get('SPM_ALLOW_TRACK_CARTS'))));
             }
             die(json_encode(array( 'result' => false )));
