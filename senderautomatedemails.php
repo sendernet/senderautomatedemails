@@ -355,8 +355,9 @@ class SenderAutomatedEmails extends Module
             $this->logDebug('Carts or newsletter not enabled');
             return;
         }
-
-        if (Configuration::get('SPM_SHOW_NEWSLETTER_CHECKBOX') && !$customer->newsletter){
+        $this->logDebug(Configuration::get('SPM_SHOW_NEWSLETTER_CHECKBOX'));
+        if (Configuration::get('SPM_SHOW_NEWSLETTER_CHECKBOX') &&
+            !Configuration::get('SPM_ALLOW_TRACK_CARTS') && !$customer->newsletter){
             $this->logDebug('Person opted out from been a subscriber');
             return;
         }
@@ -382,6 +383,10 @@ class SenderAutomatedEmails extends Module
         }
 
         $customer = $this->context->customer;
+        if (!$customer->newsletter){
+            $this->logDebug('This client account opted out for newsletters');
+            return;
+        }
         $this->formVisitor($customer);
     }
 
@@ -396,6 +401,11 @@ class SenderAutomatedEmails extends Module
     {
         $this->logDebug('hookAdditionalCustomerFormFields');
         if (!$this->isModuleActive()){
+            return;
+        }
+
+        if (Configuration::get('SPM_ALLOW_TRACK_CARTS')){
+            $this->logDebug('ON cart track this option is not available');
             return;
         }
 
@@ -501,7 +511,7 @@ class SenderAutomatedEmails extends Module
         }
 
         if ($this->context->cookie->__isset('sender-captured-cart') && !empty($this->context->cookie->__get('sender-captured-cart'))) {
-            if ($this->compareCartDateTime($this->context->cookie->__get('sender-captured-cart'))) {
+            if ($this->compareSenderDateTime($this->context->cookie->__get('sender-captured-cart'))) {
                 $this->logDebug('Avoiding duplicating logic of prestashop');
                 return;
             }
@@ -595,6 +605,13 @@ class SenderAutomatedEmails extends Module
      */
     private function formVisitor($customer)
     {
+        if ($this->context->cookie->__isset('sender-added-visitor') && !empty($this->context->cookie->__get('sender-added-visitor'))) {
+            if ($this->compareSenderDateTime($this->context->cookie->__get('sender-added-visitor'))) {
+                $this->logDebug('Avoiding duplicating logic of prestashop - Form Visitor');
+                return;
+            }
+        }
+
         $this->logDebug('FORM-VISITOR');
         $customFields = $this->getCustomFields($customer);
 
@@ -618,7 +635,7 @@ class SenderAutomatedEmails extends Module
         $this->senderApiClient()->visitorRegistered($visitorRegistration);
 
         #Checking the status of the subscriber. On unsubscribed we wont continue
-        $subscriber = $this->checkSubscriberState($customer->email);
+        $subscriber = $this->checkSubscriberState($customer->email, $customer->newsletter);
 
         #Handling subscriber deleted
         if (!$subscriber) {
@@ -635,16 +652,19 @@ class SenderAutomatedEmails extends Module
                 $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
             }
 
+        $this->context->cookie->__set('sender-added-visitor', strtotime(date('Y-m-d H:i:s')));
+        $this->context->cookie->write();
+
         #Marking the newsletter active on prestashop
         $customer->newsletter = true;
-        $customer->save();
+        $customer->update();
 
         return $subscriber;
     }
 
-    private function compareCartDateTime($dateAdd, $duration = 1)
+    private function compareSenderDateTime($dateAdd, $duration = 1)
     {
-        $this->logDebug('compareCartDateTime');
+        $this->logDebug('compareSenderDateTime');
         $currentTime = strtotime(date('Y-m-d H:i:s'));
         $dateCartAdded = $dateAdd + $duration;
 
@@ -746,54 +766,26 @@ class SenderAutomatedEmails extends Module
             $this->logDebug('Exiting update customer');
             return true;
         }
-        #Checking if we should go forward
-        if (!$customer->newsletter) {
-            if (!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_NEWSLETTERS')) {
-                $this->logDebug('No action required');
+
+        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
+            if ((Configuration::get('SPM_ALLOW_NEWSLETTERS') && Configuration::get('SPM_SHOW_NEWSLETTER_CHECKBOX'))
+                && !$customer->newsletter) {
+                #Checking the status of the subscriber. On unsubscribed we wont continue
+                $subscriber = $this->checkSubscriberState($customer->email);
+                if ($subscriber && !$customer->newsletter){
+                    $this->logDebug(json_encode($subscriber));
+                    $this->logDebug('This subscriber would be unsubscribed');
+                    $this->senderApiClient()->unsubscribe($subscriber->id);
+                }
+                $this->logDebug('This person should not be tracked');
                 return;
             }
         }
+
         #Registered customer coming to site
         #Set up the visitorRegistration thing
         try {
-            $customFields = $this->getCustomFields($customer);
-            $visitorRegistration = [
-                'email' => $customer->email,
-                'firstname' => isset($customFields['firstname']) ? $customFields['firstname'] : '',
-                'lastname' => isset($customFields['lastname']) ? $customFields['lastname'] : '',
-                'visitor_id' => $_COOKIE['sender_site_visitor'],
-            ];
-
-            #Check if has any orders
-            if($this->checkOrderHistory($customer->id)) {
-                if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
-                    $visitorRegistration['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
-                }
-            }else{
-                $visitorRegistration['list_id'] = Configuration::get('SPM_GUEST_LIST_ID');
-            }
-
-            $this->senderApiClient()->visitorRegistered($visitorRegistration);
-
-            $newsletter = $customer->newsletter ? true : false;
-            $subscriber = $this->checkSubscriberState($customer->email, $newsletter);
-
-            $this->logDebug('Subscriber variable');
-            $this->logDebug(json_encode($subscriber));
-            #Handling subscriber deleted
-            if (!$subscriber) {
-                $this->logDebug('Subscriber was deleted');
-                return;
-            }
-
-            #Removing the firstname and lastname when updating custom fields
-            unset($customFields['firstname']);
-            unset($customFields['lastname']);
-
-            if (!empty($customFields)) {
-                $this->senderApiClient()->addFields($subscriber->id, $customFields);
-                $this->logDebug('Adding fields to this recipient: ' . json_encode($customFields));
-            }
+            $this->formVisitor($customer);
         } catch (Exception $e) {
             $this->logDebug('Error hook hookactionCustomerAccountUpdate' . json_encode($e->getMessage()));
         }

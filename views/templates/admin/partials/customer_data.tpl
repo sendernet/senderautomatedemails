@@ -51,6 +51,8 @@ enable feature Cart tracking or Newsletter' mod='senderautomatedemails'}
                     </h4>
                     <div>
                         {l s='Please select the custom field, which saves gender in your Sender mailinglist or create a new field.' mod='senderautomatedemails'}
+                        <br>
+                        <strong>{l s='Showing only text field type' mod='senderautomatedemails'}</strong>
                         <p>
                             <a class="btn btn-lg btn-sender field-create"
                                href="{$appUrl|escape:'htmlall':'UTF-8'}/subscribers/fields" target="_blank">
@@ -92,6 +94,8 @@ enable feature Cart tracking or Newsletter' mod='senderautomatedemails'}
                     </h4>
                     <div>
                         {l s='Please select the custom field, which saves birthday in your Sender mailinglist or create a new field.' mod='senderautomatedemails'}
+                        <br>
+                        <strong>{l s='Showing datetime field type' mod='senderautomatedemails'}</strong>
                         <p>
                             <a class="btn btn-lg btn-sender field-create"
                                href="{$appUrl|escape:'htmlall':'UTF-8'}/subscribers/fields" target="_blank">
