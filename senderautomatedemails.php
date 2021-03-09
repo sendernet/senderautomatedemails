@@ -63,7 +63,7 @@ class SenderAutomatedEmails extends Module
             'max' => _PS_VERSION_
         );
         $this->bootstrap = true;
-        $this->module_key = 'ae9d0345b98417ac768db7c8f321ff7c'; //Got after validating the module
+        //$this->module_key = 'ae9d0345b98417ac768db7c8f321ff7c'; //Got after validating the module
 
         $this->views_url = _PS_ROOT_DIR_ . '/' . basename(_PS_MODULE_DIR_) . '/' . $this->name . '/views';
         $this->module_url = __PS_BASE_URI__ . basename(_PS_MODULE_DIR_) . '/' . $this->name;
@@ -216,7 +216,6 @@ class SenderAutomatedEmails extends Module
             $this->logDebug('Module not active');
             return false;
         }
-        $this->logDebug('Module is active');
         return true;
     }
 
@@ -382,11 +381,20 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        $customer = $this->context->customer;
-        if (!$customer->newsletter){
-            $this->logDebug('This client account opted out for newsletters');
-            return;
+        #Here the check its done over the newsletter option
+        if ($subscriber = $this->senderApiClient()->isAlreadySubscriber($this->context->customer->email)) {
+            if ($subscriber->unsubscribed) {
+                $this->logDebug('This subscriber is unsubscribed');
+                return;
+            }
         }
+
+        $customer = $this->context->customer;
+//        if (!$customer->newsletter){
+//            $this->logDebug('This client account opted out for newsletters');
+//            return;
+//        }
+
         $this->formVisitor($customer);
     }
 
@@ -517,7 +525,24 @@ class SenderAutomatedEmails extends Module
             }
         }
 
+        $email = isset($this->context->customer->email) ? $this->context->customer->email : '';
+
+        if (empty($email)){
+            $this->logDebug('NO email we wont go further on cartSavingHook');
+            return;
+        }
+
+        $subscriber = $this->senderApiClient()->isAlreadySubscriber($email);
+
+        if ($subscriber && $subscriber->unsubscribed) {
+            $this->logDebug('Exiting cart save. When product purchased, will make active the client & subscriber active
+            and track & convert cart');
+            return;
+        }
+
+        $this->logDebug('We will continue tracking the cart');
         $this->syncCart($context['cart']);
+
     }
 
     /**
@@ -530,7 +555,7 @@ class SenderAutomatedEmails extends Module
         $this->logDebug('SYNC-CART');
 
         $cartData = $this->mapCartData($cart, $_COOKIE['sender_site_visitor']);
-
+        $this->logDebug(json_encode($cartData));
         if (isset($cartData) && !empty($cartData['products'])){
             $a = $this->senderApiClient()->trackCart($cartData);
             $this->context->cookie->__set('sender-captured-cart', strtotime(date('Y-m-d H:i:s')));
@@ -558,7 +583,6 @@ class SenderAutomatedEmails extends Module
     {
         $this->logDebug('MAP-CART-DATA');
         $cartHash = $cart->id;
-
         $data = array(
             "email" => $this->context->cookie->__get('email') ? $this->context->cookie->__get('email') : '',
             'visitor_id' => $visitorId,
@@ -568,7 +592,8 @@ class SenderAutomatedEmails extends Module
                 . $this->name
                 . "&controller=recover&hash={$cartHash}",
             "currency" => $this->context->currency->iso_code,
-            "order_total" => (string)$cart->getOrderTotal(),
+//            "order_total" => (string)$cart->getOrderTotal() ,
+            "order_total" => isset($cart->total_paid_tax_incl) ? $cart->total_paid_tax_incl : (string)$cart->getOrderTotal(),
             "products" => array()
         );
 
@@ -576,19 +601,19 @@ class SenderAutomatedEmails extends Module
         if (!$products || empty($products)){
             return;
         }
+
         foreach ($products as $product) {
             $Product = new Product($product['id_product']);
-
             $price = $Product->getPrice(true, null, 2);
-
+            $linkRewrite = isset($product['link_rewrite']) ? $product['link_rewrite'] : implode('', $Product->link_rewrite);
             $prod = array(
-                'name' => $product['name'],
+                'name' => isset($product['name']) ? $product['name'] : $product['product_name'],
                 'sku' => $product['reference'],
                 'price' => (string)$price,
                 'price_display' => $price . ' ' . $this->context->currency->iso_code,
-                'qty' => $product['cart_quantity'],
+                'qty' => isset($product['cart_quantity']) ? $product['cart_quantity'] : $product['product_quantity'],
                 'image' => $this->context->link->getImageLink(
-                    $product['link_rewrite'],
+                    $linkRewrite,
                     $Product->getCoverWs(),
                     ImageType::getFormatedName('home')
                 )
@@ -635,7 +660,15 @@ class SenderAutomatedEmails extends Module
         $this->senderApiClient()->visitorRegistered($visitorRegistration);
 
         #Checking the status of the subscriber. On unsubscribed we wont continue
-        $subscriber = $this->checkSubscriberState($customer->email, $customer->newsletter);
+        #Es subscriptor pero es unsubscribed
+        #Aunk el newsletter de prestashop lo tiene activo.
+        $this->logDebug($customer->newsletter);
+        $subscriber = $this->checkSubscriberState($customer->email);
+
+        if ($subscriber->unsubscribed){
+            $this->logDebug('This person is unsubscribed');
+            return;
+        }
 
         #Handling subscriber deleted
         if (!$subscriber) {
@@ -658,7 +691,7 @@ class SenderAutomatedEmails extends Module
         #Marking the newsletter active on prestashop
         $customer->newsletter = true;
         $customer->update();
-
+        $this->logDebug('FINISH OF FORM-VISITOR');
         return $subscriber;
     }
 
@@ -707,6 +740,18 @@ class SenderAutomatedEmails extends Module
 
         try {
             $this->logDebug('#hookActionValidateOrder START');
+            #Subscriber status check
+            if ($subscriber = $this->senderApiClient()->isAlreadySubscriber($this->context->customer->email)) {
+                if ($subscriber && $subscriber->unsubscribed) {
+                    #Reactivate this subscriber
+                    $this->logDebug('This subscriber is unsubscribed. We will reactivate it and sync
+                    the cart to get the last updated');
+                    $this->senderApiClient()->reactivateSubscriber($subscriber->id);
+                    $this->syncCart($order);
+                    $idCart = $order->id;
+                }
+            }
+
             $dataConvert = [
                 'resource_key' => Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'),
                 'email' => $this->context->customer->email,
@@ -717,8 +762,10 @@ class SenderAutomatedEmails extends Module
             if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
                 $dataConvert['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
             }
-
-            $convertCart = $this->senderApiClient()->cartConvert($dataConvert, $order->id_cart);
+            $this->logDebug('Here the conversion');
+            $this->logDebug($order->id_cart);
+            $convertCart = $this->senderApiClient()->cartConvert($dataConvert, isset($idCart) ? $idCart : $order->id_cart);
+//            $convertCart = $this->senderApiClient()->cartConvert($dataConvert, $order->id_cart);
 
             $this->logDebug('Cart convert response: '
                 . json_encode($convertCart));
