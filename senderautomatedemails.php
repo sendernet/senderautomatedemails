@@ -486,6 +486,14 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
+        $subscriber = $this->senderApiClient()->isAlreadySubscriber($cookie['email']);
+
+        if ($subscriber && $subscriber->unsubscribed) {
+            $this->logDebug('Exiting cart save. When product purchased, will make active the client & subscriber active
+            and track & convert cart');
+            return;
+        }
+
         $this->logDebug('#hookActionCartSummary START');
         $this->syncCart($context['cart'], $cookie);
 
