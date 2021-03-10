@@ -19,7 +19,7 @@
             <div class="spm-details-settings">
                 <div class="alert alert-info">
                     {l s='In order to save your customers information to your Sender.net account, you would need to
-enable feature Cart tracking or Newsletter' mod='senderautomatedemails'}
+enable feature Cart tracking.' mod='senderautomatedemails'}
                 </div>
             </div>
             <blockquote>

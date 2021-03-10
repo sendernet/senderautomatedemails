@@ -149,9 +149,7 @@ class SenderAutomatedEmails extends Module
         }
 
         if (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
-            if (!$this->registerHook('displayFooterBefore')
-                || !$this->registerHook('additionalCustomerFormFields')
-            ) {
+            if (!$this->registerHook('displayFooterBefore')) {
                 return false;
             }
         } else {
@@ -221,13 +219,18 @@ class SenderAutomatedEmails extends Module
 
     public function hookDisplayHeader()
     {
-//        $this->logDebug('hookDisplayHeader');
         if (!$this->isModuleActive()){
             return;
         }
 
-        if ((!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_NEWSLETTERS')
-                && !Configuration::get('SPM_ALLOW_FORMS')) || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
+        #REFACTOR
+//        if ((!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_NEWSLETTERS')
+//                && !Configuration::get('SPM_ALLOW_FORMS')) || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
+//            return;
+//        }
+
+        if ((!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_FORMS'))
+            || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
             return;
         }
 
@@ -350,14 +353,8 @@ class SenderAutomatedEmails extends Module
 
         $customer = $this->context->customer;
 
-        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_NEWSLETTERS')){
-            $this->logDebug('Carts or newsletter not enabled');
-            return;
-        }
-        $this->logDebug(Configuration::get('SPM_SHOW_NEWSLETTER_CHECKBOX'));
-        if (Configuration::get('SPM_SHOW_NEWSLETTER_CHECKBOX') &&
-            !Configuration::get('SPM_ALLOW_TRACK_CARTS') && !$customer->newsletter){
-            $this->logDebug('Person opted out from been a subscriber');
+        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS')){
+            $this->logDebug('Carts track not enabled');
             return;
         }
 
@@ -365,7 +362,7 @@ class SenderAutomatedEmails extends Module
             $this->formVisitor($customer);
             $this->logDebug('#hookactionCustomerAccountAdd END');
         } catch (Exception $e) {
-            $this->logDebug('Error hookactionCustomer ' . json_encode($e->getMessage()));
+            $this->logDebug('Error hookActionCustomerAccountAdd ' . json_encode($e->getMessage()));
         }
     }
 
@@ -376,8 +373,8 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_NEWSLETTERS')){
-            $this->logDebug('Carts or newsletter not enabled');
+        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS')){
+            $this->logDebug('Carts track not enabled');
             return;
         }
 
@@ -390,63 +387,8 @@ class SenderAutomatedEmails extends Module
         }
 
         $customer = $this->context->customer;
-//        if (!$customer->newsletter){
-//            $this->logDebug('This client account opted out for newsletters');
-//            return;
-//        }
 
         $this->formVisitor($customer);
-    }
-
-    /**
-     * Add an extra FormField to ask for newsletter registration.
-     *
-     * @param $params
-     *
-     * @return bool
-     */
-    public function hookAdditionalCustomerFormFields($params)
-    {
-        $this->logDebug('hookAdditionalCustomerFormFields');
-        if (!$this->isModuleActive()){
-            return;
-        }
-
-        if (Configuration::get('SPM_ALLOW_TRACK_CARTS')){
-            $this->logDebug('ON cart track this option is not available');
-            return;
-        }
-
-        if (!Configuration::get('SPM_ALLOW_NEWSLETTERS')){
-            $this->logDebug('Newsletter checkbox not active');
-            return;
-        }
-
-        if (Module::isEnabled('ps_emailsubscription')) {
-            $this->logDebug('Using the newsletter checkbox from newsletter plugin');
-            return;
-        }
-
-        if (!Configuration::get('SPM_SHOW_NEWSLETTER_CHECKBOX')){
-            return;
-        }
-
-        $label = $this->trans(
-            'Sign up for our newsletter[1][2]%conditions%[/2]',
-            array(
-                '[1]' => '<br>',
-                '[2]' => '<em>',
-                '%conditions%' => Configuration::get('NW_CONDITIONS', $this->context->language->id),
-                '[/2]' => '</em>',
-            ),
-            'Modules.Emailsubscription.Shop'
-        );
-
-        return array(
-            (new FormField())
-                ->setName('newsletter')
-                ->setType('checkbox')
-                ->setLabel($label),);
     }
 
     /**
@@ -674,7 +616,9 @@ class SenderAutomatedEmails extends Module
         $subscriber = $this->checkSubscriberState($customer->email);
 
         if ($subscriber->unsubscribed){
-            $this->logDebug('This person is unsubscribed');
+            $customer->newsletter = 0;
+            $customer->update();
+            $this->logDebug('This person is unsubscribed. Marking as newsletter false for prestashop');
             return;
         }
 
@@ -699,6 +643,7 @@ class SenderAutomatedEmails extends Module
         #Marking the newsletter active on prestashop
         $customer->newsletter = true;
         $customer->update();
+        $this->logDebug('Marking as newsletter true in prestashop');
         $this->logDebug('FINISH OF FORM-VISITOR');
         return $subscriber;
     }
@@ -736,14 +681,6 @@ class SenderAutomatedEmails extends Module
             || !isset($_COOKIE['sender_site_visitor'])) {
             $this->logDebug('Cart object not loaded || Module not active || Cart tracking not active 
             || Cookies not set up');
-            if (Configuration::get('SPM_ALLOW_NEWSLETTERS')){
-                if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
-                    $subscriber = $this->senderApiClient()->isAlreadySubscriber($this->context->customer->email);
-                    $this->senderApiClient()
-                        ->addToList($subscriber ? $subscriber->id : '', Configuration::get('SPM_CUSTOMERS_LIST_ID'));
-                }
-            }
-            return;
         }
 
         try {
@@ -810,7 +747,7 @@ class SenderAutomatedEmails extends Module
      * @param bool $interface
      * @return array $context
      */
-    public function hookactionCustomerAccountUpdate($customer)
+    public function hookActionCustomerAccountUpdate($customer)
     {
         $this->logDebug('hookactionCustomerAccountUpdate');
         if (!$this->isModuleActive()){
@@ -819,22 +756,11 @@ class SenderAutomatedEmails extends Module
         //Validate if we should
         if (!Validate::isLoadedObject($customer)) {
             $this->logDebug('Exiting update customer');
-            return true;
+            return;
         }
 
         if (!Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
-            if ((Configuration::get('SPM_ALLOW_NEWSLETTERS') && Configuration::get('SPM_SHOW_NEWSLETTER_CHECKBOX'))
-                && !$customer->newsletter) {
-                #Checking the status of the subscriber. On unsubscribed we wont continue
-                $subscriber = $this->checkSubscriberState($customer->email);
-                if ($subscriber && !$customer->newsletter){
-                    $this->logDebug(json_encode($subscriber));
-                    $this->logDebug('This subscriber would be unsubscribed');
-                    $this->senderApiClient()->unsubscribe($subscriber->id);
-                }
-                $this->logDebug('This person should not be tracked');
-                return;
-            }
+            return;
         }
 
         #Registered customer coming to site
@@ -842,7 +768,7 @@ class SenderAutomatedEmails extends Module
         try {
             $this->formVisitor($customer);
         } catch (Exception $e) {
-            $this->logDebug('Error hook hookactionCustomerAccountUpdate' . json_encode($e->getMessage()));
+            $this->logDebug('Error hook hookActionCustomerAccountUpdate' . json_encode($e->getMessage()));
         }
 
         $this->logDebug('#hookactionCustomerAccountUpdate END');

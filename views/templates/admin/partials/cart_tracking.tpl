@@ -34,11 +34,6 @@
                         <a href="https://landing.sender.net/abandoned-cart-email-template"
                            target="_blank">{l s='Learn how to set up abandoned carts automation' mod='senderautomatedemails'}</a>
                     </p>
-                    <p>
-                        <i class="zmdi zmdi-email" style="font-size: 20px"></i>
-                        {l s='Newsletter. Use this option if you are not going to use the Cart tracking feature
-but still you would like to add your customers to your Sender.net application.' mod='senderautomatedemails'}
-                    </p>
                 </div>
                 <div class="form-group">
                     {*CART-TRACKING*}
@@ -46,7 +41,6 @@ but still you would like to add your customers to your Sender.net application.' 
                         <tr style="border: none">
                             <th>{l s='Activate cart tracking' mod='senderautomatedemails'} <i
                                         class="zmdi zmdi-shopping-cart"></i></th>
-                            <th>{l s='Activate newsletters' mod='senderautomatedemails'} <i class="zmdi zmdi-email"></i>
                             </th>
                         </tr>
                         <tr>
@@ -54,16 +48,6 @@ but still you would like to add your customers to your Sender.net application.' 
                                 <button style="display: inline" id="swToggleCartTrack"
                                         class="btn btn-lg {if not $allowCartTrack}btn-sender{else}btn-danger__sender{/if}">
                                     {if not $allowCartTrack}
-                                        {l s='Enable' mod='senderautomatedemails'}
-                                    {else}
-                                        {l s='Disable' mod='senderautomatedemails'}
-                                    {/if}
-                                </button>
-                            </td>
-                            <td>
-                                <button id="swToggleNewsletter"
-                                        class="btn btn-lg {if not $allowNewsletter}btn-sender{else}btn-danger__sender{/if}">
-                                    {if not $allowNewsletter}
                                         {l s='Enable' mod='senderautomatedemails'}
                                     {else}
                                         {l s='Disable' mod='senderautomatedemails'}
@@ -96,7 +80,7 @@ but still you would like to add your customers to your Sender.net application.' 
                             <label for="swCustomerListSelect">
                                 {l s='Select customer list' mod='senderautomatedemails'}
                             </label>
-                            <select {if not $allowCartTrack && not $allowNewsletter}disabled{/if} class="sender-lists" id="swCustomerListSelect"
+                            <select {if not $allowCartTrack}disabled{/if} class="sender-lists" id="swCustomerListSelect"
                                     value="{$formId|escape:'htmlall':'UTF-8'}">
                                 <option value="0">
                                     {l s='No list' mod='senderautomatedemails'}
@@ -138,7 +122,7 @@ but still you would like to add your customers to your Sender.net application.' 
                             <label for="swGuestListSelect">
                                 {l s='Select guest list' mod='senderautomatedemails'}
                             </label>
-                            <select {if not $allowCartTrack && not $allowNewsletter}disabled{/if} class="sender-lists" id="swGuestListSelect"
+                            <select {if not $allowCartTrack}disabled{/if} class="sender-lists" id="swGuestListSelect"
                                     value="{$formId|escape:'htmlall':'UTF-8'}">
                                 <option value="0">
                                     {l s='No list' mod='senderautomatedemails'}
@@ -158,23 +142,6 @@ but still you would like to add your customers to your Sender.net application.' 
                     </div>
                 {/if}
             </div>
-                <div class="panel-body" id="newsletterCheckbox" style="{if $allowNewsletter &&
-                 not $allowCartTrack} opacity: 1;{else}opacity: 0;{/if}">
-                    <label class="">
-                        <input id="newsletterCheck" class="spm-receive-newsletters-input sender-checkbox"
-                               type="checkbox"
-                               value="" name="">
-                        <span>{l s='Add checkbox in order checkout' mod='senderautomatedemails'}</span>
-                    </label>
-
-                    <div class="alert alert-info">
-                        <p>
-                            <i class="zmdi zmdi-email" style="font-size: 20px"></i>
-                            {l s='Choose from adding a checkbox asking for permissions to become a subscriber or
-no checkbox. This would be showing up in the order checkout.' mod='senderautomatedemails'}
-                        </p>
-                    </div>
-                </div>
         </div>
     </div>
 </div>

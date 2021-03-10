@@ -14,7 +14,6 @@
     var listsAjaxurl = "{$listsAjaxurl|escape:'htmlall':'UTF-8'}";
     var dataAjaxurl = "{$dataAjaxurl|escape:'htmlall':'UTF-8'}";
     var syncListAjaxUrl = "{$syncListAjaxUrl|escape:'htmlall':'UTF-8'}";
-    var newsletterAjaxUrl = "{$newsletterAjaxUrl|escape:'htmlall':'UTF-8'}";
 </script>
 <div class="sender-prestashop-card">
     <div class="sender-prestashop-header">
@@ -48,7 +47,7 @@
                     <li class="tab-link" data-tab="spm-carts">
                         <a href="#!spm-carts">
                             <i class="zmdi zmdi-shopping-cart"></i>
-                            {l s='Cart tracking | Newsletter' mod='senderautomatedemails'}
+                            {l s='Cart tracking' mod='senderautomatedemails'}
                         </a>
                     </li>
                     <li class="tab-link" data-tab="spm-customer-data">

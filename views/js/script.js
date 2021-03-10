@@ -62,7 +62,6 @@
 
             jQuery('#swToggleCartTrack').text('Saving...');
             jQuery('#swToggleCartTrack').attr('disabled', true);
-            jQuery('#newsletterCheckbox').css({opacity: 0});
             jQuery.post(cartsAjaxurl, { action: 'saveAllowCartTracking' }, function(response) {
                 var proceed = jQuery.parseJSON(response);
 
@@ -72,61 +71,19 @@
                     jQuery('#swToggleCartTrack').text('Enable');
                     jQuery('#swToggleCartTrack').removeClass('btn-danger__sender');
                     jQuery('#swToggleCartTrack').addClass('btn-sender');
-                    jQuery('#swToggleNewsletter').text('Enable');
-                    jQuery('#swToggleNewsletter').removeClass('btn-danger__sender');
-                    jQuery('#swToggleNewsletter').addClass('btn-sender');
                     jQuery('#swCustomerListSelect').attr('disabled', true);
                     jQuery('#swGuestListSelect').attr('disabled', true);
-                    jQuery('#swToggleNewsletter').attr('disabled', false);
                 } else {
                     jQuery('#swToggleCartTrackTitle').text('enabled');
                     jQuery('#swToggleCartTrackTitle').css('color', '#ff8d00');
                     jQuery('#swToggleCartTrack').text('Disable');
                     jQuery('#swToggleCartTrack').removeClass('btn-sender');
                     jQuery('#swToggleCartTrack').addClass('btn-danger__sender');
-                    jQuery('#swToggleNewsletter').text('Disable');
-                    jQuery('#swToggleNewsletter').removeClass('btn-sender');
-                    jQuery('#swToggleNewsletter').addClass('btn-danger__sender');
-                    jQuery('#swToggleNewsletter').attr('disabled', true);
                     jQuery('#swCustomerListSelect').removeAttr('disabled');
                     jQuery('#swGuestListSelect').removeAttr('disabled');
                 }
 
                 jQuery('#swToggleCartTrack').removeAttr('disabled');
-
-            });
-
-        });
-
-        jQuery('#swToggleNewsletter').on('click', function(event) {
-
-            jQuery('#swToggleNewsletter').text('Saving...');
-            jQuery('#swToggleNewsletter').attr('disabled', true);
-
-            jQuery.post(newsletterAjaxUrl, { action: 'saveAllowNewsletter' }, function(response) {
-                var proceed = jQuery.parseJSON(response);
-
-                if (!proceed.result) {
-                    jQuery('#swToggleNewsletterTitle').text('disabled');
-                    jQuery('#swToggleNewsletterTitle').css('color', 'red');
-                    jQuery('#swToggleNewsletter').text('Enable');
-                    jQuery('#swToggleNewsletter').removeClass('btn-danger__sender');
-                    jQuery('#swToggleNewsletter').addClass('btn-sender');
-                    jQuery('#swCustomerListSelect').attr('disabled', true);
-                    jQuery('#swGuestListSelect').attr('disabled', true);
-                    jQuery('#newsletterCheckbox').css({opacity: 0});
-                } else {
-                    jQuery('#swToggleNewsletterTitle').text('enabled');
-                    jQuery('#swToggleNewsletterTitle').css('color', '#ff8d00');
-                    jQuery('#swToggleNewsletter').text('Disable');
-                    jQuery('#swToggleNewsletter').removeClass('btn-sender');
-                    jQuery('#swToggleNewsletter').addClass('btn-danger__sender');
-                    jQuery('#swCustomerListSelect').removeAttr('disabled');
-                    jQuery('#swGuestListSelect').removeAttr('disabled');
-                    jQuery('#newsletterCheckbox').css({opacity: 1, visibility: "visible"});
-                }
-
-                jQuery('#swToggleNewsletter').removeAttr('disabled');
 
             });
 
@@ -287,29 +244,6 @@
                     elm.prop('checked', true);
                 }
             });
-        });
-
-        jQuery('#newsletterCheck').on('change', function(event) {
-            if($(this).is(':checked')) {
-                jQuery.post(newsletterAjaxUrl, { action: 'addCheckboxNewsletters'}, function(response) {
-                    console.log(response);
-                });
-            }else{
-                jQuery.post(newsletterAjaxUrl, { action: 'removeCheckboxNewsletters' }, function(response) {
-                    console.log(response);
-                });
-            }
-        });
-
-        jQuery('#newsletterCheck').each(function() {
-            let elm = $(this);
-            jQuery.post(newsletterAjaxUrl, { action: 'getIfEnabledNewsletterCheckbox'}, function(response) {
-                if(response == 1){
-                    elm.prop( 'checked', true );
-                }
-
-            });
-
         });
 
         jQuery('#swPartnerOffers').on('change', function(event) {

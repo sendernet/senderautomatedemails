@@ -188,7 +188,6 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             'allLists' => $this->module->senderApiClient()->getAllLists(),
             'allowNewSignups' => Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS'),
             'allowCartTrack' => Configuration::get('SPM_ALLOW_TRACK_CARTS'),
-            'allowNewsletter' => Configuration::get('SPM_ALLOW_NEWSLETTERS'),
             'allowForms' => Configuration::get('SPM_ALLOW_FORMS'),
             'cartsAjaxurl' => $this->module->module_url . '/ajax/carts_ajax.php?token='
                 . Tools::getAdminToken($this->module->name),
@@ -199,8 +198,6 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             'dataAjaxurl' => $this->module->module_url . '/ajax/data_ajax.php?token='
                 . Tools::getAdminToken($this->module->name),
             'syncListAjaxUrl' => $this->module->module_url . '/ajax/sync_list.php?token='
-                . Tools::getAdminToken($this->module->name),
-            'newsletterAjaxUrl' => $this->module->module_url . '/ajax/newsletter_ajax.php?token='
                 . Tools::getAdminToken($this->module->name),
             'formId' => Configuration::get('SPM_FORM_ID'),
             'partnerOfferId' => Configuration::get('SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID'),
