@@ -616,8 +616,9 @@ class SenderAutomatedEmails extends Module
         $subscriber = $this->checkSubscriberState($customer->email);
 
         if ($subscriber->unsubscribed){
-            $customer->newsletter = 0;
-            $customer->update();
+            #loop on updating
+            //Context::getContext()->customer->newsletter = false;
+            //Context::getContext()->customer->save();
             $this->logDebug('This person is unsubscribed. Marking as newsletter false for prestashop');
             return;
         }
@@ -641,8 +642,9 @@ class SenderAutomatedEmails extends Module
         $this->context->cookie->write();
 
         #Marking the newsletter active on prestashop
-        $customer->newsletter = true;
-        $customer->update();
+        #loop on update
+        //Context::getContext()->customer->newsletter = 1;
+        //Context::getContext()->customer->save();
         $this->logDebug('Marking as newsletter true in prestashop');
         $this->logDebug('FINISH OF FORM-VISITOR');
         return $subscriber;
