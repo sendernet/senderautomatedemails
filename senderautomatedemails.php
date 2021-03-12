@@ -143,6 +143,7 @@ class SenderAutomatedEmails extends Module
             || !$this->registerHook('actionCustomerAccountAdd')  //Adding customer and tracking the customer track
             || !$this->registerHook('actionCustomerAccountUpdate')
             || !$this->registerHook('actionAuthentication')
+            || !$this->registerHook('actionObjectNewsletterAddAfter')
             || !$this->registerHook('actionObjectCustomerUpdateAfter')
             || !$this->registerHook('displayFooterProduct')) {
             return false;
@@ -222,12 +223,6 @@ class SenderAutomatedEmails extends Module
         if (!$this->isModuleActive()){
             return;
         }
-
-        #REFACTOR
-//        if ((!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_NEWSLETTERS')
-//                && !Configuration::get('SPM_ALLOW_FORMS')) || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
-//            return;
-//        }
 
         if ((!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_FORMS'))
             || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
@@ -378,16 +373,7 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        #Here the check its done over the newsletter option
-        if ($subscriber = $this->senderApiClient()->isAlreadySubscriber($this->context->customer->email)) {
-            if ($subscriber->unsubscribed) {
-                $this->logDebug('This subscriber is unsubscribed');
-                return;
-            }
-        }
-
         $customer = $this->context->customer;
-
         $this->formVisitor($customer);
     }
 
@@ -574,6 +560,16 @@ class SenderAutomatedEmails extends Module
         return $data;
     }
 
+    public function hookActionObjectNewsletterAddAfter($customer, $isNewsletter)
+    {
+        if ($customer->newsletter === $isNewsletter){
+            return;
+        }
+
+        $customer->newsletter = $isNewsletter;
+        $customer->update();
+    }
+
     /**
      * @param $customer
      * @return false
@@ -609,17 +605,14 @@ class SenderAutomatedEmails extends Module
 
         $this->senderApiClient()->visitorRegistered($visitorRegistration);
 
-        #Checking the status of the subscriber. On unsubscribed we wont continue
-        #Es subscriptor pero es unsubscribed
-        #Aunk el newsletter de prestashop lo tiene activo.
-        $this->logDebug($customer->newsletter);
         $subscriber = $this->checkSubscriberState($customer->email);
 
-        if ($subscriber->unsubscribed){
-            #loop on updating
-            //Context::getContext()->customer->newsletter = false;
-            //Context::getContext()->customer->save();
-            $this->logDebug('This person is unsubscribed. Marking as newsletter false for prestashop');
+        if ($subscriber && $subscriber->unsubscribed){
+            if ($customer->newsletter) {
+                $this->logDebug('We need to update this customer information from prestashop');
+                $this->hookActionObjectNewsletterAddAfter($customer, false);
+            }
+            $this->logDebug('This person is unsubscribed. Newsletter removed');
             return;
         }
 
@@ -641,11 +634,10 @@ class SenderAutomatedEmails extends Module
         $this->context->cookie->__set('sender-added-visitor', strtotime(date('Y-m-d H:i:s')));
         $this->context->cookie->write();
 
-        #Marking the newsletter active on prestashop
-        #loop on update
-        //Context::getContext()->customer->newsletter = 1;
-        //Context::getContext()->customer->save();
-        $this->logDebug('Marking as newsletter true in prestashop');
+        if (!$customer->newsletter) {
+            $this->logDebug('We need to update this customer information from prestashop');
+            $this->hookActionObjectNewsletterAddAfter($customer, true);
+        }
         $this->logDebug('FINISH OF FORM-VISITOR');
         return $subscriber;
     }
@@ -694,6 +686,7 @@ class SenderAutomatedEmails extends Module
                     $this->logDebug('This subscriber is unsubscribed. We will reactivate it and sync
                     the cart to get the last updated');
                     $this->senderApiClient()->reactivateSubscriber($subscriber->id);
+                    $this->formVisitor($this->context->customer);
                     $this->syncCart($order);
                     $idCart = $order->id;
                 }
@@ -765,8 +758,6 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        #Registered customer coming to site
-        #Set up the visitorRegistration thing
         try {
             $this->formVisitor($customer);
         } catch (Exception $e) {
