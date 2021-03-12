@@ -32,7 +32,7 @@ class SenderAutomatedEmails extends Module
      */
     private $deprecatedFunctions = array();
 
-    private $debug = true;
+    private $debug = false;
 
     /**
      * Sender.net API client
@@ -210,7 +210,6 @@ class SenderAutomatedEmails extends Module
     public function isModuleActive()
     {
         if (!Configuration::get('SPM_IS_MODULE_ACTIVE')){
-            $this->logDebug('Module not active');
             return false;
         }
         return true;
@@ -535,7 +534,7 @@ class SenderAutomatedEmails extends Module
             'email' => $customer->email,
             'firstname' => isset($customFields['firstname']) ? $customFields['firstname'] : '',
             'lastname' => isset($customFields['lastname']) ? $customFields['lastname'] : '',
-            'visitor_id' => $_COOKIE['sender_site_visitor'],
+            'visitor_id' => isset($_COOKIE['sender_site_visitor']) ? $_COOKIE['sender_site_visitor'] : '',
             'list_id' => Configuration::get('SPM_GUEST_LIST_ID'),
         ];
 
