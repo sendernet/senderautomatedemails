@@ -84,7 +84,6 @@ class SenderAutomatedEmails extends Module
             'getIdFromClassName' => 'findOneIdByClassName',
             'getFormatedName' => 'getFormattedName'
         ];
-//        $tabsArray[] = Tab::getIdFromClassName("AdminSenderAutomatedEmails");
     }
 
     public function loadDefaultSettings()
@@ -137,7 +136,6 @@ class SenderAutomatedEmails extends Module
         if (!$this->registerHook('displayBackOfficeHeader')
             || !$this->registerHook('displayOrderConfirmation')
             || !$this->registerHook('registerUnsubscribedWebhook')
-            || !$this->registerHook('actionCartSummary')
             || !$this->registerHook('displayHeader')
             || !$this->registerHook('actionObjectCartUpdateAfter') // Getting it on all pages
             || !$this->registerHook('actionCustomerAccountAdd')  //Adding customer and tracking the customer track
@@ -375,59 +373,6 @@ class SenderAutomatedEmails extends Module
 
         $customer = $this->context->customer;
         $this->formVisitor($customer);
-    }
-
-    /**
-     * Use this hook in order to be sure
-     * whether we have captured the latest cart info
-     * it fires when user uses instant checkout
-     * or logged in user goes to checkout page
-     *
-     * @param object $context
-     * @return object $context
-     */
-    public function hookActionCartSummary($context)
-    {
-        $this->logDebug('hookActionCartSummary');
-
-        if (!$this->isModuleActive()){
-            return;
-        }
-
-        // Validate if we should
-        if (!Configuration::get('SPM_ALLOW_TRACK_NEW_SIGNUPS') || !Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
-            $this->logDebug('Track cart option is not enable for Guest/New customers');
-            return;
-        }
-
-        $cookie = $this->getContextCookie();
-
-        // Validate if we should track
-        if (!isset($cookie['email'])
-            || !Validate::isLoadedObject($context['cart'])
-            || (!Configuration::get('SPM_ALLOW_TRACK_CARTS')
-                && isset($cookie['logged']) && $cookie['logged'])
-            || (isset($cookie['is_guest']) && $cookie['is_guest'])
-            || !Configuration::get('SPM_IS_MODULE_ACTIVE')
-            || $this->context->controller instanceof OrderController != true) {
-            $this->logDebug('hookActionCartSummary stop');
-            return;
-        }
-
-        $subscriber = $this->senderApiClient()->isAlreadySubscriber($cookie['email']);
-
-        if ($subscriber && $subscriber->unsubscribed) {
-            $this->logDebug('Exiting cart save. When product purchased, will make active the client & subscriber active
-            and track & convert cart');
-            return;
-        }
-
-        $this->logDebug('#hookActionCartSummary START');
-        $this->syncCart($context['cart'], $cookie);
-
-        $this->logDebug('#hookActionCartSummary END');
-
-        return $context;
     }
 
     /**
@@ -1006,70 +951,6 @@ class SenderAutomatedEmails extends Module
         }
         $newTab->save();
         return true;
-    }
-
-    /**
-     * @return string Status message
-     * @todo  Optimize for huge lists
-     *
-     * Get subscribers from ps_newsletter table
-     * and sync with sender
-     *
-     */
-    public function syncOldNewsletterSubscribers($listId)
-    {
-        $error = $this->l("We couldn't find any subscribers @newsletterblock module.");
-
-        if (!Configuration::get('SPM_IS_MODULE_ACTIVE')) {
-            return $error;
-        }
-
-        $oldSubscribers = array();
-
-        // We cannot be sure whether the table exists
-        try {
-            $oldSubscribers = Db::getInstance()->executeS('SELECT * FROM ' . _DB_PREFIX_ . 'newsletter');
-            $oldCustomers = Db::getInstance()->executeS('
-                SELECT email, firstname, lastname, date_add, newsletter, optin 
-                FROM ' . _DB_PREFIX_ . 'customer 
-                WHERE newsletter = 1 OR optin = 1');
-        } catch (PrestaShopDatabaseException $e) {
-            $this->logDebug('PDO Exception: '
-                . json_encode($e));
-            return $error;
-        }
-
-        $this->logDebug('Syncing old newsletter subscribers');
-        $this->logDebug('Selected list: ' . $listId);
-
-        if (empty($oldSubscribers)) {
-            return $error;
-        }
-
-        foreach ($oldSubscribers as $subscriber) {
-            $this->senderApiClient()->addToList(array(
-                'email' => $subscriber['email'],
-                'created' => $subscriber['newsletter_date_add'],
-                'active' => $subscriber['active'],
-                'source' => $this->l('Newsletter')
-            ), $listId);
-            $this->logDebug('Added newsletter subscriber: ' . $subscriber['email']);
-        }
-
-        foreach ($oldCustomers as $subscriber) {
-            $this->senderApiClient()->addToList(array(
-                'email' => $subscriber['email'],
-                'firstname' => $subscriber['firstname'],
-                'lastname' => $subscriber['lastname'],
-                'created' => $subscriber['date_add'],
-                'active' => 1,
-                'source' => $this->l('Customer')
-            ), $listId);
-            $this->logDebug('Added newsletter subscriber: ' . $subscriber['email']);
-        }
-
-        $this->logDebug('Sync finished.');
-        return $this->l('Successfully synced!');
     }
 
     public function getContextCookie()

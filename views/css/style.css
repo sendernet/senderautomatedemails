@@ -275,8 +275,8 @@ td,th{
 .bold{
     font-weight: 700!important;
 }
-.link-different{
-    color: #5a2a7d!important;
+.sender-link{
+    color: #ff8d00!important;
 }
 .sender-table>tr,th,td{
     padding-right: 90px;

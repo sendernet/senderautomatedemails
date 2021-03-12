@@ -63,7 +63,7 @@
                     <p>
                         {l s='Would be migrating all your customers to Sender.net which opted to receive newsletter information.' mod='senderautomatedemails'}
                         <br><br>
-                        {l s='if a subscriber already exists it would get updated according to your customer information.' mod='senderautomatedemails'}
+                        {l s='If a subscriber already exists it would get updated according to your customer information.' mod='senderautomatedemails'}
                     </p>
                 </blockquote>
 

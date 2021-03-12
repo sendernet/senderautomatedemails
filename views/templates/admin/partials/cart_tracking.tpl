@@ -31,7 +31,7 @@
                     <p>
                         <i class="zmdi zmdi-shopping-cart" style="font-size: 20px"></i>
                         {l s='Enable Sender track system to track your customers cart.' mod='senderautomatedemails'}
-                        <a href="https://landing.sender.net/abandoned-cart-email-template"
+                        <a class="sender-link" href="https://landing.sender.net/abandoned-cart-email-template"
                            target="_blank">{l s='Learn how to set up abandoned carts automation' mod='senderautomatedemails'}</a>
                     </p>
                 </div>
@@ -141,6 +141,17 @@
                         </span>
                     </div>
                 {/if}
+            </div>
+
+            {*Information*}
+            <div class="panel-body">
+                <blockquote>
+                    <p>
+                        {l s='Cart abandoned and product purchased require to have an automation set up in your Sender.net application' mod='senderautomatedemails'}
+                        <a class="sender-link" href="https://app.sender.net/automation"
+                           target="_blank">{l s='Set up now' mod='senderautomatedemails'}</a>
+                    </p>
+                </blockquote>
             </div>
         </div>
     </div>
