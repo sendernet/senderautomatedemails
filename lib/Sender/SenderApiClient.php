@@ -191,12 +191,9 @@ class SenderApiClient
             curl_close($ch);
             return json_decode($server_output);
         }else{
-            $this->logDebug($status);
-            $this->logDebug('Curl error: ' . curl_error($ch));
-            $this->logDebug(json_encode($server_output));
+            curl_close($ch);
+            return false;
         }
-        curl_close($ch);
-        return false;
     }
 
     public function visitorRegistered($params)
@@ -524,7 +521,6 @@ class SenderApiClient
             return true;
         } catch (Exception $exception) {
             $this->logDebug('Unable to add fields to subscriber');
-            $this->logDebug(json_encode($fields));
         }
 
     }
