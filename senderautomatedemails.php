@@ -372,6 +372,7 @@ class SenderAutomatedEmails extends Module
      */
     public function hookActionObjectCartUpdateAfter($context)
     {
+        $this->logDebug('CartUpdateAfter');
         if (!$this->isModuleActive()){
             return;
         }
@@ -572,6 +573,7 @@ class SenderAutomatedEmails extends Module
      */
     public function hookDisplayOrderConfirmation($context)
     {
+        $this->logDebug('Confirmation');
         #First check if we should capture these details
         if (!$this->isModuleActive()){
             return;
@@ -610,7 +612,8 @@ class SenderAutomatedEmails extends Module
             if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
                 $dataConvert['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
             }
-            $this->senderApiClient()->cartConvert($dataConvert, isset($idCart) ? $idCart : $order->id_cart);
+            $cartTracked = $this->senderApiClient()->cartConvert($dataConvert, isset($idCart) ? $idCart : $order->id_cart);
+            $this->logDebug(json_encode($cartTracked));
         } catch (Exception $e) {
             $this->logDebug($e->getMessage());
         }

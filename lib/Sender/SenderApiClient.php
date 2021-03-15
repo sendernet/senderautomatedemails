@@ -104,7 +104,6 @@ class SenderApiClient
             }
         }catch (Exception $e)
         {
-            $this->logDebug($e->getMessage());
             return false;
         }
     }
@@ -119,6 +118,7 @@ class SenderApiClient
 
     /**
      * Setup api request
+     * @param $requestConfig
      * @param array $params
      * @return array
      */
@@ -259,13 +259,6 @@ class SenderApiClient
         }
 
         return $response;
-
-
-
-//        $params = array(
-//            "cart_hash" => $cartHash
-//        );
-//        return $this->makeCommerceRequest($params, 'cart_get');
     }
 
     /**
@@ -366,44 +359,6 @@ class SenderApiClient
         return;
     }
 
-    public function addToList($subscriberId, $tagId)
-    {
-        $requestConfig = [
-            'http' => 'post',
-            'method' => "subscribers/tags/$tagId"
-        ];
-
-        $data['subscribers'] = [0 => $subscriberId];
-
-        $response = $this->makeApiRequest($requestConfig, $data);
-
-        if ($response) {
-            $this->logDebug($response);
-            return $response;
-        }
-        return;
-    }
-
-    /**
-     * Delete user from mailinglist
-     *
-     * @param object $recipient
-     * @param int $listId
-     * @return array
-     */
-    public function listRemove($recipient, $listId)
-    {
-        $data = array(
-            "method" => "listRemove",
-            "params" => array(
-                "list_id" => $listId,
-                "emails" => $recipient
-            )
-        );
-
-        return $this->makeApiRequest($data);
-    }
-
     public function isAlreadySubscriber($email)
     {
         $requestConfig = [
@@ -433,55 +388,6 @@ class SenderApiClient
 
         if ($response) {
             return true;
-        }
-        return;
-    }
-
-    /**
-     * Add user or info to mailinglist
-     *
-     * @param object $recipient
-     * @param $listName
-     * @return array
-     */
-    public function addSubscriberAndList($recipient, $listName)
-    {
-        $requestConfig = [
-            'http' => 'post',
-            'method' => 'subscribers'
-        ];
-
-        $data = [];
-        foreach ($recipient as $key => $item) {
-            $data[$key] = $item;
-        }
-
-        #Validation to not
-        if (!empty($listName)) {
-            foreach ($listName as $key => $item) {
-                $data['tags'] = [$key => $item];
-            }
-        }
-
-        $response = $this->makeApiRequest($requestConfig, $data);
-
-        if ($response) {
-            return $response->data;
-        }
-        return;
-    }
-
-    public function updateSubscriber($subscriber, $subscriberId)
-    {
-        $requestConfig = [
-            'http' => "patch",
-            'method' => "subscribers/$subscriberId",
-        ];
-
-        $response = $this->makeApiRequest($requestConfig, $subscriber);
-
-        if ($response) {
-            return $response;
         }
         return;
     }
@@ -520,7 +426,7 @@ class SenderApiClient
             }
             return true;
         } catch (Exception $exception) {
-            $this->logDebug('Unable to add fields to subscriber');
+            return false;
         }
 
     }
@@ -572,16 +478,6 @@ class SenderApiClient
         $response = $this->makeApiRequest($requestConfig, $data);
 
         return $response->data;
-    }
-
-    //Temp logger
-    public function logDebug($message)
-    {
-        $this->debugLogger = new FileLogger(0);
-        $rootPath = _PS_ROOT_DIR_ . __PS_BASE_URI__ . basename(_PS_MODULE_DIR_);
-        $logPath = '/senderautomatedemails/log/sender_automated_emails_logs_' . date('Ymd') . '.log';
-        $this->debugLogger->setFilename($rootPath . $logPath);
-        $this->debugLogger->logDebug($message);
     }
 
 }

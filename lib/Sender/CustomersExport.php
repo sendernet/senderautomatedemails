@@ -29,8 +29,6 @@ class CustomersExport extends SenderApiClient
             ];
         }
 
-        $this->logDebug('Text import completed');
-
         $columnsFormed = $this->prepareStartImportColumns($columns);
         $dataStartImport = $this->formStartImportData($columnsFormed, $textImport->fileName , $textImport->rowCount);
 
@@ -49,7 +47,6 @@ class CustomersExport extends SenderApiClient
         $now = date("Y-m-d H:i:s");
         Configuration::updateValue('SPM_SENDERAPP_SYNC_LIST_DATE', $now);
 
-        $this->logDebug('Completed import to Sender.net');
         return $data = [
             'success' => true,
             'message' => $now,
@@ -61,7 +58,6 @@ class CustomersExport extends SenderApiClient
         $tagId = Configuration::get('SPM_SENDERAPP_SYNC_LIST_ID');
 
         if ($tagId != 0) {
-            $this->logDebug("Will add to $tagId");
             $tag[] = $this->getList($tagId);
         }
 
