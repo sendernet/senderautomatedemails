@@ -294,7 +294,6 @@ class SenderAutomatedEmails extends Module
     public function senderDisplayFooter()
     {
         if (!Configuration::get('SPM_ALLOW_FORMS')
-            || Configuration::get('SPM_FORM_ID') == $this->defaultSettings['SPM_FORM_ID']
             || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
             return;
         }
