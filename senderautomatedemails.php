@@ -32,7 +32,7 @@ class SenderAutomatedEmails extends Module
      */
     private $deprecatedFunctions = array();
 
-    private $debug = true;
+    private $debug = false;
 
     /**
      * Sender.net API client
