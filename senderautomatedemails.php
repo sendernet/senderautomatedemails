@@ -517,8 +517,6 @@ class SenderAutomatedEmails extends Module
             if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
                 $visitorRegistration['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
             }
-        }else{
-            $visitorRegistration['list_id'] = Configuration::get('SPM_GUEST_LIST_ID');
         }
 
         $this->senderApiClient()->visitorRegistered($visitorRegistration);
