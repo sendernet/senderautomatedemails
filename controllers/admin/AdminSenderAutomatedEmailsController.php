@@ -264,7 +264,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
     private function removeSenderKeys()
     {
         Configuration::updateValue('SPM_IS_MODULE_ACTIVE', 0);
-        Configuration::updateValue('SPM_ALLOW_FORMS', '');
+        Configuration::updateValue('SPM_ALLOW_FORMS', 0);
         Configuration::updateValue('SPM_ALLOW_IMPORT', 0);
         Configuration::updateValue('SPM_ALLOW_TRACK_NEW_SIGNUPS', 0);
         Configuration::updateValue('SPM_ALLOW_TRACK_CARTS', 0);

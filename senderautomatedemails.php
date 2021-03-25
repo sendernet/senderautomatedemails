@@ -32,7 +32,7 @@ class SenderAutomatedEmails extends Module
      */
     private $deprecatedFunctions = array();
 
-    private $debug = false;
+    private $debug = true;
 
     /**
      * Sender.net API client
@@ -196,7 +196,7 @@ class SenderAutomatedEmails extends Module
     {
         Configuration::updateValue('SPM_API_KEY', '');
         Configuration::updateValue('SPM_IS_MODULE_ACTIVE', 0);
-        Configuration::updateValue('SPM_ALLOW_FORMS', '');
+        Configuration::updateValue('SPM_ALLOW_FORMS', 0);
         Configuration::updateValue('SPM_ALLOW_IMPORT', 0);
         Configuration::updateValue('SPM_ALLOW_TRACK_NEW_SIGNUPS', 0);
         Configuration::updateValue('SPM_ALLOW_TRACK_CARTS', 0);
@@ -293,8 +293,7 @@ class SenderAutomatedEmails extends Module
 
     public function senderDisplayFooter()
     {
-        if (!Configuration::get('SPM_ALLOW_FORMS')
-            || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
+        if (!Configuration::get('SPM_ALLOW_FORMS') || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
             return;
         }
 
@@ -304,7 +303,7 @@ class SenderAutomatedEmails extends Module
 
         $form = $this->senderApiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
         #Check if form is disabled or pop-up
-        if (!$form->is_active || $form->type != 'embed') {
+        if (!$form || !$form->is_active || $form->type != 'embed') {
             return;
         }
 
