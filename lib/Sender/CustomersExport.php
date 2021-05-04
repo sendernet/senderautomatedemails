@@ -13,6 +13,8 @@
  */
 class CustomersExport extends SenderApiClient
 {
+    private $textImport;
+
     public function textImport($customers, $columns)
     {
         $requestConfig = [
@@ -21,16 +23,22 @@ class CustomersExport extends SenderApiClient
         ];
 
         $data = ['subscribers' => $customers];
-        $textImport = json_decode($this->makeExportCurlRequest($requestConfig, $data));
-        if (!$textImport){
-            return $data = [
+
+        $this->textImport = json_decode($this->makeExportCurlRequest($requestConfig, $data));
+        if (!$this->textImport){
+            return [
                 'success' => false,
                 'message' => 'Unable to export customers',
             ];
         }
 
+        return $this->textExport($columns);
+    }
+
+    public function textExport($columns)
+    {
         $columnsFormed = $this->prepareStartImportColumns($columns);
-        $dataStartImport = $this->formStartImportData($columnsFormed, $textImport->fileName , $textImport->rowCount);
+        $dataStartImport = $this->formStartImportData($columnsFormed, $this->textImport->fileName , $this->textImport->rowCount);
 
         $requestConfigStartImport = [
             'http' => 'post',
@@ -38,7 +46,7 @@ class CustomersExport extends SenderApiClient
         ];
 
         if (!$this->makeExportCurlRequest($requestConfigStartImport, $dataStartImport)){
-            return $data = [
+            return [
                 'success' => false,
                 'message' => 'Unable to export customers',
             ];
@@ -47,7 +55,7 @@ class CustomersExport extends SenderApiClient
         $now = date("Y-m-d H:i:s");
         Configuration::updateValue('SPM_SENDERAPP_SYNC_LIST_DATE', $now);
 
-        return $data = [
+        return [
             'success' => true,
             'message' => $now,
         ];
@@ -55,13 +63,13 @@ class CustomersExport extends SenderApiClient
 
     public function formStartImportData($columns, $fileName, $rowCount)
     {
-        $tagId = Configuration::get('SPM_SENDERAPP_SYNC_LIST_ID');
+        $listId = Configuration::get('SPM_SENDERAPP_SYNC_LIST_ID');
 
-        if ($tagId != 0) {
-            $tag[] = $this->getList($tagId);
+        if ($listId) {
+            $list[] = $this->getList($listId);
         }
 
-        return $dataStartImport = [
+        return [
             "emailColumn" => 0,
             "firstnameColumn" => 1,
             "lastnameColumn" => 2,
@@ -70,7 +78,7 @@ class CustomersExport extends SenderApiClient
             'fileName' => $fileName,
             "source" => "Copy" . '/' . "paste list",
             'rowCount' => $rowCount,
-            'tags' => isset($tag) ? $tag : [],
+            'tags' => isset($list) ? $list : [],
         ];
     }
 
