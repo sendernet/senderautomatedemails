@@ -509,16 +509,14 @@ class SenderAutomatedEmails extends Module
             'firstname' => isset($customFields['firstname']) ? $customFields['firstname'] : '',
             'lastname' => isset($customFields['lastname']) ? $customFields['lastname'] : '',
             'visitor_id' => isset($_COOKIE['sender_site_visitor']) ? $_COOKIE['sender_site_visitor'] : '',
-//            'list_id' => Configuration::get('SPM_GUEST_LIST_ID'),
+            'list_id' => Configuration::get('SPM_GUEST_LIST_ID'),
         ];
 
-        #Check if has any orders
-        #Commenting pending fix stats
-//        if($this->checkOrderHistory($customer->id)) {
-//            if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
-//                $visitorRegistration['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
-//            }
-//        }
+        if($this->checkOrderHistory($customer->id)) {
+            if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
+                $visitorRegistration['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+            }
+        }
 
         $this->senderApiClient()->visitorRegistered($visitorRegistration);
 
@@ -606,10 +604,9 @@ class SenderAutomatedEmails extends Module
                 'lastname' => $this->context->customer->lastname,
             ];
 
-            #Commenting pending fix
-//            if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
-//                $dataConvert['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
-//            }
+            if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
+                $dataConvert['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+            }
             $cartTracked = $this->senderApiClient()->cartConvert($dataConvert, isset($idCart) ? $idCart : $order->id_cart);
             $this->logDebug(json_encode($cartTracked));
         } catch (Exception $e) {
