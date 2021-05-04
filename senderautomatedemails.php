@@ -52,6 +52,25 @@ class SenderAutomatedEmails extends Module
      */
     public function __construct()
     {
+        $this->senderDetails();
+        $this->senderDefaultSettings();
+        $this->senderDirectories();
+
+        parent::__construct();
+        $this->bootstrap = true;
+
+        //$this->module_key = 'ae9d0345b98417ac768db7c8f321ff7c'; //Got after validating the module
+
+        #deprecated_function => new_function_to_use
+        #Issue not giving error on deprecated, functions still available
+        $this->deprecatedFunctions = [
+            'getIdFromClassName' => 'findOneIdByClassName',
+            'getFormatedName' => 'getFormattedName'
+        ];
+    }
+
+    public function senderDetails()
+    {
         $this->name = 'senderautomatedemails';
         $this->tab = 'emailing';
         $this->version = '2.0.0';
@@ -62,31 +81,13 @@ class SenderAutomatedEmails extends Module
             'min' => '1.6.0.5',
             'max' => _PS_VERSION_
         );
-        $this->bootstrap = true;
-        //$this->module_key = 'ae9d0345b98417ac768db7c8f321ff7c'; //Got after validating the module
-
-        $this->views_url = _PS_ROOT_DIR_ . '/' . basename(_PS_MODULE_DIR_) . '/' . $this->name . '/views';
-        $this->module_url = __PS_BASE_URI__ . basename(_PS_MODULE_DIR_) . '/' . $this->name;
-        $this->images_url = $this->module_url . '/views/img/';
-        $this->module_path = _PS_ROOT_DIR_ . $this->module_url;
-
-        parent::__construct();
 
         $this->displayName = $this->l('Sender.net Automated Emails');
         $this->description = $this->l('All you need for your email marketing in one tool.');
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall?');
-
-        $this->loadDefaultSettings();
-
-        #deprecated_function => new_function_to_use
-        #Issue not giving error on deprecated, functions still available
-        $this->deprecatedFunctions = [
-            'getIdFromClassName' => 'findOneIdByClassName',
-            'getFormatedName' => 'getFormattedName'
-        ];
     }
 
-    public function loadDefaultSettings()
+    public function senderDefaultSettings()
     {
         $this->defaultSettings = array(
             'SPM_API_KEY' => '',
@@ -110,6 +111,13 @@ class SenderAutomatedEmails extends Module
             'SPM_SENDERAPP_SYNC_LIST_ID' => 0,
             'SPM_SENDERAPP_RESOURCE_KEY_CLIENT' => 0,
         );
+    }
+
+    public function senderDirectories()
+    {
+        $this->views_url = _PS_ROOT_DIR_ . '/' . basename(_PS_MODULE_DIR_) . '/' . $this->name . '/views';
+        $this->module_url = __PS_BASE_URI__ . basename(_PS_MODULE_DIR_) . '/' . $this->name;
+        $this->module_path = _PS_ROOT_DIR_ . $this->module_url;
     }
 
     /**
@@ -604,11 +612,15 @@ class SenderAutomatedEmails extends Module
                 'lastname' => $this->context->customer->lastname,
             ];
 
-            if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
-                $dataConvert['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+            $list = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+            if ($list){
+                $dataConvert['list_id'] = $list;
             }
+
+            $this->logDebug(json_encode($dataConvert));
             $cartTracked = $this->senderApiClient()->cartConvert($dataConvert, isset($idCart) ? $idCart : $order->id_cart);
             $this->logDebug(json_encode($cartTracked));
+
         } catch (Exception $e) {
             $this->logDebug($e->getMessage());
         }
