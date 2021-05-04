@@ -89,8 +89,6 @@ class SenderAutomatedEmails extends Module
             'SPM_GUEST_LIST_ID' => 0,
             'SPM_GUEST_LIST_NAME' => null,
             'SPM_FORM_ID' => 0,
-            'SPM_CUSTOMER_FIELD_FIRSTNAME' => 0,
-            'SPM_CUSTOMER_FIELD_LASTNAME' => 0,
             'SPM_CUSTOMER_FIELD_LOCATION' => 0,
             'SPM_CUSTOMER_FIELD_BIRTHDAY_ID' => 0,
             'SPM_CUSTOMER_FIELD_GENDER_ID' => 0,

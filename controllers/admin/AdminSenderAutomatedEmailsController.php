@@ -176,7 +176,6 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
 
         $this->context->smarty->assign(array(
             'imageUrl' => $this->module->getPathUri() . 'views/img/sender_logo.png',
-            //Which user show here as auth been done over apiKey, no user involve
             'connectedAccount' => $this->module->senderApiClient()->getCurrentAccount(),
             'connectedUser' => $this->module->senderApiClient()->getCurrentUser(),
             'apiKey' => $this->module->senderApiClient()->getApiKey(),
@@ -226,7 +225,6 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         Configuration::updateValue('SPM_API_KEY', $apiKey);
         Configuration::updateValue('SPM_IS_MODULE_ACTIVE', true);
         Configuration::updateValue('SPM_ALLOW_IMPORT', true);
-        Configuration::updateValue('SPM_ALLOW_TRACK_NEW_SIGNUPS', true);
         Configuration::updateValue('SPM_CUSTOMER_FIELD_FIRSTNAME', true);
         Configuration::updateValue('SPM_CUSTOMER_FIELD_LASTNAME', true);
 
