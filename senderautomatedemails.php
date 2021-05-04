@@ -26,12 +26,6 @@ class SenderAutomatedEmails extends Module
      */
     private $defaultSettings = array();
 
-    /**
-     * Indicate here the functions which are not longer available on newest versions
-     * @var array
-     */
-    private $deprecatedFunctions = array();
-
     private $debug = true;
 
     /**
@@ -60,13 +54,6 @@ class SenderAutomatedEmails extends Module
         $this->bootstrap = true;
 
         //$this->module_key = 'ae9d0345b98417ac768db7c8f321ff7c'; //Got after validating the module
-
-        #deprecated_function => new_function_to_use
-        #Issue not giving error on deprecated, functions still available
-        $this->deprecatedFunctions = [
-            'getIdFromClassName' => 'findOneIdByClassName',
-            'getFormatedName' => 'getFormattedName'
-        ];
     }
 
     public function senderDetails()
