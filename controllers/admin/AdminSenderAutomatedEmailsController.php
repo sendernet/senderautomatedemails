@@ -31,7 +31,6 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
     {
         $this->_error[100] = $this->l('Could not authenticate. Incorrect api access token, please try again');
         $this->_error[101] = $this->l('No Api access token provided');
-        $this->_conf[200] = $this->l('Sender module activated. Please configure it to match your requirements');
     }
 
     // Do not init Header
@@ -79,7 +78,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             $this->module->logDebug('Connected to Sender. Got key: ' . $apiKey);
             $this->enableDefaults($apiKey);
             // Redirect back to module admin page
-            $this->redirectToAdminMenu('&conf=200');
+            $this->redirectToAdminMenu();
         } else {
             if (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
                 $this->redirectToAdminMenu('&error=100');
