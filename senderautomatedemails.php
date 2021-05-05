@@ -798,11 +798,15 @@ class SenderAutomatedEmails extends Module
 
         foreach($possibleFields as $field){
             $configValue = Configuration::get('SPM_CUSTOMER_FIELD_' . strtoupper($field));
-            switch ($field){
-                case 'birthday': $customerFields[$configValue] = $customer->birthday;
-                break;
-                case 'gender': $customerFields[$configValue] = $customer->id_gender == 1 ? $this->l('Male') : $this->l('Female');
-                break;
+            if ($configValue) {
+                switch ($field) {
+                    case 'birthday':
+                        $customerFields[$configValue] = $customer->birthday;
+                        break;
+                    case 'gender':
+                        $customerFields[$configValue] = $customer->id_gender == 1 ? $this->l('Male') : $this->l('Female');
+                        break;
+                }
             }
         }
 
