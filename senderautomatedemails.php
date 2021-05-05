@@ -494,8 +494,6 @@ class SenderAutomatedEmails extends Module
             }
         }
 
-        $customFields = $this->getCustomFields($customer);
-
         $visitorRegistration = [
             'email' => $customer->email,
             'firstname' => $customer->firstname ?: '',
@@ -527,7 +525,7 @@ class SenderAutomatedEmails extends Module
             return false;
         }
 
-        if (!empty($customFields)) {
+        if (!empty($customFields = $this->getCustomFields($customer))) {
                 $this->senderApiClient()->addFields($subscriber->id, $customFields);
             }
 
