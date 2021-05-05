@@ -202,8 +202,8 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             'guestListId' => Configuration::get('SPM_GUEST_LIST_ID'),
             'customerListId' => Configuration::get('SPM_CUSTOMERS_LIST_ID'),
             'exportListId' => Configuration::get('SPM_SENDERAPP_SYNC_LIST_ID'),
-            'genderFieldId' => Configuration::get('SPM_CUSTOMER_FIELD_GENDER_ID'),
-            'birthdayFieldId' => Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY_ID'),
+            'genderFieldId' => Configuration::get('SPM_CUSTOMER_FIELD_GENDER'),
+            'birthdayFieldId' => Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY'),
             'customFieldsText' => $customFieldsText,
             'customFieldsDatetime' => $customFieldsDatetime,
             'syncedList' => Configuration::get('SPM_SENDERAPP_SYNC_LIST_DATE')
