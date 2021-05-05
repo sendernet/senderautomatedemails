@@ -28,6 +28,8 @@ class SenderAutomatedEmails extends Module
 
     private $debug = true;
 
+    private $visitorId;
+
     /**
      * Sender.net API client
      * @var object
@@ -234,13 +236,15 @@ class SenderAutomatedEmails extends Module
 				a.src = d;
 				m.parentNode.insertBefore(a, m)
 			  })(window, document, 'script', 'https://cdn.sender.net/accounts_resources/universal.js', 'sender');
-			  sender('{$resourceKey}');
+			  sender('$resourceKey');
 			</script>
 			";
 
-        $html .= "<script>
+        if (Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
+            $html .= "<script>
 			  sender('trackVisitors')
 			</script>";
+        }
         return $html;
     }
 
@@ -282,6 +286,39 @@ class SenderAutomatedEmails extends Module
             return;
         }
         return $this->senderDisplayFooter();
+    }
+
+    public function getSenderCookieFromHeader()
+    {
+        if($this->visitorId){
+            $this->logDebug('ALready set up');
+            $this->logDebug($this->visitorId);
+            return $this->visitorId;
+        }
+        $allHeaders = getallheaders();
+        if (array_key_exists('Cookie', $allHeaders)){
+            $onlyCookies = $allHeaders['Cookie'];
+
+            $pos = strpos( $onlyCookies,'sender_site_visitor');
+            $fromSenderSiteVisitor = substr($onlyCookies, $pos);
+
+            $posIqual = strpos($fromSenderSiteVisitor, '=');
+            $fromIqualSiteVisitor = substr($fromSenderSiteVisitor, $posIqual + 1);
+
+            if ($visitorString = strtok($fromIqualSiteVisitor, ';')){
+                $this->visitorId = $visitorString;
+                $this->logDebug($this->visitorId);
+                return $this->visitorId;
+            }
+
+            if ($visitorString = strtok($fromIqualSiteVisitor, ' ')){
+                $this->visitorId = $visitorString;
+                $this->logDebug($this->visitorId);
+                return $this->visitorId;
+            }
+
+            return false;
+        }
     }
 
     public function senderDisplayFooter()
@@ -363,12 +400,14 @@ class SenderAutomatedEmails extends Module
      */
     public function hookActionObjectCartUpdateAfter($context)
     {
-        if (!$this->isModuleActive()){
+        $this->logDebug('hookActionObjectCartUpdateAfter');
+        if (!$this->isModuleActive() || !Validate::isLoadedObject($context['cart'])){
             return;
         }
 
-        if (!Validate::isLoadedObject($context['cart']) || !Configuration::get('SPM_ALLOW_TRACK_CARTS')
-            || !isset($_COOKIE['sender_site_visitor'])) {
+        $email = $this->context->customer->email ?: '';
+
+        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS') || empty($email) || !$this->getSenderCookieFromHeader()) {
             return;
         }
 
@@ -381,12 +420,6 @@ class SenderAutomatedEmails extends Module
             if ($this->compareSenderDateTime($this->context->cookie->__get('sender-captured-cart'))) {
                 return;
             }
-        }
-
-        $email = isset($this->context->customer->email) ? $this->context->customer->email : '';
-
-        if (empty($email)){
-            return;
         }
 
         $subscriber = $this->senderApiClient()->isAlreadySubscriber($email);
@@ -406,7 +439,7 @@ class SenderAutomatedEmails extends Module
      */
     private function syncCart($cart)
     {
-        $cartData = $this->mapCartData($cart, $_COOKIE['sender_site_visitor']);
+        $cartData = $this->mapCartData($cart, $this->getSenderCookieFromHeader());
         if (isset($cartData) && !empty($cartData['products'])){
             $this->senderApiClient()->trackCart($cartData);
             $this->context->cookie->__set('sender-captured-cart', strtotime(date('Y-m-d H:i:s')));
@@ -430,6 +463,7 @@ class SenderAutomatedEmails extends Module
      */
     private function mapCartData($cart, $visitorId)
     {
+        $this->logDebug(json_encode($cart));
         $cartHash = $cart->id;
         $data = array(
             "email" => $this->context->cookie->__get('email') ? $this->context->cookie->__get('email') : '',
@@ -494,11 +528,16 @@ class SenderAutomatedEmails extends Module
             }
         }
 
+        $visitorId = $this->getSenderCookieFromHeader();
+        if (!$visitorId){
+            return;
+        }
+
         $visitorRegistration = [
             'email' => $customer->email,
             'firstname' => $customer->firstname ?: '',
             'lastname' => $customer->lastname ?: '',
-            'visitor_id' => isset($_COOKIE['sender_site_visitor']) ? $_COOKIE['sender_site_visitor'] : '',
+            'visitor_id' => $visitorId,
             'list_id' => Configuration::get('SPM_GUEST_LIST_ID'),
         ];
 
@@ -566,7 +605,7 @@ class SenderAutomatedEmails extends Module
         }
 
         if (!$order || !Configuration::get('SPM_ALLOW_TRACK_CARTS')
-            || !isset($_COOKIE['sender_site_visitor'])) {
+            || !$this->getSenderCookieFromHeader()) {
             return;
         }
 
