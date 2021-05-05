@@ -90,8 +90,8 @@ class SenderAutomatedEmails extends Module
             'SPM_GUEST_LIST_NAME' => null,
             'SPM_FORM_ID' => 0,
             'SPM_CUSTOMER_FIELD_LOCATION' => 0,
-            'SPM_CUSTOMER_FIELD_BIRTHDAY_ID' => 0,
-            'SPM_CUSTOMER_FIELD_GENDER_ID' => 0,
+            'SPM_CUSTOMER_FIELD_BIRTHDAY' => 0,
+            'SPM_CUSTOMER_FIELD_GENDER' => 0,
             'SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID' => 0,
             'SPM_SENDERAPP_SYNC_LIST_ID' => 0,
             'SPM_SENDERAPP_RESOURCE_KEY_CLIENT' => 0,
@@ -363,7 +363,6 @@ class SenderAutomatedEmails extends Module
      */
     public function hookActionObjectCartUpdateAfter($context)
     {
-        $this->logDebug('CartUpdateAfter');
         if (!$this->isModuleActive()){
             return;
         }
@@ -499,8 +498,8 @@ class SenderAutomatedEmails extends Module
 
         $visitorRegistration = [
             'email' => $customer->email,
-            'firstname' => isset($customFields['firstname']) ? $customFields['firstname'] : '',
-            'lastname' => isset($customFields['lastname']) ? $customFields['lastname'] : '',
+            'firstname' => $customer->firstname ?: '',
+            'lastname' => $customer->lastname ?: '',
             'visitor_id' => isset($_COOKIE['sender_site_visitor']) ? $_COOKIE['sender_site_visitor'] : '',
             'list_id' => Configuration::get('SPM_GUEST_LIST_ID'),
         ];
@@ -527,10 +526,6 @@ class SenderAutomatedEmails extends Module
         if (!$subscriber) {
             return false;
         }
-
-        #Removing the firstname and lastname when updating custom fields
-        unset($customFields['firstname']);
-        unset($customFields['lastname']);
 
         if (!empty($customFields)) {
                 $this->senderApiClient()->addFields($subscriber->id, $customFields);
@@ -561,7 +556,6 @@ class SenderAutomatedEmails extends Module
      */
     public function hookDisplayOrderConfirmation($context)
     {
-        $this->logDebug('Confirmation');
         #First check if we should capture these details
         if (!$this->isModuleActive()){
             return;
@@ -799,20 +793,21 @@ class SenderAutomatedEmails extends Module
      */
     public function getCustomFields($customer)
     {
-        $fields = [];
+        $customerFields = [];
+        $possibleFields = ['birthday', 'gender'];
 
-        (Configuration::get('SPM_CUSTOMER_FIELD_FIRSTNAME')) != 0
-            ? $fields['firstname'] = $customer->firstname : false;
-        (Configuration::get('SPM_CUSTOMER_FIELD_LASTNAME')) != 0
-            ? $fields['lastname'] = $customer->lastname : false;
+        foreach($possibleFields as $field){
+            $configValue = Configuration::get('SPM_CUSTOMER_FIELD_' . strtoupper($field));
+            switch ($field){
+                case 'birthday': $customerFields[$configValue] = $customer->birthday;
+                break;
+                case 'gender': $customerFields[$configValue] = $customer->id_gender == 1 ? $this->l('Male') : $this->l('Female');
+                break;
+            }
+        }
 
-        (Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY_ID')) != 0
-            ? $fields[Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY_ID')] = $customer->birthday : false;
-        (Configuration::get('SPM_CUSTOMER_FIELD_GENDER_ID')) != 0
-            ? $fields[Configuration::get('SPM_CUSTOMER_FIELD_GENDER_ID')] =
-            ($customer->id_gender == 1 ? $this->l('Male') : $this->l('Female')) : false;
-
-        return $fields;
+        $this->logDebug(json_encode($customerFields));
+        return $customerFields;
     }
 
     /**
