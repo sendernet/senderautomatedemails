@@ -188,9 +188,15 @@ class SenderApiClient
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if($status === 200){
+//            $this->logDebug($server_output);
+//            $this->logDebug($status);
             curl_close($ch);
             return json_decode($server_output);
         }else{
+//            $this->logDebug($connectionUrl . $requestConfig['method']);
+//            $this->logDebug(json_encode('ch' . $ch));
+//            $this->logDebug($server_output);
+//            $this->logDebug($status);
             curl_close($ch);
             return false;
         }
@@ -205,7 +211,7 @@ class SenderApiClient
         ];
 
         $data = $params;
-
+//        $this->logDebug(json_encode($data));
         return $response = $this->makeApiRequest($requestConfig, $data);
     }
 
@@ -217,7 +223,7 @@ class SenderApiClient
             'stats' => true,
         ];
 
-        return $response = $this->makeApiRequest($requestConfig, $params);
+        $this->makeApiRequest($requestConfig, $params);
     }
 
     /**
@@ -480,4 +486,13 @@ class SenderApiClient
         return $response->data;
     }
 
+    //Temp logger
+    public function logDebug($message)
+    {
+        $this->debugLogger = new FileLogger(0);
+        $rootPath = _PS_ROOT_DIR_ . __PS_BASE_URI__ . basename(_PS_MODULE_DIR_);
+        $logPath = '/senderautomatedemails/log/sender_automated_emails_logs_' . date('Ymd') . '.log';
+        $this->debugLogger->setFilename($rootPath . $logPath);
+        $this->debugLogger->logDebug($message);
+    }
 }
