@@ -300,10 +300,10 @@ class SenderAutomatedEmails extends Module
             $onlyCookies = $allHeaders['Cookie'];
 
             $pos = strpos( $onlyCookies,'sender_site_visitor');
-            $fromSenderSiteVisitor = substr($onlyCookies, $pos);
+            $fromSenderSiteVisitor = Tools::substr($onlyCookies, $pos);
 
             $posIqual = strpos($fromSenderSiteVisitor, '=');
-            $fromIqualSiteVisitor = substr($fromSenderSiteVisitor, $posIqual + 1);
+            $fromIqualSiteVisitor = Tools::substr($fromSenderSiteVisitor, $posIqual + 1);
 
             if ($visitorString = strtok($fromIqualSiteVisitor, ';')){
                 $this->visitorId = $visitorString;
@@ -834,7 +834,7 @@ class SenderAutomatedEmails extends Module
         $possibleFields = ['birthday', 'gender'];
 
         foreach($possibleFields as $field){
-            $configValue = Configuration::get('SPM_CUSTOMER_FIELD_' . strtoupper($field));
+            $configValue = Configuration::get('SPM_CUSTOMER_FIELD_' . Tools::strtoupper($field));
             if ($configValue) {
                 switch ($field) {
                     case 'birthday':
