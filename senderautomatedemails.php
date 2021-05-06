@@ -474,7 +474,8 @@ class SenderAutomatedEmails extends Module
                 . $this->name
                 . "&controller=recover&hash={$cartHash}",
             "currency" => $this->context->currency->iso_code,
-            "order_total" => $cart->total_paid_tax_incl ?: (string)$cart->getOrderTotal(),
+            "order_total" => isset($cart->total_paid_tax_incl) ?
+                $cart->total_paid_tax_incl : (string)$cart->getOrderTotal(),
             "products" => array()
         );
 
@@ -486,7 +487,8 @@ class SenderAutomatedEmails extends Module
         foreach ($products as $product) {
             $Product = new Product($product['id_product']);
             $price = $Product->getPrice(true, null, 2);
-            $linkRewrite = $product['link_rewrite'] ?: implode('', $Product->link_rewrite);
+            $linkRewrite = isset($product['link_rewrite'])
+                ? $product['link_rewrite'] : implode('', $Product->link_rewrite);
             $prod = array(
                 'name' => isset($product['name']) ? $product['name'] : $product['product_name'],
                 'sku' => $product['reference'],
@@ -535,8 +537,8 @@ class SenderAutomatedEmails extends Module
 
         $visitorRegistration = [
             'email' => $customer->email,
-            'firstname' => $customer->firstname ?: '',
-            'lastname' => $customer->lastname ?: '',
+            'firstname' => $customer->firstname,
+            'lastname' => $customer->lastname,
             'visitor_id' => $visitorId,
             'list_id' => Configuration::get('SPM_GUEST_LIST_ID'),
         ];
@@ -634,7 +636,8 @@ class SenderAutomatedEmails extends Module
             }
 
             $this->logDebug(json_encode($dataConvert));
-            $cartTracked = $this->senderApiClient()->cartConvert($dataConvert, $idCart?: $order->id_cart);
+            $cartTracked = $this->senderApiClient()
+                ->cartConvert($dataConvert, isset($idCart) ? $idCart : $order->id_cart);
             $this->logDebug(json_encode($cartTracked));
         } catch (Exception $e) {
             $this->logDebug($e->getMessage());
