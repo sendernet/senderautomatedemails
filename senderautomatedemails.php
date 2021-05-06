@@ -203,7 +203,7 @@ class SenderAutomatedEmails extends Module
 
     public function isModuleActive()
     {
-        if (!Configuration::get('SPM_IS_MODULE_ACTIVE')){
+        if (!Configuration::get('SPM_IS_MODULE_ACTIVE')) {
             return false;
         }
         return true;
@@ -211,7 +211,7 @@ class SenderAutomatedEmails extends Module
 
     public function hookDisplayHeader()
     {
-        if (!$this->isModuleActive()){
+        if (!$this->isModuleActive()) {
             return;
         }
 
@@ -270,7 +270,7 @@ class SenderAutomatedEmails extends Module
      */
     public function hookDisplayFooterBefore()
     {
-        if (!$this->isModuleActive()){
+        if (!$this->isModuleActive()) {
             return;
         }
         return $this->senderDisplayFooter();
@@ -282,7 +282,7 @@ class SenderAutomatedEmails extends Module
      */
     public function hookDisplayFooter()
     {
-        if (!$this->isModuleActive()){
+        if (!$this->isModuleActive()) {
             return;
         }
         return $this->senderDisplayFooter();
@@ -290,28 +290,28 @@ class SenderAutomatedEmails extends Module
 
     public function getSenderCookieFromHeader()
     {
-        if($this->visitorId){
+        if ($this->visitorId) {
             $this->logDebug('ALready set up');
             $this->logDebug($this->visitorId);
             return $this->visitorId;
         }
         $allHeaders = getallheaders();
-        if (array_key_exists('Cookie', $allHeaders)){
+        if (array_key_exists('Cookie', $allHeaders)) {
             $onlyCookies = $allHeaders['Cookie'];
 
-            $pos = strpos( $onlyCookies,'sender_site_visitor');
+            $pos = strpos($onlyCookies, 'sender_site_visitor');
             $fromSenderSiteVisitor = Tools::substr($onlyCookies, $pos);
 
             $posIqual = strpos($fromSenderSiteVisitor, '=');
             $fromIqualSiteVisitor = Tools::substr($fromSenderSiteVisitor, $posIqual + 1);
 
-            if ($visitorString = strtok($fromIqualSiteVisitor, ';')){
+            if ($visitorString = strtok($fromIqualSiteVisitor, ';')) {
                 $this->visitorId = $visitorString;
                 $this->logDebug($this->visitorId);
                 return $this->visitorId;
             }
 
-            if ($visitorString = strtok($fromIqualSiteVisitor, ' ')){
+            if ($visitorString = strtok($fromIqualSiteVisitor, ' ')) {
                 $this->visitorId = $visitorString;
                 $this->logDebug($this->visitorId);
                 return $this->visitorId;
@@ -344,7 +344,7 @@ class SenderAutomatedEmails extends Module
         $options['formUrl'] = isset($form->settings->resource_path) ? $form->settings->resource_path : '';
         $options['showForm'] = true;
         $options['embedHash'] = isset($embedHash) ? $embedHash : '';
-        
+
         $this->context->smarty->assign($options);
         return $this->context->smarty->fetch($this->views_url . '/templates/front/form.tpl');
     }
@@ -359,7 +359,7 @@ class SenderAutomatedEmails extends Module
      */
     public function hookActionCustomerAccountAdd($context)
     {
-        if (!$this->isModuleActive()){
+        if (!$this->isModuleActive()) {
             return;
         }
 
@@ -369,7 +369,7 @@ class SenderAutomatedEmails extends Module
 
         $customer = $this->context->customer;
 
-        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS')){
+        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
             return;
         }
 
@@ -382,11 +382,11 @@ class SenderAutomatedEmails extends Module
 
     public function hookActionAuthentication()
     {
-        if (!$this->isModuleActive()){
+        if (!$this->isModuleActive()) {
             return;
         }
 
-        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS')){
+        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
             return;
         }
 
@@ -401,7 +401,7 @@ class SenderAutomatedEmails extends Module
     public function hookActionObjectCartUpdateAfter($context)
     {
         $this->logDebug('hookActionObjectCartUpdateAfter');
-        if (!$this->isModuleActive() || !Validate::isLoadedObject($context['cart'])){
+        if (!$this->isModuleActive() || !Validate::isLoadedObject($context['cart'])) {
             return;
         }
 
@@ -411,7 +411,7 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if ($this->context->cookie->__get('sender-deleted-cart') === true){
+        if ($this->context->cookie->__get('sender-deleted-cart') === true) {
             $this->context->cookie->__set('sender-deleted-cart', false);
             return;
         }
@@ -440,11 +440,11 @@ class SenderAutomatedEmails extends Module
     private function syncCart($cart)
     {
         $cartData = $this->mapCartData($cart, $this->getSenderCookieFromHeader());
-        if (isset($cartData) && !empty($cartData['products'])){
+        if (isset($cartData) && !empty($cartData['products'])) {
             $this->senderApiClient()->trackCart($cartData);
             $this->context->cookie->__set('sender-captured-cart', strtotime(date('Y-m-d H:i:s')));
             $this->context->cookie->write();
-        }else{
+        } else {
             $this->senderApiClient()->cartDelete(Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'), $cart->id);
             $this->context->cookie->__set('sender-deleted-cart', true);
             $this->context->cookie->write();
@@ -480,7 +480,7 @@ class SenderAutomatedEmails extends Module
         );
 
         $products = $cart->getProducts();
-        if (!$products || empty($products)){
+        if (!$products || empty($products)) {
             return;
         }
 
@@ -508,7 +508,7 @@ class SenderAutomatedEmails extends Module
 
     public function hookActionObjectNewsletterAddAfter($customer, $isNewsletter)
     {
-        if ($customer->newsletter === $isNewsletter){
+        if ($customer->newsletter === $isNewsletter) {
             return;
         }
 
@@ -529,7 +529,7 @@ class SenderAutomatedEmails extends Module
         }
 
         $visitorId = $this->getSenderCookieFromHeader();
-        if (!$visitorId){
+        if (!$visitorId) {
             return;
         }
 
@@ -541,7 +541,7 @@ class SenderAutomatedEmails extends Module
             'list_id' => Configuration::get('SPM_GUEST_LIST_ID'),
         ];
 
-        if($this->checkOrderHistory($customer->id)) {
+        if ($this->checkOrderHistory($customer->id)) {
             if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
                 $visitorRegistration['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
             }
@@ -551,7 +551,7 @@ class SenderAutomatedEmails extends Module
 
         $subscriber = $this->checkSubscriberState($customer->email);
 
-        if ($subscriber && $subscriber->unsubscribed){
+        if ($subscriber && $subscriber->unsubscribed) {
             if ($customer->newsletter) {
                 $this->logDebug('We need to update this customer information from prestashop');
                 $this->hookActionObjectNewsletterAddAfter($customer, false);
@@ -565,8 +565,8 @@ class SenderAutomatedEmails extends Module
         }
 
         if (!empty($customFields = $this->getCustomFields($customer))) {
-                $this->senderApiClient()->addFields($subscriber->id, $customFields);
-            }
+            $this->senderApiClient()->addFields($subscriber->id, $customFields);
+        }
 
         $this->context->cookie->__set('sender-added-visitor', strtotime(date('Y-m-d H:i:s')));
         $this->context->cookie->write();
@@ -594,7 +594,7 @@ class SenderAutomatedEmails extends Module
     public function hookDisplayOrderConfirmation($context)
     {
         #First check if we should capture these details
-        if (!$this->isModuleActive()){
+        if (!$this->isModuleActive()) {
             return;
         }
 
@@ -629,7 +629,7 @@ class SenderAutomatedEmails extends Module
             ];
 
             $list = Configuration::get('SPM_CUSTOMERS_LIST_ID');
-            if ($list){
+            if ($list) {
                 $dataConvert['list_id'] = $list;
             }
 
@@ -651,7 +651,7 @@ class SenderAutomatedEmails extends Module
      */
     public function hookActionObjectCustomerUpdateAfter($context)
     {
-        if (!$this->isModuleActive()){
+        if (!$this->isModuleActive()) {
             return;
         }
 
@@ -670,7 +670,7 @@ class SenderAutomatedEmails extends Module
      */
     public function hookActionCustomerAccountUpdate($customer)
     {
-        if (!$this->isModuleActive()){
+        if (!$this->isModuleActive()) {
             return;
         }
         //Validate if we should
@@ -694,7 +694,7 @@ class SenderAutomatedEmails extends Module
     private function checkOrderHistory($customerId)
     {
         $customerOrders = Order::getCustomerOrders($customerId);
-        if ($customerOrders && count($customerOrders) > 0){
+        if ($customerOrders && count($customerOrders) > 0) {
             return true;
         }
         return false;
@@ -709,7 +709,7 @@ class SenderAutomatedEmails extends Module
      */
     public function hookDisplayFooterProduct($params)
     {
-        if (!$this->isModuleActive()){
+        if (!$this->isModuleActive()) {
             return;
         }
 
@@ -833,7 +833,7 @@ class SenderAutomatedEmails extends Module
         $customerFields = [];
         $possibleFields = ['birthday', 'gender'];
 
-        foreach($possibleFields as $field){
+        foreach ($possibleFields as $field) {
             $configValue = Configuration::get('SPM_CUSTOMER_FIELD_' . Tools::strtoupper($field));
             if ($configValue) {
                 switch ($field) {

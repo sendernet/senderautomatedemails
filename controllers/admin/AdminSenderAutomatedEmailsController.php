@@ -164,11 +164,11 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             }
         }
 
-        foreach ($customFields as $field){
-            if ($field->type === 'text'){
+        foreach ($customFields as $field) {
+            if ($field->type === 'text') {
                 $customFieldsText[] = $field;
             }
-            if ($field->type === 'datetime'){
+            if ($field->type === 'datetime') {
                 $customFieldsDatetime[] = $field;
             }
         }
