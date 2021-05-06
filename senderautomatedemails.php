@@ -416,7 +416,8 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if ($this->context->cookie->__isset('sender-captured-cart') && !empty($this->context->cookie->__get('sender-captured-cart'))) {
+        if ($this->context->cookie->__isset('sender-captured-cart')
+            && !empty($this->context->cookie->__get('sender-captured-cart'))) {
             if ($this->compareSenderDateTime($this->context->cookie->__get('sender-captured-cart'))) {
                 return;
             }
@@ -429,7 +430,6 @@ class SenderAutomatedEmails extends Module
         }
 
         $this->syncCart($context['cart']);
-
     }
 
     /**
@@ -474,8 +474,7 @@ class SenderAutomatedEmails extends Module
                 . $this->name
                 . "&controller=recover&hash={$cartHash}",
             "currency" => $this->context->currency->iso_code,
-//            "order_total" => (string)$cart->getOrderTotal() ,
-            "order_total" => isset($cart->total_paid_tax_incl) ? $cart->total_paid_tax_incl : (string)$cart->getOrderTotal(),
+            "order_total" => $cart->total_paid_tax_incl ?: (string)$cart->getOrderTotal(),
             "products" => array()
         );
 
@@ -487,7 +486,7 @@ class SenderAutomatedEmails extends Module
         foreach ($products as $product) {
             $Product = new Product($product['id_product']);
             $price = $Product->getPrice(true, null, 2);
-            $linkRewrite = isset($product['link_rewrite']) ? $product['link_rewrite'] : implode('', $Product->link_rewrite);
+            $linkRewrite = $product['link_rewrite'] ?: implode('', $Product->link_rewrite);
             $prod = array(
                 'name' => isset($product['name']) ? $product['name'] : $product['product_name'],
                 'sku' => $product['reference'],
@@ -522,7 +521,8 @@ class SenderAutomatedEmails extends Module
      */
     private function formVisitor($customer)
     {
-        if ($this->context->cookie->__isset('sender-added-visitor') && !empty($this->context->cookie->__get('sender-added-visitor'))) {
+        if ($this->context->cookie->__isset('sender-added-visitor')
+            && !empty($this->context->cookie->__get('sender-added-visitor'))) {
             if ($this->compareSenderDateTime($this->context->cookie->__get('sender-added-visitor'))) {
                 return;
             }
@@ -634,9 +634,8 @@ class SenderAutomatedEmails extends Module
             }
 
             $this->logDebug(json_encode($dataConvert));
-            $cartTracked = $this->senderApiClient()->cartConvert($dataConvert, isset($idCart) ? $idCart : $order->id_cart);
+            $cartTracked = $this->senderApiClient()->cartConvert($dataConvert, $idCart?: $order->id_cart);
             $this->logDebug(json_encode($cartTracked));
-
         } catch (Exception $e) {
             $this->logDebug($e->getMessage());
         }
@@ -841,7 +840,8 @@ class SenderAutomatedEmails extends Module
                         $customerFields[$configValue] = $customer->birthday;
                         break;
                     case 'gender':
-                        $customerFields[$configValue] = $customer->id_gender == 1 ? $this->l('Male') : $this->l('Female');
+                        $value = $customer->id_gender == 1 ? $this->l('Male') : $this->l('Female');
+                        $customerFields[$configValue] = $value;
                         break;
                 }
             }
