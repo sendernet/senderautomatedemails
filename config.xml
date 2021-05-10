@@ -4,7 +4,7 @@
     <displayName><![CDATA[Sender.net Automated Emails]]></displayName>
     <version><![CDATA[2.0.0]]></version>
     <description><![CDATA[All you need for your email marketing in one tool.]]></description>
-    <author><![CDATA[Sender.net]]></author>
+    <author><![CDATA[Sender.net]]></author><author_uri><![CDATA[https://www.sender.net/]]></author_uri>
     <tab><![CDATA[emailing]]></tab>
 	<confirmUninstall><![CDATA[Are you sure you want to uninstall?]]></confirmUninstall>
     <is_configurable>1</is_configurable>
