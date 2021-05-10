@@ -288,32 +288,34 @@ class SenderAutomatedEmails extends Module
         return $this->senderDisplayFooter();
     }
 
+    /**
+     * Solution for validation. $_COOKIE not allowed in ps
+     * @return false|string
+     */
     public function getSenderCookieFromHeader()
     {
         if ($this->visitorId) {
-            $this->logDebug('ALready set up');
-            $this->logDebug($this->visitorId);
             return $this->visitorId;
         }
+
         $allHeaders = getallheaders();
         if (array_key_exists('Cookie', $allHeaders)) {
             $onlyCookies = $allHeaders['Cookie'];
 
-            $pos = strpos($onlyCookies, 'sender_site_visitor');
-            $fromSenderSiteVisitor = Tools::substr($onlyCookies, $pos);
+            $senderCookiePos = strpos($onlyCookies, 'sender_site_visitor');
+            $fromSenderSiteVisitor = Tools::substr($onlyCookies, $senderCookiePos);
 
             $posIqual = strpos($fromSenderSiteVisitor, '=');
             $fromIqualSiteVisitor = Tools::substr($fromSenderSiteVisitor, $posIqual + 1);
 
             if ($visitorString = strtok($fromIqualSiteVisitor, ';')) {
                 $this->visitorId = $visitorString;
-                $this->logDebug($this->visitorId);
                 return $this->visitorId;
             }
 
+            #When sender cookie would be last on client list
             if ($visitorString = strtok($fromIqualSiteVisitor, ' ')) {
                 $this->visitorId = $visitorString;
-                $this->logDebug($this->visitorId);
                 return $this->visitorId;
             }
 
