@@ -323,7 +323,6 @@ class SenderAutomatedEmails extends Module
 
     public function senderDisplayFooter()
     {
-        dump($this->context->cookie->__get('sender-site-visitor'));
         if (!Configuration::get('SPM_ALLOW_FORMS') || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
             return;
         }
