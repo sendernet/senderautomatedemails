@@ -391,7 +391,7 @@ class SenderAutomatedEmails extends Module
         }
 
         $customer = $this->context->customer;
-        $this->formVisitor($customer);
+        $this->formVisitor($customer, false);
     }
 
     /**
@@ -521,7 +521,7 @@ class SenderAutomatedEmails extends Module
      * @param $customer
      * @return false
      */
-    private function formVisitor($customer)
+    private function formVisitor($customer, $saveFields = true)
     {
         if ($this->context->cookie->__isset('sender-added-visitor')
             && !empty($this->context->cookie->__get('sender-added-visitor'))) {
@@ -566,8 +566,10 @@ class SenderAutomatedEmails extends Module
             return false;
         }
 
-        if (!empty($customFields = $this->getCustomFields($customer))) {
-            $this->senderApiClient()->addFields($subscriber->id, $customFields);
+        if ($saveFields) {
+            if (!empty($customFields = $this->getCustomFields($customer))) {
+                $this->senderApiClient()->addFields($subscriber->id, $customFields);
+            }
         }
 
         $this->context->cookie->__set('sender-added-visitor', strtotime(date('Y-m-d H:i:s')));
@@ -617,7 +619,7 @@ class SenderAutomatedEmails extends Module
                 if ($subscriber && $subscriber->unsubscribed) {
                     #Reactivate this subscriber
                     $this->senderApiClient()->reactivateSubscriber($subscriber->id);
-                    $this->formVisitor($this->context->customer);
+                    $this->formVisitor($this->context->customer, false);
                     $this->syncCart($order);
                     $idCart = $order->id;
                 }
@@ -638,6 +640,7 @@ class SenderAutomatedEmails extends Module
             $this->logDebug(json_encode($dataConvert));
             $cartTracked = $this->senderApiClient()
                 ->cartConvert($dataConvert, isset($idCart) ? $idCart : $order->id_cart);
+
             $this->logDebug(json_encode($cartTracked));
         } catch (Exception $e) {
             $this->logDebug($e->getMessage());
