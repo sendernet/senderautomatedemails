@@ -365,6 +365,10 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
+        if (!$this->guestCheckNoAction()){
+            return;
+        }
+
         if (!Validate::isLoadedObject($context['newCustomer'])) {
             return;
         }
@@ -397,6 +401,28 @@ class SenderAutomatedEmails extends Module
     }
 
     /**
+     * @return bool
+     * 1.6 validation for no tracking
+     */
+    public function guestCheckNoAction()
+    {
+        $this->logDebug('Checking if guest action');
+        #Check version
+        if (version_compare(_PS_VERSION_, '1.7.0.0', '<=')) {
+            if ($this->context->customer->is_guest) {
+                $this->logDebug('Guest account should not add anything');
+                return false;
+            }
+        } else {
+            if ($this->context->controller->guestAllowed &&
+                $this->context->controller->php_self != 'authentication') { //Si guestAllowed activo
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Use this hook only if we have customer email
      * @return object
      */
@@ -404,6 +430,11 @@ class SenderAutomatedEmails extends Module
     {
         $this->logDebug('hookActionObjectCartUpdateAfter');
         if (!$this->isModuleActive() || !Validate::isLoadedObject($context['cart'])) {
+            return;
+        }
+
+        if (!$this->guestCheckNoAction()){
+            $this->logDebug('Exiting here');
             return;
         }
 
@@ -523,7 +554,7 @@ class SenderAutomatedEmails extends Module
      * @param $customer
      * @return false
      */
-    private function formVisitor($customer, $saveFields = true)
+    private function formVisitor($customer, $saveFields = true, $addToList = true)
     {
         if ($this->context->cookie->__isset('sender-added-visitor')
             && !empty($this->context->cookie->__get('sender-added-visitor'))) {
@@ -542,8 +573,14 @@ class SenderAutomatedEmails extends Module
             'firstname' => $customer->firstname,
             'lastname' => $customer->lastname,
             'visitor_id' => $visitorId,
-            'list_id' => Configuration::get('SPM_GUEST_LIST_ID'),
         ];
+
+        if ($addToList){
+            $visitorRegistration['list_id'] = Configuration::get('SPM_GUEST_LIST_ID');
+        }
+
+        $this->logDebug(json_encode($this));
+        #Check if has been ordered as guest so stop doing all the rest
 
         if ($this->checkOrderHistory($customer->id)) {
             if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
@@ -621,10 +658,12 @@ class SenderAutomatedEmails extends Module
                 if ($subscriber && $subscriber->unsubscribed) {
                     #Reactivate this subscriber
                     $this->senderApiClient()->reactivateSubscriber($subscriber->id);
-                    $this->formVisitor($this->context->customer, false);
-                    $this->syncCart($order);
-                    $idCart = $order->id;
                 }
+            } else {
+                $this->logDebug('Coming here as a guest');
+                $this->formVisitor($this->context->customer, false, false);
+                $this->syncCart($order);
+                $idCart = $order->id;
             }
 
             $dataConvert = [
