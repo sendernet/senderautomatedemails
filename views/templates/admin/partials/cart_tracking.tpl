@@ -120,7 +120,7 @@
                     <div class="col-xs-12" id="guest_list_tab">
                         <div id="swGuestListSelectContainer" class="form-group">
                             <label for="swGuestListSelect">
-                                {l s='Select guest list' mod='senderautomatedemails'}
+                                {l s='Select new registered list' mod='senderautomatedemails'}
                             </label>
                             <select {if not $allowCartTrack}disabled{/if} class="sender-lists" id="swGuestListSelect"
                                     value="{$formId|escape:'htmlall':'UTF-8'}">

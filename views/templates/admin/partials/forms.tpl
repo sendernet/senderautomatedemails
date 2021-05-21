@@ -65,7 +65,10 @@
                         </label>
                         <select {if not $allowForms}disabled{/if} class="sender-lists" id="swFormsSelect" name="swFormsSelect">
                             <option value="0">
-                                {l s='Select a form' mod='senderautomatedemails'}
+                                {l s='Pop-up form' mod='senderautomatedemails'}
+                            </option>
+                            <option value="" disabled>
+                                {l s='Embed forms' mod='senderautomatedemails'}
                             </option>
                             {foreach $allForms as $form}
                                 {if $form->type === 'embed'}
@@ -82,10 +85,15 @@
                     </span>
                 </div>
             </div>
-            <div class="panel-body">
+            <div class="panel-body" style="padding-top: 0!important;">
                 <blockquote>
                     <p>
-                        {l s='To avoid pop-up forms from showing, they must be hidden to show on this website. To hide pop-up forms, go to your Sender account, Forms.' mod='senderautomatedemails'}
+                        {l s='If selected option would be ' mod='senderautomatedemails'}
+                        <strong>Pop-up forms</strong>
+                        {l s='Choose the pop-up form to show in you sender.net application' mod='senderautomatedemails'}
+                    </p>
+                    <p>
+                        {l s='To avoid pop-up form from showing, they must be hidden to show on this website. To hide pop-up forms, go to your Sender account, Forms.' mod='senderautomatedemails'}
                     </p>
                 </blockquote>
             </div>
@@ -96,7 +104,7 @@
                 </a>
 
                 <div style="margin-top: 30px" class="alert alert-info">
-                    <h4>{l s='About the form location.' mod='senderautomatedemails' }</h4>
+                    <h4>{l s='About the embed form location.' mod='senderautomatedemails' }</h4>
                     <p>
                         {l s='Initially the embed form would be hook to "DisplayFooterBefore" or "DisplayFooter" (ps-1.7, ps-1.6). Using Prestashop functionalities it
 can be transplant to "DisplayHome", this will allow you to move your form, from your website bottom to show only on the homepage.' mod='senderautomatedemails'}
