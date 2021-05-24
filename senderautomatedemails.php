@@ -365,10 +365,6 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if (!$this->guestCheckNoAction()){
-            return;
-        }
-
         if (!Validate::isLoadedObject($context['newCustomer'])) {
             return;
         }
@@ -380,7 +376,11 @@ class SenderAutomatedEmails extends Module
         }
 
         try {
-            $this->formVisitor($customer);
+            if (!$this->guestCheckNoAction()){
+                $this->formVisitor($customer, true, false);
+            }else {
+                $this->formVisitor($customer);
+            }
         } catch (Exception $e) {
             $this->logDebug('Error hookActionCustomerAccountAdd ' . json_encode($e->getMessage()));
         }
@@ -422,12 +422,7 @@ class SenderAutomatedEmails extends Module
         if (!$this->isModuleActive() || !Validate::isLoadedObject($context['cart'])) {
             return;
         }
-
-        if (!$this->guestCheckNoAction()){
-            $this->logDebug('Exiting here');
-            return;
-        }
-
+        
         $email = $this->context->customer->email ?: '';
 
         if (!Configuration::get('SPM_ALLOW_TRACK_CARTS') || empty($email) || !$this->getSenderCookieFromHeader()) {
@@ -650,7 +645,7 @@ class SenderAutomatedEmails extends Module
                     $this->senderApiClient()->reactivateSubscriber($subscriber->id);
                 }
             } else {
-                $this->formVisitor($this->context->customer, true, false);
+                $this->formVisitor($this->context->customer, false, false);
                 $this->syncCart($order);
                 $idCart = $order->id;
             }
