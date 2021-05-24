@@ -406,18 +406,8 @@ class SenderAutomatedEmails extends Module
      */
     public function guestCheckNoAction()
     {
-        $this->logDebug('Checking if guest action');
-        #Check version
-        if (version_compare(_PS_VERSION_, '1.7.0.0', '<=')) {
-            if ($this->context->customer->is_guest) {
-                $this->logDebug('Guest account should not add anything');
-                return false;
-            }
-        } else {
-            if ($this->context->controller->guestAllowed &&
-                $this->context->controller->php_self != 'authentication') { //Si guestAllowed activo
-                return false;
-            }
+        if ($this->context->customer->is_guest){
+            return false;
         }
         return true;
     }
@@ -660,7 +650,6 @@ class SenderAutomatedEmails extends Module
                     $this->senderApiClient()->reactivateSubscriber($subscriber->id);
                 }
             } else {
-                $this->logDebug('Coming here as a guest');
                 $this->formVisitor($this->context->customer, false, false);
                 $this->syncCart($order);
                 $idCart = $order->id;
