@@ -902,10 +902,11 @@ class SenderAutomatedEmails extends Module
     public function syncList()
     {
         try {
-            $customersRequirements = Db::getInstance()->executeS('
-                SELECT email, firstname, lastname
-                       FROM ' . _DB_PREFIX_ . 'customer
-                WHERE newsletter = 1');
+            $customersRequirements = Db::getInstance()->executeS("SELECT C.email,firstname,lastname FROM 
+                " . _DB_PREFIX_ . "customer C 
+                INNER JOIN " . _DB_PREFIX_ . "orders O on C.id_customer = O.id_customer
+                INNER JOIN " . _DB_PREFIX_ . "order_detail OD on O.id_order = OD.id_order");
+
             if (!empty($customersRequirements)) {
                 $stringCustomers = $this->recursiveImplode($customersRequirements);
                 $customersExport = new CustomersExport(Configuration::get('SPM_API_KEY'));
