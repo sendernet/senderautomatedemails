@@ -192,7 +192,7 @@ class SenderApiClient
         ];
 
         $data = $params;
-        return $response = $this->makeApiRequest($requestConfig, $data);
+        return $this->makeApiRequest($requestConfig, $data);
     }
 
     public function trackCart($params)
@@ -219,7 +219,7 @@ class SenderApiClient
             'stats' => true,
         ];
 
-        return $response = $this->makeApiRequest($requestConfig, $data);
+        return $this->makeApiRequest($requestConfig, $data);
     }
 
     /**
@@ -264,7 +264,7 @@ class SenderApiClient
             'resource_key' => $resourceKey
         ];
 
-        return $response = $this->makeApiRequest($requestConfig, $data);
+        return $this->makeApiRequest($requestConfig, $data);
     }
 
     /**
