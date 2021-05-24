@@ -406,7 +406,7 @@ class SenderAutomatedEmails extends Module
      */
     public function guestCheckNoAction()
     {
-        if ($this->context->customer->is_guest){
+        if ($this->context->customer->is_guest) {
             return false;
         }
         return true;
@@ -560,7 +560,7 @@ class SenderAutomatedEmails extends Module
             'visitor_id' => $visitorId,
         ];
 
-        if ($addToList){
+        if ($addToList) {
             $visitorRegistration['list_id'] = Configuration::get('SPM_GUEST_LIST_ID');
         }
 
