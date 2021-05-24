@@ -650,7 +650,7 @@ class SenderAutomatedEmails extends Module
                     $this->senderApiClient()->reactivateSubscriber($subscriber->id);
                 }
             } else {
-                $this->formVisitor($this->context->customer, false, false);
+                $this->formVisitor($this->context->customer, true, false);
                 $this->syncCart($order);
                 $idCart = $order->id;
             }
@@ -883,7 +883,6 @@ class SenderAutomatedEmails extends Module
             }
         }
 
-        $this->logDebug(json_encode($customerFields));
         return $customerFields;
     }
 
