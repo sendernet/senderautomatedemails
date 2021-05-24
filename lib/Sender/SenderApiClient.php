@@ -117,19 +117,6 @@ class SenderApiClient
     }
 
     /**
-     * Setup api request
-     * @param $requestConfig
-     * @param array $params
-     * @return array
-     */
-    private function makeApiRequestLegacy($requestConfig, $params)
-    {
-        if (function_exists('curl_version')) {
-            return $this->makeCurlRequest($requestConfig, $params);
-        }
-    }
-
-    /**
      * Make api request through CURL
      * @param $requestConfig
      * @param $data
@@ -187,16 +174,10 @@ class SenderApiClient
         $server_output = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if($status === 200){
-//            $this->logDebug($server_output);
-//            $this->logDebug($status);
+        if ($status === 200) {
             curl_close($ch);
             return json_decode($server_output);
-        }else{
-//            $this->logDebug($connectionUrl . $requestConfig['method']);
-//            $this->logDebug(json_encode('ch' . $ch));
-//            $this->logDebug($server_output);
-//            $this->logDebug($status);
+        } else {
             curl_close($ch);
             return false;
         }
@@ -211,7 +192,6 @@ class SenderApiClient
         ];
 
         $data = $params;
-//        $this->logDebug(json_encode($data));
         return $response = $this->makeApiRequest($requestConfig, $data);
     }
 
@@ -484,15 +464,5 @@ class SenderApiClient
         $response = $this->makeApiRequest($requestConfig, $data);
 
         return $response->data;
-    }
-
-    //Temp logger
-    public function logDebug($message)
-    {
-        $this->debugLogger = new FileLogger(0);
-        $rootPath = _PS_ROOT_DIR_ . __PS_BASE_URI__ . basename(_PS_MODULE_DIR_);
-        $logPath = '/senderautomatedemails/log/sender_automated_emails_logs_' . date('Ymd') . '.log';
-        $this->debugLogger->setFilename($rootPath . $logPath);
-        $this->debugLogger->logDebug($message);
     }
 }
