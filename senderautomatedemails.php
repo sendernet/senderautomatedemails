@@ -376,9 +376,9 @@ class SenderAutomatedEmails extends Module
         }
 
         try {
-            if (!$this->guestCheckNoAction()){
+            if (!$this->guestCheckNoAction()) {
                 $this->formVisitor($customer, true, false);
-            }else {
+            } else {
                 $this->formVisitor($customer);
             }
         } catch (Exception $e) {
