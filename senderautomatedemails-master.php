@@ -54,8 +54,6 @@ class SenderAutomatedEmails extends Module
 
         parent::__construct();
         $this->bootstrap = true;
-
-        //$this->module_key = 'ae9d0345b98417ac768db7c8f321ff7c'; //Got after validating the module
     }
 
     public function senderDetails()
