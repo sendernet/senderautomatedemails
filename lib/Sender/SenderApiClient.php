@@ -178,6 +178,10 @@ class SenderApiClient
             curl_close($ch);
             return json_decode($server_output);
         } else {
+            $this->logDebug($connectionUrl . $requestConfig['method']);
+            $this->logDebug(json_encode('ch' . $ch));
+            $this->logDebug($server_output);
+            $this->logDebug($status);
             curl_close($ch);
             return false;
         }
@@ -190,6 +194,14 @@ class SenderApiClient
             'method' => 'attach_visitor',
             'stats' => true,
         ];
+
+        if (is_null($params['newsletter'])){
+            $params['newsletter'] = false;
+        }
+
+        if (empty($params['newsletter'])){
+            $params['newsletter'] = 0;
+        }
 
         $data = $params;
         return $this->makeApiRequest($requestConfig, $data);
@@ -349,7 +361,7 @@ class SenderApiClient
     {
         $requestConfig = [
             'http' => 'get',
-            'method' => "subscribers/by_email/$email"
+            'method' => "subscribers/$email"
         ];
 
         $data = [];
@@ -361,21 +373,20 @@ class SenderApiClient
         return false;
     }
 
-    public function reactivateSubscriber($id)
-    {;
+    public function reactivateSubscriber($id, $channel)
+    {
         $requestConfig = [
             'http' => 'post',
             'method' => "subscribers/reactivate"
         ];
 
-        $data['subscribers'] = [0 => $id];
+        $data['subscribers'] = [$id];
+        $data['channel_status'] = strtoupper($channel);
 
         $response = $this->makeApiRequest($requestConfig, $data);
-
         if ($response) {
             return true;
         }
-        return;
     }
 
     public function unsubscribe($subscriberId)
@@ -464,5 +475,15 @@ class SenderApiClient
         $response = $this->makeApiRequest($requestConfig, $data);
 
         return $response->data;
+    }
+
+    //Temp logger
+    public function logDebug($message)
+    {
+        $this->debugLogger = new FileLogger(0);
+        $rootPath = _PS_ROOT_DIR_ . __PS_BASE_URI__ . basename(_PS_MODULE_DIR_);
+        $logPath = '/senderautomatedemails/log/sender_automated_emails_logs_' . date('Ymd') . '.log';
+        $this->debugLogger->setFilename($rootPath . $logPath);
+        $this->debugLogger->logDebug($message);
     }
 }
