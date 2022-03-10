@@ -132,6 +132,13 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
      */
     public function renderConfigurationMenu()
     {
+        $this->module->apiClient = new SenderApiClient();
+        $this->module->apiClient->setApiKey(Configuration::get('SPM_API_KEY'));
+
+        if (!$this->module->apiClient->checkApiKey()) {
+            $this->disconnect();
+        }
+
         if (version_compare(_PS_VERSION_, '1.6.0.0', '>=')) {
             $disconnectUrl = $this->context->link->getAdminLink('AdminSenderAutomatedEmails') . '&disconnect=true';
         } else {
