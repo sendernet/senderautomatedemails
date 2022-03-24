@@ -77,6 +77,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         if ($this->module->apiClient->checkApiKey()) {
             $this->module->logDebug('Connected to Sender. Got key: ' . $apiKey);
             $this->enableDefaults($apiKey);
+            $this->addStore();
             // Redirect back to module admin page
             $this->redirectToAdminMenu();
         } else {
@@ -236,6 +237,16 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
 
         $resourceKey = $this->getResourceKey();
         Configuration::updateValue('SPM_SENDERAPP_RESOURCE_KEY_CLIENT', $resourceKey);
+    }
+
+    public function addStore()
+    {
+        $data = [];
+        $data['name'] = Configuration::get('PS_SHOP_NAME');
+        $data['domain'] = Configuration::get('PS_SHOP_DOMAIN');
+        $data['type'] = 'prestashop';
+        
+        $this->module->apiClient->addStore($data);
     }
 
     public function getResourceKey()

@@ -477,6 +477,17 @@ class SenderApiClient
         return $response->data;
     }
 
+    public function addStore($data)
+    {
+        $requestConfig = [
+            'http' => 'post',
+            'method' => "stores",
+            'stats' => false,
+        ];
+
+        return $this->makeApiRequest($requestConfig, $data);
+    }
+
     //Temp logger
     public function logDebug($message)
     {
