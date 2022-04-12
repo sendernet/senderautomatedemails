@@ -95,6 +95,7 @@ class SenderAutomatedEmails extends Module
             'SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID' => 0,
             'SPM_SENDERAPP_SYNC_LIST_ID' => 0,
             'SPM_SENDERAPP_RESOURCE_KEY_CLIENT' => 0,
+            'SPM_SENDERAPP_STORE_ID' => null
         );
     }
 
@@ -161,6 +162,7 @@ class SenderAutomatedEmails extends Module
     public function uninstall()
     {
         if (parent::uninstall()) {
+            $this->senderApiClient()->removeStore();
             foreach (array_keys($this->defaultSettings) as $defaultSettingKey) {
                 if (!Configuration::deleteByName($defaultSettingKey)) {
                     return false;

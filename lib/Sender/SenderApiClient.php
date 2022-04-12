@@ -485,7 +485,24 @@ class SenderApiClient
             'stats' => false,
         ];
 
-        return $this->makeApiRequest($requestConfig, $data);
+        $response = $this->makeApiRequest($requestConfig, $data);
+        if ($response){
+            Configuration::updateValue('SPM_SENDERAPP_STORE_ID', $response->data->id);
+        }
+
+    }
+    
+    public function removeStore()
+    {
+        $storeId = Configuration::get('SPM_SENDERAPP_STORE_ID');
+        if ($storeId) {
+            $requestConfig = [
+                'http' => "delete",
+                'method' => "stores/$storeId",
+                'stats' => false
+            ];
+            $this->makeApiRequest($requestConfig, []);
+        }
     }
 
     //Temp logger
