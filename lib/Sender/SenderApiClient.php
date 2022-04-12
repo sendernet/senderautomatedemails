@@ -486,7 +486,6 @@ class SenderApiClient
         ];
 
         $response = $this->makeApiRequest($requestConfig, $data);
-        $this->logDebug($response);
         if ($response){
             Configuration::updateValue('SPM_SENDERAPP_STORE_ID', $response->data->id);
         }
@@ -502,8 +501,7 @@ class SenderApiClient
                 'method' => "stores/$storeId",
                 'stats' => false
             ];
-            $response = $this->makeApiRequest($requestConfig, []);
-            $this->logDebug($response);
+            $this->makeApiRequest($requestConfig, []);
         }
     }
 
