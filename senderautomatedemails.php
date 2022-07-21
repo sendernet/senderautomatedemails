@@ -213,11 +213,6 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if ((!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_FORMS'))
-            || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
-            return;
-        }
-
         $resourceKey = Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT');
 
         $html = '';
@@ -243,6 +238,7 @@ class SenderAutomatedEmails extends Module
 			  sender('trackVisitors')
 			</script>";
         }
+
         return $html;
     }
 
