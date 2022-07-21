@@ -213,8 +213,10 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        $resourceKey = Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT');
-
+        if (!$resourceKey = Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
+            return;
+        }
+        
         $html = '';
         $html .= "
 			<script>
