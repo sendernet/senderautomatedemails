@@ -351,25 +351,41 @@
         } else {}
 
         jQuery('#syncList').click(function (){
-            jQuery('#syncList').html('Working on it');
-            jQuery('#syncList').focusout();
+            const buttonElm = jQuery('#syncList');
+            buttonElm.html('Working on it');
+            buttonElm.attr('disabled', true);
+            jQuery('#responseMessage').hide();
+
             jQuery.get(syncListAjaxUrl, {
                 action: 'syncList',
             }, function(response) {
-                var proceed = jQuery.parseJSON(response);
-                if (!proceed.result.success) {
-                    jQuery('#syncList').html('Synchronize this list with Sender.net');
-                    jQuery('#syncError').show().html(proceed.result.message);
-                } else {
-                    $('#syncError').css('display', 'none');
-                    jQuery('#syncList').addClass('btn_sender_success');
-                    jQuery('#syncList').html('Synchronized');
-                    jQuery('#syncDate').html(proceed.result.message);
-                    setTimeout(function(){
-                        $('#syncList').removeClass('btn_sender_success').html('Synchronize this list with Sender.net');
-                    }, 5000);
+                try {
+                    var proceed = jQuery.parseJSON(response);
+                    if (!proceed.result.success) {
+                        buttonElm.html('Synchronize this list with Sender.net');
+                        jQuery('#syncError').show().html(proceed.result.message);
+                    } else {
+                        $('#syncError').css('display', 'none');
+                        buttonElm.addClass('btn_sender_success');
+                        buttonElm.html('Synchronized');
+                        if(proceed.result.time) {
+                            jQuery('#syncDate').html(proceed.result.time);
+                        }
+                        jQuery('#responseMessage').show('fast').html(proceed.result.message);
+                        setTimeout(function(){
+                            $('#syncList').removeClass('btn_sender_success').html('Synchronize this list with Sender.net');
+                        }, 5000);
+                    }
+                } catch(e) {
+                    buttonElm.html('Synchronize this list with Sender.net');
+                    jQuery('#syncError').show().html('Something went wrong, please try again.');
                 }
-            });
+            })
+            .fail(() => {
+                buttonElm.html('Synchronize this list with Sender.net');
+                jQuery('#syncError').show().html('Something went wrong, please try again.');
+            })
+            .always(() => buttonElm.attr('disabled', false));
         });
 
         function actionSaved(element){

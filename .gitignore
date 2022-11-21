@@ -7,3 +7,4 @@ lib/Sender/Base62.php
 lib/Sender/test.json
 README.md
 CHANGELOG.md
+.env
