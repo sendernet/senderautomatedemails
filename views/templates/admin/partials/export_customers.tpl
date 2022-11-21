@@ -70,9 +70,11 @@
 
                 <div class="panel-body">
                     <button id="syncList"
-                            class="btn btn-lg btn-sender">{l s='Synchronize this list with Sender' mod='senderautomatedemails'}</button>
-                    <p style="margin-top: 15px">
-                        <small>Last time synchronized: <span id="syncDate">{$syncedList|escape:'htmlall':'UTF-8'}</span></small>
+                            class="btn btn-lg btn-sender">{l s='Synchronize this list with Sender.net' mod='senderautomatedemails'}</button>
+                    <p style="margin-top: 15px" id="syncDataParent">
+                        <small id="syncTime">Last time synchronized: <span id="syncDate">{$syncedList|escape:'htmlall':'UTF-8'}</span></small>
+                        <br />
+                        <small class="alert alert-success" id="responseMessage" style="display: none; margin-bottom: 0; margin-top: 15px;"></small>
                     </p>
                     <p style="margin-top: 15px">
                         <small class="alert alert-danger" id="syncError" style="display: none"></small>

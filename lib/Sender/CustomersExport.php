@@ -13,39 +13,13 @@
  */
 class CustomersExport extends SenderApiClient
 {
-    private $textImport;
 
-    public function textImport($customers, $columns)
+    public function export(array $customers)
     {
-        $requestConfig = [
-            "http" => 'post',
-            "method" => "subscribers/text_import",
-        ];
+        $storeId = Configuration::get('SPM_SENDERAPP_STORE_ID');
+        $endPoint = "stores/".$storeId."/import_shop_data";
 
-        $data = ['subscribers' => $customers];
-
-        $this->textImport = json_decode($this->makeExportCurlRequest($requestConfig, $data));
-        if (!$this->textImport){
-            return [
-                'success' => false,
-                'message' => 'Unable to export customers',
-            ];
-        }
-
-        return $this->textExport($columns);
-    }
-
-    public function textExport($columns)
-    {
-        $columnsFormed = $this->prepareStartImportColumns($columns);
-        $dataStartImport = $this->formStartImportData($columnsFormed, $this->textImport->fileName , $this->textImport->rowCount);
-
-        $requestConfigStartImport = [
-            'http' => 'post',
-            'method' => 'subscribers/start_import'
-        ];
-
-        if (!$this->makeExportCurlRequest($requestConfigStartImport, $dataStartImport)){
+        if (!$response = $this->makeExportCurlRequest($endPoint, ['customers' => $customers])){
             return [
                 'success' => false,
                 'message' => 'Unable to export customers',
@@ -55,65 +29,18 @@ class CustomersExport extends SenderApiClient
         $now = date("Y-m-d H:i:s");
         Configuration::updateValue('SPM_SENDERAPP_SYNC_LIST_DATE', $now);
 
-        return [
-            'success' => true,
-            'message' => $now,
-        ];
-    }
+        $response = json_decode($response, true);
+        $response['time'] = $now;
 
-    public function formStartImportData($columns, $fileName, $rowCount)
-    {
-        $listId = Configuration::get('SPM_SENDERAPP_SYNC_LIST_ID');
-
-        if ($listId) {
-            $list[] = $this->getList($listId);
-        }
-
-        return [
-            "emailColumn" => 0,
-            "firstnameColumn" => 1,
-            "lastnameColumn" => 2,
-            'customFieldColumns' => [],
-            'columns' => $columns,
-            'fileName' => $fileName,
-            "source" => "Copy" . '/' . "paste list",
-            'rowCount' => $rowCount,
-            'tags' => isset($list) ? $list : [],
-        ];
-    }
-
-    public function prepareStartImportColumns($columns)
-    {
-        $columnsTypes = array_unique(array_reduce(array_map('array_keys', $columns), 'array_merge', []));
-        foreach ($columnsTypes as $type) {
-            $columnsFormed[] = ['type' => $type];
-        }
-
-        foreach ($columns as $key) {
-            foreach ($key as $label => $value) {
-                switch ($label) {
-                    case 'email':
-                        $columnsFormed[0]['examples'][] = $value;
-                        break;
-                    case 'firstname':
-                        $columnsFormed[1]['examples'][] = $value;
-                        break;
-                    case 'lastname':
-                        $columnsFormed[2]['examples'][] = $value;
-                        break;
-                }
-            }
-        }
-
-        return $columnsTypes;
+        return $response;
     }
 
     /**
-     * @param $requestConfig
+     * @param string $endpoint
      * @param $data
      * @return bool|mixed|string
      */
-    private function makeExportCurlRequest($requestConfig, $data)
+    private function makeExportCurlRequest($endpoint, $data)
     {
         #Forming data for curl request
         $formedData = json_encode($data);
@@ -126,7 +53,7 @@ class CustomersExport extends SenderApiClient
             'Content-type: Application/json'
         ));
 
-        curl_setopt($ch, CURLOPT_URL, $this->senderBaseUrl . $requestConfig['method']);
+        curl_setopt($ch, CURLOPT_URL, $this->senderBaseUrl . $endpoint);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $formedData);
 
@@ -135,13 +62,9 @@ class CustomersExport extends SenderApiClient
         $server_output = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-        if($status === 200){
-            curl_close($ch);
-            return $server_output;
-        }else{
-            curl_close($ch);
-            return false;
-        }
+        curl_close($ch);
+
+        return $status === 200 ? $server_output : false;
     }
 
 }

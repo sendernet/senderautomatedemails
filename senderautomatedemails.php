@@ -842,21 +842,82 @@ class SenderAutomatedEmails extends Module
     public function syncList()
     {
         try {
-            $customersRequirements = Db::getInstance()->executeS("SELECT C.email,firstname,lastname FROM 
-                " . _DB_PREFIX_ . "customer C 
-                INNER JOIN " . _DB_PREFIX_ . "orders O on C.id_customer = O.id_customer
-                INNER JOIN " . _DB_PREFIX_ . "order_detail OD on O.id_order = OD.id_order");
+            $customerTableName = _DB_PREFIX_ . "customer";
+            $orderTableName = _DB_PREFIX_ . "orders";
+            $orderDetailsTableName = _DB_PREFIX_ . "order_detail";
+            $genderTableName = _DB_PREFIX_ . "gender_lang";
+            $limit = 1000;
 
-            if (!empty($customersRequirements)) {
-                $stringCustomers = $this->recursiveImplode($customersRequirements);
-                $customersExport = new CustomersExport(Configuration::get('SPM_API_KEY'));
-                return $customersExport->textImport($stringCustomers, $customersRequirements);
-            }
+            $count = Db::getInstance()->executeS("SELECT 
+                COUNT(C.id_customer) AS total FROM 
+                " . $customerTableName . " C 
+                WHERE EXISTS(
+                    SELECT 1 FROM " . $orderTableName . " O WHERE C.id_customer = O.id_customer
+                        AND EXISTS(
+                            SELECT 1 FROM " . $orderDetailsTableName . " OD WHERE O.id_order = OD.id_order)
+                )");
 
-            return [
+            $iterations = isset($count[0]) ? ceil((int) $count[0]['total'] / $limit):0;
+
+            $exporter = new CustomersExport(Configuration::get('SPM_API_KEY'));
+
+            $result = [
                 'success' => true,
                 'message' => 'No customers to be exported',
             ];
+
+            $fields = ["email"];
+
+            if(Configuration::get('SPM_CUSTOMER_FIELD_FIRSTNAME')) {
+                $fields[] = 'firstname';
+            }
+            if(Configuration::get('SPM_CUSTOMER_FIELD_LASTNAME')) {
+                $fields[] = 'lastname';
+            }
+            if($genderColumn = Configuration::get('SPM_CUSTOMER_FIELD_GENDER')) {
+                $fields[] = $genderTableName . '.name AS gender';
+            }
+            if($birthdayColumn = Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY')) {
+                $fields[] = 'birthday';
+            }
+
+            $tagId = Configuration::get('SPM_SENDERAPP_SYNC_LIST_ID');
+
+            for ($i=0; $i < $iterations; $i++) {
+                $sql = "SELECT ". implode(",", $fields) ." FROM " . $customerTableName . " C ";
+                
+                if($genderColumn) {
+                    $sql .= "LEFT JOIN ". $genderTableName . " ON " . $genderTableName . ".id_gender = C.id_gender ";
+                }
+
+                $sql .= "WHERE EXISTS(SELECT 1 FROM " . $orderTableName . " O WHERE C.id_customer = O.id_customer AND EXISTS(SELECT 1 FROM " . $orderDetailsTableName . " OD WHERE O.id_order = OD.id_order)) ";
+                
+                $customers = Db::getInstance()->executeS($sql . " LIMIT " . $limit  . " OFFSET " . $i * $limit);
+                
+                if($genderColumn || $birthdayColumn || $tagId) {
+                    array_walk($customers, function(&$customer) use($genderColumn, $birthdayColumn, $tagId) {
+                        $customer['columns'] = [];
+
+                        if($genderColumn) {
+                            $customer['columns'][$genderColumn] = $customer['gender'];
+                            unset($customer['gender']);
+                        }
+
+                        if($birthdayColumn) {
+                            $customer['columns'][$birthdayColumn] = $customer['birthday'];
+                            unset($customer['birthday']);
+                        }
+
+                        if($tagId) {
+                            $customer['tags'] = [$tagId];
+                        }
+                    });
+                }
+
+                $result = $exporter->export($customers);
+            }
+
+            return $result;
 
         } catch (PrestaShopDatabaseException $e) {
             $data = [
