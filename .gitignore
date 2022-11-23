@@ -5,6 +5,7 @@ sftp-config.json
 .idea
 lib/Sender/Base62.php
 lib/Sender/test.json
-README.md
-CHANGELOG.md
 .env
+docker-compose.yml
+DEV.MD
+.env.example
