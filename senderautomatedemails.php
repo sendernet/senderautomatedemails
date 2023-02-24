@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 2010-2021 Sender.net
  *
@@ -60,7 +61,7 @@ class SenderAutomatedEmails extends Module
     {
         $this->name = 'senderautomatedemails';
         $this->tab = 'emailing';
-        $this->version = '3.0.0';
+        $this->version = '3.1.0';
         $this->author = 'Sender.net';
         $this->author_uri = 'https://www.sender.net/';
         $this->need_instance = 0;
@@ -127,7 +128,8 @@ class SenderAutomatedEmails extends Module
             }
         }
 
-        if (!$this->registerHook('displayBackOfficeHeader')
+        if (
+            !$this->registerHook('displayBackOfficeHeader')
             || !$this->registerHook('displayOrderConfirmation')
             || !$this->registerHook('registerUnsubscribedWebhook')
             || !$this->registerHook('displayHeader')
@@ -137,7 +139,8 @@ class SenderAutomatedEmails extends Module
             || !$this->registerHook('actionAuthentication')
             || !$this->registerHook('actionObjectNewsletterAddAfter')
             || !$this->registerHook('actionObjectCustomerUpdateAfter')
-            || !$this->registerHook('displayFooterProduct')) {
+            || !$this->registerHook('displayFooterProduct')
+        ) {
             return false;
         }
 
@@ -216,7 +219,8 @@ class SenderAutomatedEmails extends Module
         }
 
         if ((!Configuration::get('SPM_ALLOW_TRACK_CARTS') && !Configuration::get('SPM_ALLOW_FORMS'))
-            || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
+            || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')
+        ) {
             return;
         }
 
@@ -431,8 +435,10 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if ($this->context->cookie->__isset('sender-captured-cart')
-            && !empty($this->context->cookie->__get('sender-captured-cart'))) {
+        if (
+            $this->context->cookie->__isset('sender-captured-cart')
+            && !empty($this->context->cookie->__get('sender-captured-cart'))
+        ) {
             if ($this->compareSenderDateTime($this->context->cookie->__get('sender-captured-cart'))) {
                 return;
             }
@@ -518,8 +524,10 @@ class SenderAutomatedEmails extends Module
      */
     private function formVisitor($customer, $saveFields = true, $addToList = true)
     {
-        if ($this->context->cookie->__isset('sender-added-visitor')
-            && !empty($this->context->cookie->__get('sender-added-visitor'))) {
+        if (
+            $this->context->cookie->__isset('sender-added-visitor')
+            && !empty($this->context->cookie->__get('sender-added-visitor'))
+        ) {
             if ($this->compareSenderDateTime($this->context->cookie->__get('sender-added-visitor'))) {
                 return;
             }
@@ -594,15 +602,17 @@ class SenderAutomatedEmails extends Module
             $order = $context['objOrder'];
         }
 
-        if (!$order || !Configuration::get('SPM_ALLOW_TRACK_CARTS')
-            || !$this->getSenderCookieFromHeader()) {
+        if (
+            !$order || !Configuration::get('SPM_ALLOW_TRACK_CARTS')
+            || !$this->getSenderCookieFromHeader()
+        ) {
             return;
         }
 
         try {
             #Subscriber status check
             $subscriber = $this->senderApiClient()->isAlreadySubscriber(strtolower($this->context->customer->email));
-            if (!$subscriber){
+            if (!$subscriber) {
                 return;
             }
 
@@ -705,9 +715,11 @@ class SenderAutomatedEmails extends Module
         if ($product instanceof Product /* or ObjectModel */) {
             $product = (array)$product;
 
-            if (empty($product)
+            if (
+                empty($product)
                 || !Configuration::get('SPM_IS_MODULE_ACTIVE')
-                || !Configuration::get('SPM_ALLOW_IMPORT')) {
+                || !Configuration::get('SPM_ALLOW_IMPORT')
+            ) {
                 return;
             }
 
@@ -726,7 +738,7 @@ class SenderAutomatedEmails extends Module
                     $discount = '-' . (($product['specificPrice']['reduction']) * 100 | round(0)) . '%';
                 } elseif ($product['specificPrice']['reduction_type'] == 'amount') {
                     $discount = '-' . (($product['specificPrice']['reduction']) * 100
-                            | round(0)) . $this->context->currency->iso_code;
+                        | round(0)) . $this->context->currency->iso_code;
                 } else {
                     $discount = '-0%';
                 }
@@ -738,9 +750,11 @@ class SenderAutomatedEmails extends Module
                 $discount = '-0%';
             }
         } else {
-            if (empty($product)
+            if (
+                empty($product)
                 || !Configuration::get('SPM_IS_MODULE_ACTIVE')
-                || !Configuration::get('SPM_ALLOW_IMPORT')) {
+                || !Configuration::get('SPM_ALLOW_IMPORT')
+            ) {
                 return;
             }
 
@@ -846,6 +860,10 @@ class SenderAutomatedEmails extends Module
             $orderTableName = _DB_PREFIX_ . "orders";
             $orderDetailsTableName = _DB_PREFIX_ . "order_detail";
             $genderTableName = _DB_PREFIX_ . "gender_lang";
+            $addressTableName = _DB_PREFIX_ . "address";
+            $countryTableName = _DB_PREFIX_ . "country";
+            $zoneTableName = _DB_PREFIX_ . "zone";
+            $languageTableName = _DB_PREFIX_ . "lang";
             $limit = 1000;
 
             $count = Db::getInstance()->executeS("SELECT 
@@ -857,7 +875,7 @@ class SenderAutomatedEmails extends Module
                             SELECT 1 FROM " . $orderDetailsTableName . " OD WHERE O.id_order = OD.id_order)
                 )");
 
-            $iterations = isset($count[0]) ? ceil((int) $count[0]['total'] / $limit):0;
+            $iterations = isset($count[0]) ? ceil((int) $count[0]['total'] / $limit) : 0;
 
             $exporter = new CustomersExport(Configuration::get('SPM_API_KEY'));
 
@@ -866,59 +884,82 @@ class SenderAutomatedEmails extends Module
                 'message' => 'No customers to be exported',
             ];
 
-            $fields = ["email"];
+            $fields = ["email", "newsletter"];
 
-            if(Configuration::get('SPM_CUSTOMER_FIELD_FIRSTNAME')) {
+            if (Configuration::get('SPM_CUSTOMER_FIELD_FIRSTNAME')) {
                 $fields[] = 'firstname';
             }
-            if(Configuration::get('SPM_CUSTOMER_FIELD_LASTNAME')) {
+            if (Configuration::get('SPM_CUSTOMER_FIELD_LASTNAME')) {
                 $fields[] = 'lastname';
             }
-            if($genderColumn = Configuration::get('SPM_CUSTOMER_FIELD_GENDER')) {
+            if ($genderColumn = Configuration::get('SPM_CUSTOMER_FIELD_GENDER')) {
                 $fields[] = $genderTableName . '.name AS gender';
             }
-            if($birthdayColumn = Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY')) {
+            if ($birthdayColumn = Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY')) {
                 $fields[] = 'birthday';
+            }
+            if ($countryColumn = Configuration::get('SPM_CUSTOMER_FIELD_COUNTRY')) {
+                $fields[] = $zoneTableName . '.name AS country';
+            }
+            if ($languageColumn = Configuration::get('SPM_CUSTOMER_FIELD_LANGUAGE')) {
+                $fields[] =  $languageTableName . '.name AS language';
             }
 
             $tagId = Configuration::get('SPM_SENDERAPP_SYNC_LIST_ID');
 
-            for ($i=0; $i < $iterations; $i++) {
-                $sql = "SELECT ". implode(",", $fields) ." FROM " . $customerTableName . " C ";
-                
-                if($genderColumn) {
-                    $sql .= "LEFT JOIN ". $genderTableName . " ON " . $genderTableName . ".id_gender = C.id_gender ";
+            for ($i = 0; $i < $iterations; $i++) {
+                $sql = "SELECT C.id_customer as id," . implode(",", $fields) . " FROM " . $customerTableName . " C ";
+
+                // join area
+                if ($genderColumn) {
+                    $sql .= "LEFT JOIN " . $genderTableName . " ON " . $genderTableName . ".id_gender = C.id_gender ";
                 }
 
+                if ($languageColumn) {
+                    $sql .= "LEFT JOIN " . $languageTableName . " ON " . $languageTableName . ".id_lang = C.id_lang ";
+                }
+
+                if ($countryColumn) {
+                    $sql .= "LEFT JOIN " . $zoneTableName . " ON " . $zoneTableName . ".id_zone = (SELECT id_zone FROM " . $countryTableName . " WHERE " . $countryTableName . ".id_country = (SELECT id_country FROM " . $addressTableName . " WHERE id_customer = C.id_customer AND active = 1 LIMIT 1) LIMIT 1) ";
+                }
+
+                // conditions
                 $sql .= "WHERE EXISTS(SELECT 1 FROM " . $orderTableName . " O WHERE C.id_customer = O.id_customer AND EXISTS(SELECT 1 FROM " . $orderDetailsTableName . " OD WHERE O.id_order = OD.id_order)) ";
-                
+
                 $customers = Db::getInstance()->executeS($sql . " LIMIT " . $limit  . " OFFSET " . $i * $limit);
-                
-                if($genderColumn || $birthdayColumn || $tagId) {
-                    array_walk($customers, function(&$customer) use($genderColumn, $birthdayColumn, $tagId) {
-                        $customer['columns'] = [];
 
-                        if($genderColumn) {
-                            $customer['columns'][$genderColumn] = $customer['gender'];
-                            unset($customer['gender']);
-                        }
+                array_walk($customers, function (&$customer) use ($genderColumn, $birthdayColumn, $tagId, $languageColumn, $countryColumn) {
+                    $customer['fields'] = [];
 
-                        if($birthdayColumn) {
-                            $customer['columns'][$birthdayColumn] = $customer['birthday'];
-                            unset($customer['birthday']);
-                        }
+                    if ($genderColumn) {
+                        $customer['fields'][$genderColumn] = $customer['gender'];
+                        unset($customer['gender']);
+                    }
 
-                        if($tagId) {
-                            $customer['tags'] = [$tagId];
-                        }
-                    });
-                }
+                    if ($birthdayColumn) {
+                        $customer['fields'][$birthdayColumn] = $customer['birthday'];
+                        unset($customer['birthday']);
+                    }
+
+                    if ($languageColumn) {
+                        $customer['fields'][$languageColumn] = $customer['language'];
+                        unset($customer['language']);
+                    }
+
+                    if ($countryColumn) {
+                        $customer['fields'][$countryColumn] = $customer['country'];
+                        unset($customer['country']);
+                    }
+
+                    if ($tagId) {
+                        $customer['tags'] = [$tagId];
+                    }
+                });
 
                 $result = $exporter->export($customers);
             }
 
             return $result;
-
         } catch (PrestaShopDatabaseException $e) {
             $data = [
                 'success' => false,
