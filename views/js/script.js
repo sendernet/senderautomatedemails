@@ -262,36 +262,25 @@
             });
         });
 
-        jQuery('#swGenderField').on('change', function(event) {
-
-            jQuery.post(dataAjaxurl, {
-                action: 'genderField',
-                field_id: jQuery('#swGenderField').val(),
-            }, function(response) {
+        jQuery(".sender-custom-field").each((i, el) => {
+          jQuery(el).on("change", function (event) {
+            var fieldName = event.target.name;
+            jQuery.post(
+              dataAjaxurl,
+              {
+                action: `${fieldName}Field`,
+                field_id: event.target.value
+              },
+              function (response) {
                 var proceed = jQuery.parseJSON(response);
                 if (!proceed.result) {
-                    console.log('save error');
+                  console.log("save error");
                 } else {
-                    actionSaved($('#gender_tab').find('span'));
+                  actionSaved($(`#${fieldName}_tab`).find("span"));
                 }
-            });
-
-        });
-
-        jQuery('#swBirthdayField').on('change', function(event) {
-
-            jQuery.post(dataAjaxurl, {
-                action: 'birthdayField',
-                field_id: jQuery('#swBirthdayField').val(),
-            }, function(response) {
-                var proceed = jQuery.parseJSON(response);
-                if (!proceed.result) {
-                    console.log('save error');
-                } else {
-                    actionSaved($('#birthday_tab').find('span'));
-                }
-            });
-
+              }
+            );
+          });
         });
 
         jQuery('#swCustomerListSelect').on('change', function(event) {

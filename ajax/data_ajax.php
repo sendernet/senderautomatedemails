@@ -38,18 +38,16 @@ if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->na
             Configuration::updateValue('SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID', Tools::getValue('field_id'));
             break;
         case 'genderField':
-            if (Tools::getValue('field_id') == 0) {
-                Configuration::updateValue('SPM_CUSTOMER_FIELD_GENDER', null);
-                die(json_encode(['result' => true]));
-            }
-            Configuration::updateValue('SPM_CUSTOMER_FIELD_GENDER', Tools::getValue('field_id'));
+            Configuration::updateValue('SPM_CUSTOMER_FIELD_GENDER', Tools::getValue('field_id') == 0 ? Tools::getValue('field_id') : null);
             die(json_encode(['result' => true]));
         case 'birthdayField':
-            if (Tools::getValue('field_id') == 0) {
-                Configuration::updateValue('SPM_CUSTOMER_FIELD_BIRTHDAY', null);
-                die(json_encode(['result' => true]));
-            }
-            Configuration::updateValue('SPM_CUSTOMER_FIELD_BIRTHDAY', Tools::getValue('field_id'));
+            Configuration::updateValue('SPM_CUSTOMER_FIELD_BIRTHDAY', Tools::getValue('field_id') == 0 ? Tools::getValue('field_id') : null);
+            die(json_encode(['result' => true]));
+        case 'languageField':
+            Configuration::updateValue('SPM_CUSTOMER_FIELD_LANGUAGE', Tools::getValue('field_id') == 0 ? Tools::getValue('field_id') : null);
+            die(json_encode(['result' => true]));
+        case 'countryField':
+            Configuration::updateValue('SPM_CUSTOMER_FIELD_COUNTRY', Tools::getValue('field_id') == 0 ? Tools::getValue('field_id') : null);
             die(json_encode(['result' => true]));
         default:
             exit;
