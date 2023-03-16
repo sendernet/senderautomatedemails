@@ -13,6 +13,53 @@
     'use strict';
     jQuery(document).ready(function() {
 
+        function compareVersions(v1, v2) {
+            // Split the version numbers into components
+            const v1_parts = v1.split('.');
+            const v2_parts = v2.split('.');
+          
+            // Compare the major version number
+            if (parseInt(v1_parts[0]) > parseInt(v2_parts[0])) {
+              return 1;
+            } else if (parseInt(v1_parts[0]) < parseInt(v2_parts[0])) {
+              return -1;
+            }
+          
+            // Compare the minor version number
+            if (parseInt(v1_parts[1]) > parseInt(v2_parts[1])) {
+              return 1;
+            } else if (parseInt(v1_parts[1]) < parseInt(v2_parts[1])) {
+              return -1;
+            }
+          
+            // Compare the patch version number
+            if (parseInt(v1_parts[2]) > parseInt(v2_parts[2])) {
+              return 1;
+            } else if (parseInt(v1_parts[2]) < parseInt(v2_parts[2])) {
+              return -1;
+            }
+          
+            // The version numbers are equal
+            return 0;
+        }
+
+        function extractVersion(str) {
+            return str?.match(/(\d+)\.(\d+)\.(\d+)/)?.[0];
+        }
+
+        // check for updates
+        jQuery.ajax({
+            url: "https://api.github.com/repos/sendernet/senderprestashop/commits?path=senderautomatedemails.zip&per_page=1",
+            success: (response) => {
+                var version = extractVersion(response[0]?.commit?.message);
+                var installedVersion = extractVersion(jQuery("#current-version").text());
+                
+                if(version && installedVersion && compareVersions(version, installedVersion) === 1) {
+                    jQuery("#update-link").attr("title", `New version (v${version}) available.`).show("slow");
+                }
+            }
+        });
+
         jQuery('#swToggleNewSignups').on('click', function(event) {
 
             var newSignupButton = jQuery('#swToggleNewSignups');

@@ -30,7 +30,7 @@
                 value="{$fieldId|escape:'htmlall':'UTF-8'}">
             {if empty($fields)}
                 <option value="0">
-                    {l s=$emptyMessage mod='senderautomatedemails'}
+                    {l s=$emptyMessage|default:'No fields found' mod='senderautomatedemails'}
                 </option>
             {else}
                 <option value="0">
