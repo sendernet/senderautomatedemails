@@ -20,7 +20,10 @@
         <div class="spm-text-left">
             <img src="{$imageUrl|escape:'htmlall':'UTF-8'}" alt="Sender Logo">
             <span>
-                <small style="vertical-align: bottom;">v{$moduleVersion|escape:'htmlall':'UTF-8'}</small>
+                <small id="current-version" style="vertical-align: bottom;">v{$moduleVersion|escape:'htmlall':'UTF-8'}</small>
+                <a id="update-link" style="vertical-align: bottom;display: none;" href="https://help.sender.net/knowledgebase/the-documentation-of-our-prestashop-plugin/" title="New version available" target="_blank">
+                    <span><small><img style="max-width: 15px" src="https://img.icons8.com/pulsar-color/48/null/logout-rounded-up.png"/></small></span>
+                </a>
             </span>
         </div>
     </div>
