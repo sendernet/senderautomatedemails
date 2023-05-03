@@ -857,25 +857,16 @@ class SenderAutomatedEmails extends Module
     {
         try {
             $customerTableName = _DB_PREFIX_ . "customer";
-            $orderTableName = _DB_PREFIX_ . "orders";
-            $orderDetailsTableName = _DB_PREFIX_ . "order_detail";
             $genderTableName = _DB_PREFIX_ . "gender_lang";
             $addressTableName = _DB_PREFIX_ . "address";
             $countryTableName = _DB_PREFIX_ . "country";
             $zoneTableName = _DB_PREFIX_ . "zone";
             $languageTableName = _DB_PREFIX_ . "lang";
-            $limit = 1000;
+            $limit = 100;
 
-            $count = Db::getInstance()->executeS("SELECT 
-                COUNT(C.id_customer) AS total FROM 
-                " . $customerTableName . " C 
-                WHERE EXISTS(
-                    SELECT 1 FROM " . $orderTableName . " O WHERE C.id_customer = O.id_customer
-                        AND EXISTS(
-                            SELECT 1 FROM " . $orderDetailsTableName . " OD WHERE O.id_order = OD.id_order)
-                )");
+            $count = Db::getInstance()->executeS("SELECT COUNT(C.id_customer) AS total FROM " . $customerTableName . " C");
 
-            $iterations = isset($count[0]) ? ceil((int) $count[0]['total'] / $limit) : 0;
+            $iterations = isset($count[0]['total']) ? ceil((int) $count[0]['total'] / $limit) : 0;
 
             $exporter = new CustomersExport(Configuration::get('SPM_API_KEY'));
 
@@ -885,23 +876,30 @@ class SenderAutomatedEmails extends Module
             ];
 
             $fields = ["email", "newsletter"];
+            $fieldsMap = [
+                'gender' => Configuration::get('SPM_CUSTOMER_FIELD_GENDER'), 
+                'birthday' => Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY'), 
+                'language' => Configuration::get('SPM_CUSTOMER_FIELD_LANGUAGE'), 
+                'country' => Configuration::get('SPM_CUSTOMER_FIELD_COUNTRY')
+            ];
 
+            // adding the to the fields which will be use for selecting those columns
             if (Configuration::get('SPM_CUSTOMER_FIELD_FIRSTNAME')) {
                 $fields[] = 'firstname';
             }
             if (Configuration::get('SPM_CUSTOMER_FIELD_LASTNAME')) {
                 $fields[] = 'lastname';
             }
-            if ($genderColumn = Configuration::get('SPM_CUSTOMER_FIELD_GENDER')) {
+            if ($fieldsMap["gender"]) {
                 $fields[] = $genderTableName . '.name AS gender';
             }
-            if ($birthdayColumn = Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY')) {
+            if ($fieldsMap["birthday"]) {
                 $fields[] = 'birthday';
             }
-            if ($countryColumn = Configuration::get('SPM_CUSTOMER_FIELD_COUNTRY')) {
+            if ($fieldsMap["country"]) {
                 $fields[] = $zoneTableName . '.name AS country';
             }
-            if ($languageColumn = Configuration::get('SPM_CUSTOMER_FIELD_LANGUAGE')) {
+            if ($fieldsMap["language"]) {
                 $fields[] =  $languageTableName . '.name AS language';
             }
 
@@ -911,52 +909,50 @@ class SenderAutomatedEmails extends Module
                 $sql = "SELECT C.id_customer as id," . implode(",", $fields) . " FROM " . $customerTableName . " C ";
 
                 // join area
-                if ($genderColumn) {
+                if ($fieldsMap["gender"]) {
                     $sql .= "LEFT JOIN " . $genderTableName . " ON " . $genderTableName . ".id_gender = C.id_gender ";
                 }
 
-                if ($languageColumn) {
+                if ($fieldsMap["language"]) {
                     $sql .= "LEFT JOIN " . $languageTableName . " ON " . $languageTableName . ".id_lang = C.id_lang ";
                 }
 
-                if ($countryColumn) {
+                if ($fieldsMap["country"]) {
                     $sql .= "LEFT JOIN " . $zoneTableName . " ON " . $zoneTableName . ".id_zone = (SELECT id_zone FROM " . $countryTableName . " WHERE " . $countryTableName . ".id_country = (SELECT id_country FROM " . $addressTableName . " WHERE id_customer = C.id_customer AND active = 1 LIMIT 1) LIMIT 1) ";
                 }
 
                 // conditions
-                $sql .= "WHERE EXISTS(SELECT 1 FROM " . $orderTableName . " O WHERE C.id_customer = O.id_customer AND EXISTS(SELECT 1 FROM " . $orderDetailsTableName . " OD WHERE O.id_order = OD.id_order)) ";
+                $customers = Db::getInstance()->executeS($sql . " LIMIT " . $limit  . " OFFSET " . ($i * $limit));
 
-                $customers = Db::getInstance()->executeS($sql . " LIMIT " . $limit  . " OFFSET " . $i * $limit);
-
-                array_walk($customers, function (&$customer) use ($genderColumn, $birthdayColumn, $tagId, $languageColumn, $countryColumn) {
+                // add tagId and fields to the customer data
+                array_walk($customers, function (&$customer) use ($fieldsMap, $tagId) {
                     $customer['fields'] = [];
 
-                    if ($genderColumn) {
-                        $customer['fields'][$genderColumn] = $customer['gender'];
-                        unset($customer['gender']);
-                    }
+                    foreach($fieldsMap as $column => $id) {
 
-                    if ($birthdayColumn) {
-                        $customer['fields'][$birthdayColumn] = $customer['birthday'];
-                        unset($customer['birthday']);
-                    }
-
-                    if ($languageColumn) {
-                        $customer['fields'][$languageColumn] = $customer['language'];
-                        unset($customer['language']);
-                    }
-
-                    if ($countryColumn) {
-                        $customer['fields'][$countryColumn] = $customer['country'];
-                        unset($customer['country']);
+                        // customer didn't added this column for export
+                        if(!$id) {
+                            continue;
+                        }
+                        
+                        $customer['fields'][$id] = $customer[$column];
+                        unset($customer[$column]);
                     }
 
                     if ($tagId) {
                         $customer['tags'] = [$tagId];
                     }
                 });
-
+                
                 $result = $exporter->export($customers);
+            }
+
+            if(isset($result["success"]) && $result["success"]) {
+                return [
+                    "success" => true,
+                    "message" => $result["message"],
+                    "total" => isset($count[0]['total']) ? $count[0]['total'] : 0,
+                ];
             }
 
             return $result;
