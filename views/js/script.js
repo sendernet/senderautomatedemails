@@ -407,7 +407,12 @@
                         if(proceed.result.time) {
                             jQuery('#syncDate').html(proceed.result.time);
                         }
-                        jQuery('#responseMessage').show('fast').html(proceed.result.message);
+                        var responseMessage = proceed.result.message;
+                        if(proceed.result.total) {
+                            responseMessage = `${responseMessage}. Total ${proceed.result.total} customers will be exported.`;
+                        }
+                        jQuery('#responseMessage').show('fast').html(responseMessage);
+
                         setTimeout(function(){
                             $('#syncList').removeClass('btn_sender_success').html('Synchronize this list with Sender.net');
                         }, 5000);
