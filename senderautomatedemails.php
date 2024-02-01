@@ -96,7 +96,9 @@ class SenderAutomatedEmails extends Module
             'SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID' => 0,
             'SPM_SENDERAPP_SYNC_LIST_ID' => 0,
             'SPM_SENDERAPP_RESOURCE_KEY_CLIENT' => 0,
-            'SPM_SENDERAPP_STORE_ID' => null
+            'SPM_SENDERAPP_STORE_ID' => null,
+            'SPM_CUSTOMER_FIELD_FIRSTNAME' => null,
+            'SPM_CUSTOMER_FIELD_LASTNAME' => null,
         );
     }
 
@@ -183,25 +185,6 @@ class SenderAutomatedEmails extends Module
         }
 
         return true;
-    }
-
-    /**
-     * Reset all Sender.net related settings
-     *
-     * @return void
-     */
-    private function disableModule()
-    {
-        Configuration::updateValue('SPM_API_KEY', '');
-        Configuration::updateValue('SPM_IS_MODULE_ACTIVE', 0);
-        Configuration::updateValue('SPM_ALLOW_FORMS', 0);
-        Configuration::updateValue('SPM_ALLOW_IMPORT', 0);
-        Configuration::updateValue('SPM_ALLOW_TRACK_NEW_SIGNUPS', 0);
-        Configuration::updateValue('SPM_ALLOW_TRACK_CARTS', 0);
-        Configuration::updateValue('SPM_CUSTOMER_FIELD_FIRSTNAME', 0);
-        Configuration::updateValue('SPM_CUSTOMER_FIELD_LASTNAME', 0);
-        Configuration::updateValue('SPM_SENDERAPP_RESOURCE_KEY_CLIENT', 0);
-        Configuration::updateValue('SPM_FORM_ID', 0);
     }
 
     public function isModuleActive()
@@ -1048,14 +1031,6 @@ class SenderAutomatedEmails extends Module
         if (!$this->senderApiClient) {
             $this->senderApiClient = new SenderApiClient();
             $this->senderApiClient->setApiKey(Configuration::get('SPM_API_KEY'));
-        }
-
-        // Check if key is valid
-        if (!$this->senderApiClient->checkApiKey()) {
-            // Disable module
-            $this->disableModule();
-
-            return $this->senderApiClient;
         }
 
         return $this->senderApiClient;

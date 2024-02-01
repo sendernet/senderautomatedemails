@@ -136,10 +136,6 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         $this->module->apiClient = new SenderApiClient();
         $this->module->apiClient->setApiKey(Configuration::get('SPM_API_KEY'));
 
-        if (!$this->module->apiClient->checkApiKey()) {
-            $this->disconnect();
-        }
-
         if (version_compare(_PS_VERSION_, '1.6.0.0', '>=')) {
             $disconnectUrl = $this->context->link->getAdminLink('AdminSenderAutomatedEmails') . '&disconnect=true';
         } else {
@@ -271,6 +267,10 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
     private function disconnect()
     {
         $this->module->logDebug('Removing api key');
+        $this->module->apiClient = new SenderApiClient();
+        $this->module->apiClient->setApiKey(Configuration::get('SPM_API_KEY'));
+        $this->module->apiClient->removeStore();
+
         Configuration::deleteByName('SPM_API_KEY');
         Configuration::deleteByName('SPM_SENDERAPP_RESOURCE_KEY_CLIENT');
         $this->removeSenderKeys();
