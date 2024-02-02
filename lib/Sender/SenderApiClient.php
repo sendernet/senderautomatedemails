@@ -99,12 +99,14 @@ class SenderApiClient
             $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
 
-            if($status === 200){
+            if ($status === 401) {
+                return false;
+            } else {
                 return true;
             }
-        }catch (Exception $e)
-        {
-            return false;
+        } catch (Exception $e) {
+            $this->logDebug($server_output);
+            $this->logDebug($status);
         }
     }
 
