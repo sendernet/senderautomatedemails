@@ -102,8 +102,11 @@ class SenderApiClient
             if($status === 200){
                 return true;
             }
-        }catch (Exception $e)
-        {
+        }catch (Exception $e) {
+            $this->logDebug($this->generateAuthUrl());
+            $this->logDebug(json_encode('ch' . $ch));
+            $this->logDebug($server_output);
+            $this->logDebug($status);
             return false;
         }
     }
@@ -521,7 +524,6 @@ class SenderApiClient
         }
     }
 
-    //Temp logger
     public function logDebug($message)
     {
         $this->debugLogger = new FileLogger(0);
@@ -529,5 +531,12 @@ class SenderApiClient
         $logPath = '/senderautomatedemails/log/sender_automated_emails_logs_' . date('Ymd') . '.log';
         $this->debugLogger->setFilename($rootPath . $logPath);
         $this->debugLogger->logDebug($message);
+        $this->logDebugBackoffice($message);
+    }
+
+    public function logDebugBackoffice($message)
+    {
+        //Using 3 as severity to display in backoffice logs as error type
+        PrestaShopLogger::addLog($message, 3);
     }
 }
