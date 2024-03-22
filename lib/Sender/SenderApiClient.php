@@ -508,7 +508,6 @@ class SenderApiClient
         }
     }
 
-    //Temp logger
     public function logDebug($message)
     {
         $this->debugLogger = new FileLogger(0);
@@ -516,5 +515,12 @@ class SenderApiClient
         $logPath = '/senderautomatedemails/log/sender_automated_emails_logs_' . date('Ymd') . '.log';
         $this->debugLogger->setFilename($rootPath . $logPath);
         $this->debugLogger->logDebug($message);
+        $this->logDebugBackoffice($message);
+    }
+
+    public function logDebugBackoffice($message)
+    {
+        //Using 3 as severity to display in backoffice logs as error type
+        PrestaShopLogger::addLog($message, 3);
     }
 }
