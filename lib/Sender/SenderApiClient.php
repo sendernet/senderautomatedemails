@@ -179,7 +179,7 @@ class SenderApiClient
             return json_decode($server_output);
         } else {
             $this->logDebug($connectionUrl . $requestConfig['method']);
-            $this->logDebug(json_encode('ch' . $ch));
+            $this->logDebug('cURL Info: ' . json_encode(curl_getinfo($ch)));
             $this->logDebug($server_output);
             $this->logDebug($status);
             curl_close($ch);
@@ -215,7 +215,7 @@ class SenderApiClient
             'stats' => true,
         ];
 
-        $this->makeApiRequest($requestConfig, $params);
+        return $this->makeApiRequest($requestConfig, $params);
     }
 
     /**
@@ -228,6 +228,22 @@ class SenderApiClient
         $requestConfig = [
             'http' => 'post',
             'method' => "carts/$cartId/convert",
+            'stats' => true,
+        ];
+
+        return $this->makeApiRequest($requestConfig, $data);
+    }
+
+    /**
+     * @param $data
+     * @param $cartId
+     * @return array|false
+     */
+    public function cartUpdateStatus($data, $cartId)
+    {
+        $requestConfig = [
+            'http' => 'patch',
+            'method' => "carts/$cartId/status",
             'stats' => true,
         ];
 
