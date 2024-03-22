@@ -21,6 +21,9 @@ require_once(_PS_CONFIG_DIR_ . "/config.inc.php");
 
 class SenderAutomatedEmails extends Module
 {
+    const CART_STATE_CONFIRMED = "confirmed";
+    const CART_STATE_UPDATED = "updated";
+
     /**
      * Default settings array
      * @var array
@@ -42,6 +45,18 @@ class SenderAutomatedEmails extends Module
      * @var object
      */
     private $debugLogger = null;
+
+    /**
+     * The tracking state of the cart
+     * @var null|string "confirmed" | "updated" | null
+     */
+    private $cartState = null;
+
+    /**
+     * The trackable order data
+     * @var array
+     */
+    private $cartTrackableData = [];
 
     /**
      * Contructor function
@@ -329,17 +344,30 @@ class SenderAutomatedEmails extends Module
 
     public function senderDisplayFooter()
     {
+        $options = [
+            'showForm' => false,
+            'cartState' => $this->cartState,
+            'cartTrackableData' => $this->cartTrackableData
+        ];
+
         if (!Configuration::get('SPM_ALLOW_FORMS') || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
+            
+            if($this->cartState) {
+                $this->context->smarty->assign($options);
+                return $this->context->smarty->fetch($this->views_url . '/templates/front/cart.tpl');
+            }
+
             return;
         }
-
-        $options = array(
-            'showForm' => false
-        );
 
         $form = $this->senderApiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
         #Check if form is disabled or pop-up
         if (!$form || !$form->is_active || $form->type != 'embed') {
+            if($this->cartState) {
+                $this->context->smarty->assign($options);
+                return $this->context->smarty->fetch($this->views_url . '/templates/front/cart.tpl');
+            }
+            
             return;
         }
 
@@ -463,6 +491,9 @@ class SenderAutomatedEmails extends Module
             $this->context->cookie->__set('sender-deleted-cart', true);
         }
         $this->context->cookie->write();
+
+        $this->cartState = self::CART_STATE_UPDATED;
+        $this->cartTrackableData = $cartData;
     }
 
     /**
@@ -628,7 +659,13 @@ class SenderAutomatedEmails extends Module
                 $dataConvert['list_id'] = $list;
             }
 
-            $cartTracked = $this->senderApiClient()->cartConvert($dataConvert, isset($idCart) ? $idCart : $order->id_cart);;
+            $cartID = isset($idCart) ? $idCart : $order->id_cart;
+            $cartTracked = $this->senderApiClient()->cartConvert($dataConvert, $cartID);
+
+            $this->cartState = self::CART_STATE_CONFIRMED;
+            $this->cartTrackableData = $dataConvert;
+            $this->cartTrackableData['external_id'] = $cartID;
+
             $this->logDebug(json_encode($cartTracked));
         } catch (Exception $e) {
             $this->logDebug($e->getMessage());
