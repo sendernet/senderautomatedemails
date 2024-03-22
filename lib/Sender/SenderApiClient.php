@@ -102,8 +102,11 @@ class SenderApiClient
             if($status === 200){
                 return true;
             }
-        }catch (Exception $e)
-        {
+        }catch (Exception $e) {
+            $this->logDebug($this->generateAuthUrl());
+            $this->logDebug(json_encode('ch' . $ch));
+            $this->logDebug($server_output);
+            $this->logDebug($status);
             return false;
         }
     }
@@ -179,7 +182,7 @@ class SenderApiClient
             return json_decode($server_output);
         } else {
             $this->logDebug($connectionUrl . $requestConfig['method']);
-            $this->logDebug(json_encode('ch' . $ch));
+            $this->logDebug('cURL Info: ' . json_encode(curl_getinfo($ch)));
             $this->logDebug($server_output);
             $this->logDebug($status);
             curl_close($ch);
@@ -215,7 +218,7 @@ class SenderApiClient
             'stats' => true,
         ];
 
-        $this->makeApiRequest($requestConfig, $params);
+        return $this->makeApiRequest($requestConfig, $params);
     }
 
     /**
@@ -228,6 +231,22 @@ class SenderApiClient
         $requestConfig = [
             'http' => 'post',
             'method' => "carts/$cartId/convert",
+            'stats' => true,
+        ];
+
+        return $this->makeApiRequest($requestConfig, $data);
+    }
+
+    /**
+     * @param $data
+     * @param $cartId
+     * @return array|false
+     */
+    public function cartUpdateStatus($data, $cartId)
+    {
+        $requestConfig = [
+            'http' => 'patch',
+            'method' => "carts/$cartId/status",
             'stats' => true,
         ];
 
@@ -505,7 +524,6 @@ class SenderApiClient
         }
     }
 
-    //Temp logger
     public function logDebug($message)
     {
         $this->debugLogger = new FileLogger(0);
@@ -513,5 +531,12 @@ class SenderApiClient
         $logPath = '/senderautomatedemails/log/sender_automated_emails_logs_' . date('Ymd') . '.log';
         $this->debugLogger->setFilename($rootPath . $logPath);
         $this->debugLogger->logDebug($message);
+        $this->logDebugBackoffice($message);
+    }
+
+    public function logDebugBackoffice($message)
+    {
+        //Using 3 as severity to display in backoffice logs as error type
+        PrestaShopLogger::addLog($message, 3);
     }
 }

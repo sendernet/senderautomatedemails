@@ -15,7 +15,3 @@
         </div>
     </div>
 {/if}
-
-{if $cartState !== null}
-    {include file="./cart.tpl" cartState=$cartState cartTrackableData=$cartTrackableData}
-{/if}

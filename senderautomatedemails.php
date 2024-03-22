@@ -47,18 +47,6 @@ class SenderAutomatedEmails extends Module
     private $debugLogger = null;
 
     /**
-     * The tracking state of the cart
-     * @var null|string "confirmed" | "updated" | null
-     */
-    private $cartState = null;
-
-    /**
-     * The trackable order data
-     * @var array
-     */
-    private $cartTrackableData = [];
-
-    /**
      * Contructor function
      *
      */
@@ -76,7 +64,7 @@ class SenderAutomatedEmails extends Module
     {
         $this->name = 'senderautomatedemails';
         $this->tab = 'emailing';
-        $this->version = '3.6.0';
+        $this->version = '3.6.5';
         $this->author = 'Sender.net';
         $this->author_uri = 'https://www.sender.net/';
         $this->need_instance = 0;
@@ -155,6 +143,7 @@ class SenderAutomatedEmails extends Module
             || !$this->registerHook('actionObjectNewsletterAddAfter')
             || !$this->registerHook('actionObjectCustomerUpdateAfter')
             || !$this->registerHook('displayFooterProduct')
+            || !$this->registerHook('actionOrderHistoryAddAfter')
         ) {
             return false;
         }
@@ -345,29 +334,16 @@ class SenderAutomatedEmails extends Module
     public function senderDisplayFooter()
     {
         $options = [
-            'showForm' => false,
-            'cartState' => $this->cartState,
-            'cartTrackableData' => $this->cartTrackableData
+            'showForm' => false
         ];
 
         if (!Configuration::get('SPM_ALLOW_FORMS') || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
-            
-            if($this->cartState) {
-                $this->context->smarty->assign($options);
-                return $this->context->smarty->fetch($this->views_url . '/templates/front/cart.tpl');
-            }
-
             return;
         }
 
         $form = $this->senderApiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
         #Check if form is disabled or pop-up
         if (!$form || !$form->is_active || $form->type != 'embed') {
-            if($this->cartState) {
-                $this->context->smarty->assign($options);
-                return $this->context->smarty->fetch($this->views_url . '/templates/front/cart.tpl');
-            }
-            
             return;
         }
 
@@ -476,6 +452,54 @@ class SenderAutomatedEmails extends Module
     }
 
     /**
+     * Order status update hook
+     * 
+     * @param array $context
+     * 
+     * e.g
+     * ```php
+     * $context = ['order_history' => OrderHistory]
+     * ```
+     */
+    public function hookActionOrderHistoryAddAfter($context)
+    {
+        $this->logDebug(__FUNCTION__);
+
+        if(!Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
+            return;
+        }
+
+        try {
+            $order_id = isset($context["order_history"]->id_order) ? $context["order_history"]->id_order : null;
+
+            if(!$order_id) {
+                $this->logDebug("No order_id");
+                return;
+            }
+
+            $order = new Order($order_id);
+
+            if(!$order) {
+                $this->logDebug("Order not found $order_id");
+                return;
+            }
+            
+            $data = [
+                'resource_key' => Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'),
+                'order_id' => $order_id,
+                'cart_status' => $order->hasBeenPaid() ? "PAID" : "UNPAID"
+            ];
+
+            $res = $this->senderApiClient()->cartUpdateStatus($data, $order->id_cart);
+
+            $this->logDebug("CART_STATUS_UPDATE: " . json_encode(["data" => $data, "response" => $res]));
+
+        } catch (Exception $e) {
+            $this->logDebug($e->getMessage());
+        }
+    }
+
+    /**
      * @param $cart
      * @return void
      */
@@ -483,7 +507,12 @@ class SenderAutomatedEmails extends Module
     {
         $cartData = $this->mapCartData($cart, $this->getSenderCookieFromHeader());
         if (isset($cartData) && !empty($cartData['products'])) {
-            $this->senderApiClient()->trackCart($cartData);
+
+            $response = $this->senderApiClient()->trackCart($cartData);
+            $responseMessage = $response && is_string($response) ? $response : json_encode($response ?: []);
+
+            $this->logDebug("SyncCart: " . $responseMessage);
+
             $this->context->cookie->__set('sender-captured-cart', strtotime(date('Y-m-d H:i:s')));
             $this->context->cookie->write();
         } else {
@@ -491,9 +520,6 @@ class SenderAutomatedEmails extends Module
             $this->context->cookie->__set('sender-deleted-cart', true);
         }
         $this->context->cookie->write();
-
-        $this->cartState = self::CART_STATE_UPDATED;
-        $this->cartTrackableData = $cartData;
     }
 
     /**
@@ -516,6 +542,7 @@ class SenderAutomatedEmails extends Module
             "currency" => $this->context->currency->iso_code,
             "order_total" => isset($cart->total_paid_tax_incl) ?
                 $cart->total_paid_tax_incl : (string)$cart->getOrderTotal(),
+            "store_id" => Configuration::get('SPM_SENDERAPP_STORE_ID'),
             "products" => array()
         );
 
@@ -523,12 +550,27 @@ class SenderAutomatedEmails extends Module
         if (!$products || empty($products)) {
             return;
         }
+        $data['products'] = $this->mapProducts($products);
+
+        return $data;
+    }
+
+    /**
+     * Map Prestashop product into Sender compatible
+     * 
+     * @param array $products
+     */
+    private function mapProducts($products)
+    {
+        $result = [];
 
         foreach ($products as $product) {
             $Product = new Product($product['id_product']);
             $price = $Product->getPrice(true, null, 2);
             $linkRewrite = isset($product['link_rewrite'])
                 ? $product['link_rewrite'] : implode('', $Product->link_rewrite);
+            $imageType = method_exists("ImageType", "getFormattedName") ? ImageType::getFormattedName('home') : ImageType::getFormatedName('home');
+
             $prod = array(
                 'name' => isset($product['name']) ? $product['name'] : $product['product_name'],
                 'sku' => $product['reference'],
@@ -538,13 +580,13 @@ class SenderAutomatedEmails extends Module
                 'image' => $this->context->link->getImageLink(
                     $linkRewrite,
                     $Product->getCoverWs(),
-                    ImageType::getFormatedName('home')
+                    $imageType
                 )
             );
-            $data['products'][] = $prod;
+            $result[] = $prod;
         }
 
-        return $data;
+        return $result;
     }
 
     /**
@@ -652,6 +694,7 @@ class SenderAutomatedEmails extends Module
                 'email' => strtolower($this->context->customer->email),
                 'firstname' => $this->context->customer->firstname,
                 'lastname' => $this->context->customer->lastname,
+                'products' => $this->mapProducts($order->getProducts())
             ];
 
             $list = Configuration::get('SPM_CUSTOMERS_LIST_ID');
@@ -660,15 +703,24 @@ class SenderAutomatedEmails extends Module
             }
 
             $cartID = isset($idCart) ? $idCart : $order->id_cart;
+            $dataConvert['store_id'] = Configuration::get('SPM_SENDERAPP_STORE_ID');
+
             $cartTracked = $this->senderApiClient()->cartConvert($dataConvert, $cartID);
 
-            $this->cartState = self::CART_STATE_CONFIRMED;
-            $this->cartTrackableData = $dataConvert;
-            $this->cartTrackableData['external_id'] = $cartID;
+            $this->logDebug("CONVERT_RES: " . json_encode($cartTracked));
 
-            $this->logDebug(json_encode($cartTracked));
+            $cartTrackableData = $dataConvert;
+            $cartTrackableData['external_id'] = $cartID;
+
+            $options = [
+                'cartState' => self::CART_STATE_CONFIRMED,
+                'cartTrackableData' => $cartTrackableData
+            ];
+            
+            $this->context->smarty->assign($options);
+            return $this->context->smarty->fetch($this->views_url . '/templates/front/cart.tpl');
         } catch (Exception $e) {
-            $this->logDebug($e->getMessage());
+            $this->logDebug("FAILED_CONVERT: " . $e->getMessage());
         }
     }
 
@@ -1077,7 +1129,7 @@ class SenderAutomatedEmails extends Module
      * Get Sender API Client instance
      * and make sure that everything is in order
      *
-     * @return object SenderApiClient
+     * @return SenderApiClient
      */
     public function senderApiClient()
     {
