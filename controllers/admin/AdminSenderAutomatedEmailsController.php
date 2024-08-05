@@ -243,11 +243,14 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
 
     public function addStore()
     {
-        $data = [];
-        $data['name'] = Configuration::get('PS_SHOP_NAME');
-        $data['domain'] = Configuration::get('PS_SHOP_DOMAIN');
-        $data['type'] = 'prestashop';
-        
+        $protocol = Configuration::get('PS_SSL_ENABLED') ? 'https://' : 'http://';
+
+        $data = [
+            'name' => Configuration::get('PS_SHOP_NAME'),
+            'domain' => $protocol . Configuration::get('PS_SHOP_DOMAIN'),
+            'type' => 'prestashop'
+        ];
+
         $this->module->apiClient->addStore($data);
     }
 
