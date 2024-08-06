@@ -497,7 +497,7 @@ class SenderApiClient
             return $response->data;
         }
 
-        return $response->data;
+        return false;
     }
 
     public function addStore($data)
