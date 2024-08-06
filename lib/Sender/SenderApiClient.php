@@ -106,7 +106,7 @@ class SenderApiClient
             $this->logDebug($this->generateAuthUrl());
             $this->logDebug(json_encode('ch' . $ch));
             $this->logDebug($server_output);
-            $this->logDebug($status);
+            $this->logDebug((string) $status);
             return false;
         }
     }
@@ -144,6 +144,7 @@ class SenderApiClient
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Authorization: ' . $this->prefixAuth . $this->apiKey,
+            'Accept: application/json',
         ));
 
         curl_setopt($ch, CURLOPT_ENCODING, '');
@@ -184,7 +185,7 @@ class SenderApiClient
             $this->logDebug($connectionUrl . $requestConfig['method']);
             $this->logDebug('cURL Info: ' . json_encode(curl_getinfo($ch)));
             $this->logDebug($server_output);
-            $this->logDebug($status);
+            $this->logDebug((string) $status);
             curl_close($ch);
             return false;
         }
@@ -492,8 +493,11 @@ class SenderApiClient
         $data = [];
 
         $response = $this->makeApiRequest($requestConfig, $data);
+        if ($response){
+            return $response->data;
+        }
 
-        return $response->data;
+        return false;
     }
 
     public function addStore($data)
