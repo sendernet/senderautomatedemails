@@ -103,10 +103,10 @@ class SenderApiClient
                 return true;
             }
         }catch (Exception $e) {
-            $this->logDebug($this->generateAuthUrl());
-            $this->logDebug(json_encode('ch' . $ch));
-            $this->logDebug($server_output);
-            $this->logDebug((string) $status);
+            $this->logDebug($this->generateAuthUrl(), true);
+            $this->logDebug(json_encode('ch' . $ch), true);
+            $this->logDebug($server_output, true);
+            $this->logDebug((string) $status, true);
             return false;
         }
     }
@@ -182,10 +182,10 @@ class SenderApiClient
             curl_close($ch);
             return json_decode($server_output);
         } else {
-            $this->logDebug($connectionUrl . $requestConfig['method']);
-            $this->logDebug('cURL Info: ' . json_encode(curl_getinfo($ch)));
-            $this->logDebug($server_output);
-            $this->logDebug((string) $status);
+            $this->logDebug($connectionUrl . $requestConfig['method'], true);
+            $this->logDebug('cURL Info: ' . json_encode(curl_getinfo($ch)), true);
+            $this->logDebug($server_output, true);
+            $this->logDebug((string) $status, true);
             curl_close($ch);
             return false;
         }
@@ -528,7 +528,7 @@ class SenderApiClient
         }
     }
 
-    public function logDebug($message)
+    public function logDebug($message, $backoffice = false)
     {
         $this->debugLogger = new FileLogger(0);
         $rootPath = _PS_ROOT_DIR_ . __PS_BASE_URI__ . basename(_PS_MODULE_DIR_);

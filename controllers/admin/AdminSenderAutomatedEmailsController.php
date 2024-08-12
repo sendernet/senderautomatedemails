@@ -75,7 +75,6 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         $this->module->apiClient->setApiKey($apiKey);
 
         if ($this->module->apiClient->checkApiKey()) {
-            $this->module->logDebug('Connected to Sender. Got key: ' . $apiKey);
             $this->enableDefaults($apiKey);
             $this->addStore();
             // Redirect back to module admin page

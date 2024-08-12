@@ -41,12 +41,6 @@ class SenderAutomatedEmails extends Module
     public $senderApiClient = null;
 
     /**
-     * FileLogger instance
-     * @var object
-     */
-    private $debugLogger = null;
-
-    /**
      * Contructor function
      *
      */
@@ -483,11 +477,15 @@ class SenderAutomatedEmails extends Module
                 $this->logDebug("Order not found $order_id");
                 return;
             }
-            
+
+            $cartStatus = $order->hasBeenShipped()
+                ? 'SHIPPED'
+                : ($order->hasBeenPaid() ? 'PAID' : 'UNPAID');
+
             $data = [
                 'resource_key' => Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'),
                 'order_id' => $order_id,
-                'cart_status' => $order->hasBeenPaid() ? "PAID" : "UNPAID"
+                'cart_status' => $cartStatus
             ];
 
             $res = $this->senderApiClient()->cartUpdateStatus($data, $order->id_cart);
@@ -1155,12 +1153,7 @@ class SenderAutomatedEmails extends Module
     public function logDebug($message)
     {
         if ($this->debug) {
-            if (!$this->debugLogger) {
-                $this->debugLogger = new FileLogger(0);
-                $logFolder = '/log/sender_automated_emails_logs_';
-                $this->debugLogger->setFilename($this->module_path . $logFolder . date('Ymd') . '.log');
-            }
-            $this->debugLogger->logDebug($message);
+            $this->senderApiClient()->logDebug($message);
         }
     }
 
