@@ -581,7 +581,8 @@ class SenderAutomatedEmails extends Module
                     $linkRewrite,
                     $Product->getCoverWs(),
                     $imageType
-                )
+                ),
+                'description' => strip_tags($product['description_short']),
             );
             $result[] = $prod;
         }
