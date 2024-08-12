@@ -530,12 +530,23 @@ class SenderApiClient
 
     public function logDebug($message, $backoffice = false)
     {
-        $this->debugLogger = new FileLogger(0);
-        $rootPath = _PS_ROOT_DIR_ . __PS_BASE_URI__ . basename(_PS_MODULE_DIR_);
-        $logPath = '/senderautomatedemails/log/sender_automated_emails_logs_' . date('Ymd') . '.log';
-        $this->debugLogger->setFilename($rootPath . $logPath);
-        $this->debugLogger->logDebug($message);
-        $this->logDebugBackoffice($message);
+        try {
+            $debugLogger = new FileLogger(0);
+            $rootPath = _PS_ROOT_DIR_ . __PS_BASE_URI__ . basename(_PS_MODULE_DIR_);
+            $logPath = '/senderautomatedemails/log/sender_automated_emails_logs_' . date('Ymd') . '.log';
+            $logFilePath = $rootPath . $logPath;
+
+            if (is_writable(dirname($logFilePath))) {
+                $debugLogger->setFilename($logFilePath);
+                $debugLogger->logDebug($message);
+            }
+
+            if ($backoffice) {
+                $this->logDebugBackoffice($message);
+            }
+        } catch (Exception $e) {
+            PrestaShopLogger::addLog('Log error: ' . $e->getMessage(), 3);
+        }
     }
 
     public function logDebugBackoffice($message)
