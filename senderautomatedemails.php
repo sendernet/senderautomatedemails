@@ -690,12 +690,50 @@ class SenderAutomatedEmails extends Module
                 return;
             }
 
+            $orderDetails = [
+                'tax' => number_format(isset($order->total_paid_tax_incl) ? $order->total_paid_tax_incl - $order->total_paid_tax_excl : 0, 2),
+                'total' => number_format(isset($order->total_paid_tax_incl) ? $order->total_paid_tax_incl : 0, 2),
+                'discount' => number_format(isset($order->total_discounts) ? $order->total_discounts : 0, 2),
+                'subtotal' => number_format(isset($order->total_products) ? $order->total_products : 0, 2),
+                'order_date' => isset($order->date_add) ? date('d/m/Y', strtotime($order->date_add)) : null,
+            ];
+
+            $billingAddress = new Address((int)(isset($order->id_address_invoice) ? $order->id_address_invoice : 0));
+            $billing = [
+                'zip' => isset($billingAddress->postcode) ? $billingAddress->postcode : '',
+                'city' => isset($billingAddress->city) ? $billingAddress->city : '',
+                'state' => isset($billingAddress->state) ? $billingAddress->state : '',
+                'address' => (isset($billingAddress->address1) ? $billingAddress->address1 : '') . ' ' .
+                    (isset($billingAddress->address2) ? $billingAddress->address2 : ''),
+                'country' => isset($billingAddress->country) ? $billingAddress->country : '',
+                'last_name' => isset($billingAddress->lastname) ? $billingAddress->lastname : '',
+                'first_name' => isset($billingAddress->firstname) ? $billingAddress->firstname : '',
+            ];
+
+            $shippingAddress = new Address((int)(isset($order->id_address_delivery) ? $order->id_address_delivery : 0));
+            $shipping = [
+                'zip' => isset($shippingAddress->postcode) ? $shippingAddress->postcode : '',
+                'city' => isset($shippingAddress->city) ? $shippingAddress->city : '',
+                'state' => isset($shippingAddress->state) ? $shippingAddress->state : '',
+                'address' => (isset($shippingAddress->address1) ? $shippingAddress->address1 : '') . ' ' .
+                    (isset($shippingAddress->address2) ? $shippingAddress->address2 : ''),
+                'country' => isset($shippingAddress->country) ? $shippingAddress->country : '',
+                'last_name' => isset($shippingAddress->lastname) ? $shippingAddress->lastname : '',
+                'first_name' => isset($shippingAddress->firstname) ? $shippingAddress->firstname : '',
+                'payment_method' => isset($order->payment) ? $order->payment : '',
+                'shipping_charge' => number_format(isset($order->total_shipping) ? $order->total_shipping : 0, 2),
+            ];
+
+
             $dataConvert = [
                 'resource_key' => Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'),
                 'email' => strtolower($this->context->customer->email),
                 'firstname' => $this->context->customer->firstname,
                 'lastname' => $this->context->customer->lastname,
-                'products' => $this->mapProducts($order->getProducts())
+                'products' => $this->mapProducts($order->getProducts()),
+                'order_details' => $orderDetails,
+                'shipping' => $shipping,
+                'billing' => $billing,
             ];
 
             $list = Configuration::get('SPM_CUSTOMERS_LIST_ID');
