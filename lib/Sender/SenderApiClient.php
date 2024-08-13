@@ -131,7 +131,7 @@ class SenderApiClient
         #Forming data for curl request
         $formedData = [];
         if (!empty($data)) {
-            $formedData = http_build_query($data);
+            $formedData = json_encode($data);
         }
 
         if (isset($requestConfig['stats']) && $requestConfig['stats']){
@@ -145,13 +145,14 @@ class SenderApiClient
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Authorization: ' . $this->prefixAuth . $this->apiKey,
             'Accept: application/json',
+            'Content-Type: application/json',
         ));
 
         curl_setopt($ch, CURLOPT_ENCODING, '');
         curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 
         #Cases get, post
-        $httpMethod = $requestConfig['http'] ? $requestConfig['http'] : 'get';
+        $httpMethod = $requestConfig['http'] ?: 'get';
         switch ($httpMethod) {
             case "get":
                 curl_setopt($ch, CURLOPT_URL, $connectionUrl . $requestConfig['method'] . $this->limit);
