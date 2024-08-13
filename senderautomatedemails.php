@@ -482,6 +482,14 @@ class SenderAutomatedEmails extends Module
                 ? 'SHIPPED'
                 : ($order->hasBeenPaid() ? 'PAID' : 'UNPAID');
 
+            //Trigger convert cart
+            if($cartStatus === 'PAID'){
+                $context['order'] = $order;
+                $context['customer'] = $order->getCustomer();
+                $this->hookDisplayOrderConfirmation($context);
+                return;
+            }
+
             $data = [
                 'resource_key' => Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'),
                 'order_id' => $order_id,
@@ -681,7 +689,15 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
+        if (!$order->hasBeenPaid()){
+            return;
+        }
+
         try {
+            if (isset($context['customer'])){
+                $this->context->customer = $context['customer'];
+            }
+
             #Subscriber status check
             $subscriber = $this->senderApiClient()->isAlreadySubscriber(strtolower($this->context->customer->email));
             if (!$subscriber) {
@@ -728,7 +744,6 @@ class SenderAutomatedEmails extends Module
                 'email' => strtolower($this->context->customer->email),
                 'firstname' => $this->context->customer->firstname,
                 'lastname' => $this->context->customer->lastname,
-                'products' => $this->mapProducts($order->getProducts()),
                 'order_details' => $orderDetails,
                 'shipping' => $shipping,
                 'billing' => $billing,
