@@ -734,6 +734,7 @@ class SenderAutomatedEmails extends Module
                 'order_details' => $orderDetails,
                 'shipping' => $shipping,
                 'billing' => $billing,
+                'order_id' => (string)$order->id,
             ];
 
             $list = Configuration::get('SPM_CUSTOMERS_LIST_ID');
