@@ -103,10 +103,10 @@ class SenderApiClient
                 return true;
             }
         }catch (Exception $e) {
-            $this->logDebug($this->generateAuthUrl());
-            $this->logDebug(json_encode('ch' . $ch));
-            $this->logDebug($server_output);
-            $this->logDebug((string) $status);
+            $this->logDebug($this->generateAuthUrl(), true);
+            $this->logDebug(json_encode('ch' . $ch), true);
+            $this->logDebug($server_output, true);
+            $this->logDebug((string) $status, true);
             return false;
         }
     }
@@ -131,7 +131,7 @@ class SenderApiClient
         #Forming data for curl request
         $formedData = [];
         if (!empty($data)) {
-            $formedData = http_build_query($data);
+            $formedData = json_encode($data);
         }
 
         if (isset($requestConfig['stats']) && $requestConfig['stats']){
@@ -145,13 +145,14 @@ class SenderApiClient
         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
             'Authorization: ' . $this->prefixAuth . $this->apiKey,
             'Accept: application/json',
+            'Content-Type: application/json',
         ));
 
         curl_setopt($ch, CURLOPT_ENCODING, '');
         curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 
         #Cases get, post
-        $httpMethod = $requestConfig['http'] ? $requestConfig['http'] : 'get';
+        $httpMethod = $requestConfig['http'] ?: 'get';
         switch ($httpMethod) {
             case "get":
                 curl_setopt($ch, CURLOPT_URL, $connectionUrl . $requestConfig['method'] . $this->limit);
@@ -182,10 +183,10 @@ class SenderApiClient
             curl_close($ch);
             return json_decode($server_output);
         } else {
-            $this->logDebug($connectionUrl . $requestConfig['method']);
-            $this->logDebug('cURL Info: ' . json_encode(curl_getinfo($ch)));
-            $this->logDebug($server_output);
-            $this->logDebug((string) $status);
+            $this->logDebug($connectionUrl . $requestConfig['method'], true);
+            $this->logDebug('cURL Info: ' . json_encode(curl_getinfo($ch)), true);
+            $this->logDebug($server_output, true);
+            $this->logDebug((string) $status, true);
             curl_close($ch);
             return false;
         }
@@ -528,14 +529,25 @@ class SenderApiClient
         }
     }
 
-    public function logDebug($message)
+    public function logDebug($message, $backoffice = false)
     {
-        $this->debugLogger = new FileLogger(0);
-        $rootPath = _PS_ROOT_DIR_ . __PS_BASE_URI__ . basename(_PS_MODULE_DIR_);
-        $logPath = '/senderautomatedemails/log/sender_automated_emails_logs_' . date('Ymd') . '.log';
-        $this->debugLogger->setFilename($rootPath . $logPath);
-        $this->debugLogger->logDebug($message);
-        $this->logDebugBackoffice($message);
+        try {
+            $debugLogger = new FileLogger(0);
+            $rootPath = _PS_ROOT_DIR_ . __PS_BASE_URI__ . basename(_PS_MODULE_DIR_);
+            $logPath = '/senderautomatedemails/log/sender_automated_emails_logs_' . date('Ymd') . '.log';
+            $logFilePath = $rootPath . $logPath;
+
+            if (is_writable(dirname($logFilePath))) {
+                $debugLogger->setFilename($logFilePath);
+                $debugLogger->logDebug($message);
+            }
+
+            if ($backoffice) {
+                $this->logDebugBackoffice($message);
+            }
+        } catch (Exception $e) {
+            PrestaShopLogger::addLog('Log error: ' . $e->getMessage(), 3);
+        }
     }
 
     public function logDebugBackoffice($message)
