@@ -160,14 +160,13 @@ class SenderAutomatedEmails extends Module
                 }
             }
 
-            //Todo uninstall after branch pushed in git
-            $container = Context::getContext()->get('container');
-            $tabRepository = $container->get('prestashop.core.admin.tab.repository');
-
-            $tabId = $tabRepository->findOneIdByClassName("AdminSenderAutomatedEmails");
-            if ($tabId) {
-                $tab = new Tab($tabId);
-                $tab->delete();
+            $tabsArray = array();
+            $tabsArray[] = Tab::getIdFromClassName("AdminSenderAutomatedEmails");
+            foreach ($tabsArray as $tabId) {
+                if ($tabId) {
+                    $tab = new Tab($tabId);
+                    $tab->delete();
+                }
             }
         }
 
