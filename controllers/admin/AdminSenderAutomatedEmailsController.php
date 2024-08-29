@@ -163,21 +163,28 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         $customFieldsText = [];
         $customFieldsDatetime = [];
 
-        #Removing the default fields
-        $customFieldsToHide = ['email', 'firstname', 'lastname'];
-        foreach ($customFields as $key => $field) {
-            if (in_array(Tools::strtolower(str_replace(' ', '', $field->title)), $customFieldsToHide)) {
-                unset($customFields[$key]);
+        if (!empty($customFields)) {
+            #Removing the default fields
+            $customFieldsToHide = ['email', 'firstname', 'lastname'];
+            foreach ($customFields as $key => $field) {
+                if (in_array(Tools::strtolower(str_replace(' ', '', $field->title)), $customFieldsToHide)) {
+                    unset($customFields[$key]);
+                }
+            }
+
+            foreach ($customFields as $field) {
+                if ($field->type === 'text') {
+                    $customFieldsText[] = $field;
+                }
+                if ($field->type === 'datetime') {
+                    $customFieldsDatetime[] = $field;
+                }
             }
         }
 
-        foreach ($customFields as $field) {
-            if ($field->type === 'text') {
-                $customFieldsText[] = $field;
-            }
-            if ($field->type === 'datetime') {
-                $customFieldsDatetime[] = $field;
-            }
+        $account = $this->module->senderApiClient()->getCurrentAccount();
+        if (empty($account)){
+            $status = false;
         }
 
         $this->context->smarty->assign(array(
@@ -217,7 +224,9 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             'customFieldsDatetime' => $customFieldsDatetime,
             'syncedList' => Configuration::get('SPM_SENDERAPP_SYNC_LIST_DATE')
                 ? Configuration::get('SPM_SENDERAPP_SYNC_LIST_DATE') : '',
-        ));
+            'integration_status' => isset($status) ? $status : true,
+            'link' => $this->context->link,
+    ));
         #loading templates
         $output .= $this->context->smarty->fetch($this->module->views_url . '/templates/admin/view.tpl');
 

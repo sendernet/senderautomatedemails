@@ -237,8 +237,6 @@ class SenderAutomatedEmails extends Module
             $html .= "<script>
 			  sender('trackVisitors')
 			</script>";
-
-            $this->context->controller->addJS($this->module_path . '/js/trackVisitors.js');
         }
 
         if (isset($this->context->cookie->visitorData)) {
@@ -246,7 +244,11 @@ class SenderAutomatedEmails extends Module
             $this->context->smarty->assign('visitorData', $visitorData);
             $html .= $this->context->smarty->fetch($this->views_url . '/templates/front/trackVisitors.tpl');
 
-            $this->context->cookie->__unset('visitorData');
+            $currentTime = strtotime(date('Y-m-d H:i:s'));
+            $dateVisitorAdded = $visitorData['visitor_added_time'] + 1;
+            if ($dateVisitorAdded <= $currentTime) {
+                $this->context->cookie->__unset('visitorData');
+            }
         }
 
         return $html;
@@ -651,6 +653,7 @@ class SenderAutomatedEmails extends Module
         $this->context->cookie->__set('visitorData', json_encode([
             'email' => $customer->email,
             'resource_key' => Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'),
+            'visitor_added_time' => strtotime(date('Y-m-d H:i:s')),
         ]));
     }
 
