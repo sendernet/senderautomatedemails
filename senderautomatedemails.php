@@ -77,7 +77,7 @@ class SenderAutomatedEmails extends Module
     {
         $this->name = 'senderautomatedemails';
         $this->tab = 'emailing';
-        $this->version = '3.7.1';
+        $this->version = '3.7.2';
         $this->author = 'Sender.net';
         $this->author_uri = 'https://www.sender.net/';
         $this->need_instance = 0;
@@ -304,40 +304,6 @@ class SenderAutomatedEmails extends Module
 
         $this->logDebug('This is not a connected HUMAN!');
         return false;
-    }
-    /**
-     * Solution for validation. $_COOKIE not allowed in ps
-     * @return false|string
-     */
-    public function getSenderCookieFromHeader()
-    {
-        if ($this->visitorId) {
-            return $this->visitorId;
-        }
-
-        $allHeaders = getallheaders();
-        if (array_key_exists('Cookie', $allHeaders)) {
-            $onlyCookies = $allHeaders['Cookie'];
-
-            $senderCookiePos = strpos($onlyCookies, 'sender_site_visitor');
-            $fromSenderSiteVisitor = Tools::substr($onlyCookies, $senderCookiePos);
-
-            $posIqual = strpos($fromSenderSiteVisitor, '=');
-            $fromIqualSiteVisitor = Tools::substr($fromSenderSiteVisitor, $posIqual + 1);
-
-            if ($visitorString = strtok($fromIqualSiteVisitor, ';')) {
-                $this->visitorId = $visitorString;
-                return $this->visitorId;
-            }
-
-            #When sender cookie would be last on client list
-            if ($visitorString = strtok($fromIqualSiteVisitor, ' ')) {
-                $this->visitorId = $visitorString;
-                return $this->visitorId;
-            }
-
-            return false;
-        }
     }
 
     public function senderDisplayFooter()
@@ -690,7 +656,7 @@ class SenderAutomatedEmails extends Module
 
         if (
             !$order || !Configuration::get('SPM_ALLOW_TRACK_CARTS')
-            || !$this->getSenderCookieFromHeader()
+            || !$this->getConnectedClient()
         ) {
             return;
         }
