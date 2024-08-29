@@ -19,7 +19,7 @@ class SenderApiClient
 
     private $limit = '?limit=100';
     private $appUrl = 'https://app.sender.net';
-    private $senderStatsBaseUrl = 'https://stats.sender.net/';
+    private $senderStatsBaseUrl = 'https://stats.sender.net/commerce/';
 
     public function __construct($apiKey = null)
     {
@@ -103,10 +103,7 @@ class SenderApiClient
                 return true;
             }
         }catch (Exception $e) {
-            $this->logDebug($this->generateAuthUrl(), true);
-            $this->logDebug(json_encode('ch' . $ch), true);
-            $this->logDebug($server_output, true);
-            $this->logDebug((string) $status, true);
+            $this->logDebug($e->getMessage());
             return false;
         }
     }
@@ -192,11 +189,11 @@ class SenderApiClient
         }
     }
 
-    public function visitorRegistered($params)
+    public function createSubscriber($params)
     {
         $requestConfig = [
             'http' => 'post',
-            'method' => 'attach_visitor',
+            'method' => 'create_subscriber',
             'stats' => true,
         ];
 
@@ -285,7 +282,7 @@ class SenderApiClient
      * @param $cartId
      * @return array|false
      */
-    public function cartDelete($resourceKey, $cartId)
+    public function cartDelete($cartId)
     {
         $requestConfig = [
             'http' => 'delete',
@@ -294,7 +291,7 @@ class SenderApiClient
         ];
 
         $data = [
-            'resource_key' => $resourceKey
+            'resource_key' => Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')
         ];
 
         return $this->makeApiRequest($requestConfig, $data);
@@ -315,7 +312,9 @@ class SenderApiClient
 
         $response = $this->makeApiRequest($requestConfig, $data);
 
-        return $response->data;
+        if ($response) {
+            return $response->data;
+        }
     }
 
     /**
@@ -355,7 +354,9 @@ class SenderApiClient
 
         $response = $this->makeApiRequest($requestConfig, $data);
 
-        return $response->data;
+        if ($response) {
+            return $response->data;
+        }
     }
 
     /**
