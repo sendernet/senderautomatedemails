@@ -1110,14 +1110,6 @@ class SenderAutomatedEmails extends Module
             $this->senderApiClient->setApiKey(Configuration::get('SPM_API_KEY'));
         }
 
-        // Check if key is valid
-        if (!$this->senderApiClient->checkApiKey()) {
-            // Disable module
-            $this->disableModule();
-
-            return $this->senderApiClient;
-        }
-
         return $this->senderApiClient;
     }
 }

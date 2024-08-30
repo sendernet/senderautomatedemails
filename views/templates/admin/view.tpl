@@ -132,6 +132,7 @@
                                           method="post" style="margin-bottom: 20px;">
                                         <div class="form-group">
                                             <label for="apiKey">{l s='API access token:' mod='senderautomatedemails'}</label>
+                                            <input type="hidden" name="sender_reconnect" value="true">
                                             <input type="text" id="apiKey" name="apiKey"
                                                    placeholder="{l s='Paste here the new API token to reconnect' mod='senderautomatedemails'}"
                                                    required class="form-control">

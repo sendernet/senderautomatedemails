@@ -52,7 +52,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             $this->disconnect();
         }
 
-        if (!empty(Configuration::get('SPM_API_KEY'))) {
+        if (!empty(Configuration::get('SPM_API_KEY')) && !Tools::getIsset('sender_reconnect')) {
             return $this->renderConfigurationMenu();
         }
 
