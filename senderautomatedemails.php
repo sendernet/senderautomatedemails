@@ -297,11 +297,9 @@ class SenderAutomatedEmails extends Module
     {
         $context = Context::getContext();
         if (isset($context->customer) && !empty($context->customer->email)){
-            $this->logDebug('THIS IS A CONNECTED HUMAN ' . $context->customer->email);
             return true;
         }
 
-        $this->logDebug('This is not a connected HUMAN!');
         return false;
     }
 
