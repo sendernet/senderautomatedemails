@@ -53,7 +53,7 @@ class SenderAutomatedEmails extends Module
         'SPM_SENDERAPP_STORE_ID' => null
     ];
 
-    private $debug = true;
+    private $debug = false;
     public $senderApiClient = null;
 
     public $views_url;
@@ -394,7 +394,6 @@ class SenderAutomatedEmails extends Module
      */
     public function hookActionObjectCartUpdateAfter($context)
     {
-        $this->logDebug('hookActionObjectCartUpdateAfter');
         if (!$this->isModuleActive() || !Validate::isLoadedObject($context['cart'])) {
             return;
         }
@@ -432,8 +431,6 @@ class SenderAutomatedEmails extends Module
      */
     public function hookActionOrderHistoryAddAfter($context)
     {
-        $this->logDebug(__FUNCTION__);
-
         if(!Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
             return;
         }
