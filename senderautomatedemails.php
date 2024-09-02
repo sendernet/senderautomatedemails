@@ -56,9 +56,9 @@ class SenderAutomatedEmails extends Module
     private $debug = true;
     public $senderApiClient = null;
 
-    public string $views_url;
-    public string $module_url;
-    public string $module_path;
+    public $views_url;
+    public $module_url;
+    public $module_path;
 
     /**
      * Contructor function
