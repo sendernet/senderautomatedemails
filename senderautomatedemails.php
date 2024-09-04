@@ -31,17 +31,34 @@ class SenderAutomatedEmails extends Module
      * Default settings array
      * @var array
      */
-    private $defaultSettings = array();
+    private $defaultSettings = [
+        'SPM_API_KEY' => '',
+        'SPM_IS_MODULE_ACTIVE' => 0,
+        'SPM_LAST_ACTIVE_ACCOUNT' => 0,
+        'SPM_ALLOW_FORMS' => 0,
+        'SPM_ALLOW_IMPORT' => 0,
+        'SPM_ALLOW_TRACK_NEW_SIGNUPS' => 0,
+        'SPM_ALLOW_TRACK_CARTS' => 0,
+        'SPM_CUSTOMERS_LIST_ID' => 0,
+        'SPM_CUSTOMERS_LIST_NAME' => null,
+        'SPM_GUEST_LIST_ID' => 0,
+        'SPM_GUEST_LIST_NAME' => null,
+        'SPM_FORM_ID' => 0,
+        'SPM_CUSTOMER_FIELD_LOCATION' => 0,
+        'SPM_CUSTOMER_FIELD_BIRTHDAY' => 0,
+        'SPM_CUSTOMER_FIELD_GENDER' => 0,
+        'SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID' => 0,
+        'SPM_SENDERAPP_SYNC_LIST_ID' => 0,
+        'SPM_SENDERAPP_RESOURCE_KEY_CLIENT' => 0,
+        'SPM_SENDERAPP_STORE_ID' => null
+    ];
 
-    private $debug = true;
-
-    private $visitorId;
-
-    /**
-     * Sender.net API client
-     * @var object
-     */
+    private $debug = false;
     public $senderApiClient = null;
+
+    public $views_url;
+    public $module_url;
+    public $module_path;
 
     /**
      * Contructor function
@@ -50,7 +67,6 @@ class SenderAutomatedEmails extends Module
     public function __construct()
     {
         $this->senderDetails();
-        $this->senderDefaultSettings();
         $this->senderDirectories();
 
         parent::__construct();
@@ -61,7 +77,7 @@ class SenderAutomatedEmails extends Module
     {
         $this->name = 'senderautomatedemails';
         $this->tab = 'emailing';
-        $this->version = '3.7.1';
+        $this->version = '3.7.2';
         $this->author = 'Sender.net';
         $this->author_uri = 'https://www.sender.net/';
         $this->need_instance = 0;
@@ -75,31 +91,6 @@ class SenderAutomatedEmails extends Module
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall?');
     }
 
-    public function senderDefaultSettings()
-    {
-        $this->defaultSettings = array(
-            'SPM_API_KEY' => '',
-            'SPM_IS_MODULE_ACTIVE' => 0,
-            'SPM_LAST_ACTIVE_ACCOUNT' => 0,
-            'SPM_ALLOW_FORMS' => 0,
-            'SPM_ALLOW_IMPORT' => 0,
-            'SPM_ALLOW_TRACK_NEW_SIGNUPS' => 0, # Always enabled, use customers tracking instead
-            'SPM_ALLOW_TRACK_CARTS' => 0, # <- Allow customers track
-            'SPM_CUSTOMERS_LIST_ID' => 0,
-            'SPM_CUSTOMERS_LIST_NAME' => null,
-            'SPM_GUEST_LIST_ID' => 0,
-            'SPM_GUEST_LIST_NAME' => null,
-            'SPM_FORM_ID' => 0,
-            'SPM_CUSTOMER_FIELD_LOCATION' => 0,
-            'SPM_CUSTOMER_FIELD_BIRTHDAY' => 0,
-            'SPM_CUSTOMER_FIELD_GENDER' => 0,
-            'SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID' => 0,
-            'SPM_SENDERAPP_SYNC_LIST_ID' => 0,
-            'SPM_SENDERAPP_RESOURCE_KEY_CLIENT' => 0,
-            'SPM_SENDERAPP_STORE_ID' => null
-        );
-    }
-
     public function senderDirectories()
     {
         $this->views_url = _PS_ROOT_DIR_ . '/' . basename(_PS_MODULE_DIR_) . '/' . $this->name . '/views';
@@ -108,8 +99,6 @@ class SenderAutomatedEmails extends Module
     }
 
     /**
-     * Handle module installation
-     *
      * @return bool
      */
     public function install()
@@ -159,8 +148,6 @@ class SenderAutomatedEmails extends Module
     }
 
     /**
-     * Handle uninstall
-     *
      * @return bool
      */
     public function uninstall()
@@ -250,6 +237,19 @@ class SenderAutomatedEmails extends Module
 			  sender('trackVisitors')
 			</script>";
         }
+
+        if (isset($this->context->cookie->visitorData)) {
+            $visitorData = json_decode($this->context->cookie->visitorData, true);
+            $this->context->smarty->assign('visitorData', $visitorData);
+            $html .= $this->context->smarty->fetch($this->views_url . '/templates/front/trackVisitors.tpl');
+
+            $currentTime = strtotime(date('Y-m-d H:i:s'));
+            $dateVisitorAdded = $visitorData['visitor_added_time'] + 1;
+            if ($dateVisitorAdded <= $currentTime) {
+                $this->context->cookie->__unset('visitorData');
+            }
+        }
+
         return $html;
     }
 
@@ -293,39 +293,14 @@ class SenderAutomatedEmails extends Module
         return $this->senderDisplayFooter();
     }
 
-    /**
-     * Solution for validation. $_COOKIE not allowed in ps
-     * @return false|string
-     */
-    public function getSenderCookieFromHeader()
+    public function getConnectedClient()
     {
-        if ($this->visitorId) {
-            return $this->visitorId;
+        $context = Context::getContext();
+        if (isset($context->customer) && !empty($context->customer->email)){
+            return true;
         }
 
-        $allHeaders = getallheaders();
-        if (array_key_exists('Cookie', $allHeaders)) {
-            $onlyCookies = $allHeaders['Cookie'];
-
-            $senderCookiePos = strpos($onlyCookies, 'sender_site_visitor');
-            $fromSenderSiteVisitor = Tools::substr($onlyCookies, $senderCookiePos);
-
-            $posIqual = strpos($fromSenderSiteVisitor, '=');
-            $fromIqualSiteVisitor = Tools::substr($fromSenderSiteVisitor, $posIqual + 1);
-
-            if ($visitorString = strtok($fromIqualSiteVisitor, ';')) {
-                $this->visitorId = $visitorString;
-                return $this->visitorId;
-            }
-
-            #When sender cookie would be last on client list
-            if ($visitorString = strtok($fromIqualSiteVisitor, ' ')) {
-                $this->visitorId = $visitorString;
-                return $this->visitorId;
-            }
-
-            return false;
-        }
+        return false;
     }
 
     public function senderDisplayFooter()
@@ -387,9 +362,6 @@ class SenderAutomatedEmails extends Module
         }
     }
 
-    /**
-     * @return void
-     */
     public function hookActionAuthentication()
     {
         if (!$this->isModuleActive()) {
@@ -422,12 +394,11 @@ class SenderAutomatedEmails extends Module
      */
     public function hookActionObjectCartUpdateAfter($context)
     {
-        $this->logDebug('hookActionObjectCartUpdateAfter');
         if (!$this->isModuleActive() || !Validate::isLoadedObject($context['cart'])) {
             return;
         }
 
-        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS') || !$this->getSenderCookieFromHeader()) {
+        if (!Configuration::get('SPM_ALLOW_TRACK_CARTS') || !$this->getConnectedClient()) {
             return;
         }
 
@@ -460,8 +431,6 @@ class SenderAutomatedEmails extends Module
      */
     public function hookActionOrderHistoryAddAfter($context)
     {
-        $this->logDebug(__FUNCTION__);
-
         if(!Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
             return;
         }
@@ -506,7 +475,7 @@ class SenderAutomatedEmails extends Module
      */
     private function syncCart($cart)
     {
-        $cartData = $this->mapCartData($cart, $this->getSenderCookieFromHeader());
+        $cartData = $this->mapCartData($cart);
         if (isset($cartData) && !empty($cartData['products'])) {
 
             $response = $this->senderApiClient()->trackCart($cartData);
@@ -517,7 +486,7 @@ class SenderAutomatedEmails extends Module
             $this->context->cookie->__set('sender-captured-cart', strtotime(date('Y-m-d H:i:s')));
             $this->context->cookie->write();
         } else {
-            $this->senderApiClient()->cartDelete(Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'), $cart->id);
+            $this->senderApiClient()->cartDelete($cart->id);
             $this->context->cookie->__set('sender-deleted-cart', true);
         }
         $this->context->cookie->write();
@@ -525,16 +494,14 @@ class SenderAutomatedEmails extends Module
 
     /**
      * @param $cart
-     * @param $visitorId
      * @return array|void
      */
-    private function mapCartData($cart, $visitorId)
+    private function mapCartData($cart)
     {
         $this->logDebug(json_encode($cart));
         $cartHash = $cart->id;
         $data = array(
             "email" => $this->context->cookie->__get('email') ? $this->context->cookie->__get('email') : '',
-            'visitor_id' => $visitorId,
             "external_id" => $cartHash,
             "url" => _PS_BASE_URL_ . __PS_BASE_URI__
                 . 'index.php?fc=module&module='
@@ -544,7 +511,8 @@ class SenderAutomatedEmails extends Module
             "order_total" => isset($cart->total_paid_tax_incl) ?
                 $cart->total_paid_tax_incl : (string)$cart->getOrderTotal(),
             "store_id" => Configuration::get('SPM_SENDERAPP_STORE_ID'),
-            "products" => array()
+            "products" => array(),
+            "resource_key" => Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'),
         );
 
         $products = $cart->getProducts();
@@ -608,16 +576,13 @@ class SenderAutomatedEmails extends Module
             }
         }
 
-        if (!$visitorId = $this->getSenderCookieFromHeader()) {
-            return;
-        }
-
         $visitorRegistration = [
             'email' => $customer->email,
             'firstname' => $customer->firstname,
             'lastname' => $customer->lastname,
-            'visitor_id' => $visitorId,
-            'newsletter' => $customer->newsletter
+            'newsletter' => $customer->newsletter,
+            'resource_key' => Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'),
+            'store_id' => Configuration::get('SPM_SENDERAPP_STORE_ID'),
         ];
 
         if ($addToList) {
@@ -630,7 +595,7 @@ class SenderAutomatedEmails extends Module
             }
         }
 
-        $this->senderApiClient()->visitorRegistered($visitorRegistration);
+        $this->senderApiClient()->createSubscriber($visitorRegistration);
 
         if (!$subscriber = $this->senderApiClient()->isAlreadySubscriber(strtolower($customer->email))) {
             return;
@@ -644,6 +609,12 @@ class SenderAutomatedEmails extends Module
 
         $this->context->cookie->__set('sender-added-visitor', strtotime(date('Y-m-d H:i:s')));
         $this->context->cookie->write();
+
+        $this->context->cookie->__set('visitorData', json_encode([
+            'email' => $customer->email,
+            'resource_key' => Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'),
+            'visitor_added_time' => strtotime(date('Y-m-d H:i:s')),
+        ]));
     }
 
     /**
@@ -679,7 +650,7 @@ class SenderAutomatedEmails extends Module
 
         if (
             !$order || !Configuration::get('SPM_ALLOW_TRACK_CARTS')
-            || !$this->getSenderCookieFromHeader()
+            || !$this->getConnectedClient()
         ) {
             return;
         }
@@ -932,18 +903,6 @@ class SenderAutomatedEmails extends Module
     }
 
     /**
-     * @param string $channel
-     * @param $subscriber
-     * @return string|null
-     */
-    public function getChannelStatus($channel, $subscriber)
-    {
-        $this->logDebug(__FUNCTION__);
-        $this->logDebug($subscriber->status);
-        return $subscriber->status->$channel ? $subscriber->status->$channel : false;
-    }
-
-    /**
      * @param $customer
      * @return array
      */
@@ -1095,34 +1054,6 @@ class SenderAutomatedEmails extends Module
     }
 
     /**
-     * @param array $array
-     * @param $glue
-     * @param $include_keys
-     * @return string
-     */
-    public function recursiveImplode(array $array, $glue = ',', $include_keys = false)
-    {
-        $glued_string = '';
-
-        // Recursively iterates array and adds key/value to glued string
-        array_walk_recursive($array, function ($value, $key) use ($glue, $include_keys, &$glued_string) {
-            $include_keys and $glued_string .= $key . $glue;
-
-            if ($key == 'lastname') {
-                $glued_string .= $value;
-                $glued_string .= PHP_EOL;
-            } else {
-                $glued_string .= $value . $glue;
-            }
-        });
-        // Removes last $glue from string
-        Tools::strlen($glue) > 0 and $glued_string = Tools::substr($glued_string, 0, -Tools::strlen($glue));
-
-        $result = str_replace('{"subscribers":', '', $glued_string);
-        return (string)$result;
-    }
-
-    /**
      * Add Module Settings tab to the sidebar
      */
     private function addTabs()
@@ -1172,14 +1103,6 @@ class SenderAutomatedEmails extends Module
         if (!$this->senderApiClient) {
             $this->senderApiClient = new SenderApiClient();
             $this->senderApiClient->setApiKey(Configuration::get('SPM_API_KEY'));
-        }
-
-        // Check if key is valid
-        if (!$this->senderApiClient->checkApiKey()) {
-            // Disable module
-            $this->disableModule();
-
-            return $this->senderApiClient;
         }
 
         return $this->senderApiClient;

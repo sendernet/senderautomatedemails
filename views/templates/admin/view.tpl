@@ -78,27 +78,36 @@
                 <div class="panel-heading">
                     <i class="zmdi zmdi-notifications-active"></i>
                     {l s='Plugin status is' mod='senderautomatedemails'}
-                    <span style="color:#ff8d00;">{l s='ACTIVE' mod='senderautomatedemails'}</span>
+                    {if $integration_status}
+                        <span style="color:#ff8d00;">{l s='ACTIVE' mod='senderautomatedemails'}</span>
+                    {else}
+                        <span style="color:#ff0000;">{l s='INACTIVE' mod='senderautomatedemails'}</span>
+                    {/if}
                 </div>
+
                 <div class="panel-body">
                     <div class="spm-details-settings">
                         <table class="table" style="margin-bottom: 25px;">
-                            <tr>
-                                <td>
-                                    {l s='Account:' mod='senderautomatedemails'}
-                                </td>
-                                <td>
-                                    <strong>{$connectedAccount->title|escape:'htmlall':'UTF-8'}</strong>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    {l s='User email:' mod='senderautomatedemails'}
-                                </td>
-                                <td>
-                                    <strong>{$connectedUser->email|escape:'htmlall':'UTF-8'}</strong>
-                                </td>
-                            </tr>
+                            {if !empty($connectedAccount)}
+                                <tr>
+                                    <td>
+                                        {l s='Account:' mod='senderautomatedemails'}
+                                    </td>
+                                    <td>
+                                        <strong>{$connectedAccount->title|escape:'htmlall':'UTF-8'}</strong>
+                                    </td>
+                                </tr>
+                            {/if}
+                            {if !empty($connectedUser)}
+                                <tr>
+                                    <td>
+                                        {l s='User email:' mod='senderautomatedemails'}
+                                    </td>
+                                    <td>
+                                        <strong>{$connectedUser->email|escape:'htmlall':'UTF-8'}</strong>
+                                    </td>
+                                </tr>
+                            {/if}
                             <tr>
                                 <td>
                                     {l s='Api key:' mod='senderautomatedemails'}
@@ -110,9 +119,39 @@
                                 </td>
                             </tr>
                         </table>
+                        {if $integration_status}
                         <a href="{$disconnectUrl|escape:'htmlall':'UTF-8'}" class="btn btn-lg btn-sender">
                             {l s='Disconnect' mod='senderautomatedemails'}
                         </a>
+                        {else}
+                            <span style="color:#ff0000;">{l s='INACTIVE' mod='senderautomatedemails'}</span>
+                            <!-- Show reconnect form when INACTIVE -->
+                            <div class="row">
+                                <div class="col-xs-12" style="padding: 10px;">
+                                    <form action="{$link->getAdminLink('AdminSenderAutomatedEmails')|escape:'htmlall':'UTF-8'}"
+                                          method="post" style="margin-bottom: 20px;">
+                                        <div class="form-group">
+                                            <label for="apiKey">{l s='API access token:' mod='senderautomatedemails'}</label>
+                                            <input type="hidden" name="sender_reconnect" value="true">
+                                            <input type="text" id="apiKey" name="apiKey"
+                                                   placeholder="{l s='Paste here the new API token to reconnect' mod='senderautomatedemails'}"
+                                                   required class="form-control">
+                                        </div>
+                                        <input type="submit" value="{l s='Reconnect' mod='senderautomatedemails'}"
+                                               name="actionApiKey" class="btn btn-lg btn-sender" style="color: #fff;">
+                                    </form>
+                                    <div class="row" style="margin-top: 20px;">
+                                        <div class="col-xs-12">
+                                            <p>{l s='To disconnect the sender store, click the button below:' mod='senderautomatedemails'}</p>
+                                            <a href="{$disconnectUrl|escape:'htmlall':'UTF-8'}"
+                                               class="btn btn-lg btn-sender">
+                                                {l s='Disconnect' mod='senderautomatedemails'}
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {/if}
                     </div>
                 </div>
             </div>
