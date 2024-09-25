@@ -180,10 +180,12 @@ class SenderApiClient
             curl_close($ch);
             return json_decode($server_output);
         } else {
-            $this->logDebug($connectionUrl . $requestConfig['method'], true);
-            $this->logDebug('cURL Info: ' . json_encode(curl_getinfo($ch)), true);
-            $this->logDebug($server_output, true);
-            $this->logDebug((string) $status, true);
+            $this->logDebug("Request: {$connectionUrl} {$requestConfig['method']}, Response: {$server_output}, Status: {$status}", true);
+
+            if ($status === 500) {
+                $this->logDebug('cURL Info: ' . json_encode(curl_getinfo($ch)), true);
+            }
+
             curl_close($ch);
             return false;
         }
