@@ -180,7 +180,7 @@ class SenderApiClient
             curl_close($ch);
             return json_decode($server_output);
         } else {
-            $this->logDebug("Request: {$connectionUrl} {$requestConfig['method']}, Response: {$server_output}, Status: {$status}", true);
+            $this->logDebug("Request: {$connectionUrl}{$requestConfig['method']}, Response: {$server_output}, Status: {$status}", true);
 
             if ($status === 500) {
                 $this->logDebug('cURL Info: ' . json_encode(curl_getinfo($ch)), true);
@@ -556,6 +556,6 @@ class SenderApiClient
     public function logDebugBackoffice($message)
     {
         //Using 3 as severity to display in backoffice logs as error type
-        PrestaShopLogger::addLog($message, 3);
+        PrestaShopLogger::addLog($message, 1);
     }
 }
