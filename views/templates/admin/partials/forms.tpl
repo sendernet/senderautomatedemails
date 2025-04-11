@@ -87,13 +87,15 @@
             <div class="panel-body" style="padding-top: 0!important;">
                 <blockquote>
                     <p>
-                        {l s='If selected option would be ' mod='senderautomatedemails'}
-                        <strong>Pop-up forms</strong>
-                        <strong>Spin-to-win wheel</strong>
-                        {l s='Choose the pop-up or spin-to-win wheel form to show in you sender.net application' mod='senderautomatedemails'}
+                        {l
+                        s='To display a form on your website, this option must be enabled. If you want to show an Embed form, select it from the dropdown above. If you want to show a Pop-up or Spin-to-win wheel form, you must select it from your Sender.net account.'
+                        mod='senderautomatedemails'}
                     </p>
+
                     <p>
-                        {l s='To avoid pop-up or spin-to-win wheel form from showing, they must be hidden to show on this website. To hide pop-up or spin-to-win wheel form, go to your Sender account, Forms.' mod='senderautomatedemails'}
+                        {l
+                        s='To prevent Pop-up or Spin-to-win wheel forms from showing, they must be hidden in your Sender.net account under the Forms section.'
+                        mod='senderautomatedemails'}
                     </p>
                 </blockquote>
             </div>
