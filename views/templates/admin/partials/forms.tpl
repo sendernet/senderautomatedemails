@@ -89,10 +89,11 @@
                     <p>
                         {l s='If selected option would be ' mod='senderautomatedemails'}
                         <strong>Pop-up forms</strong>
-                        {l s='Choose the pop-up form to show in you sender.net application' mod='senderautomatedemails'}
+                        <strong>Spin-to-win wheel</strong>
+                        {l s='Choose the pop-up or spin-to-win wheel form to show in you sender.net application' mod='senderautomatedemails'}
                     </p>
                     <p>
-                        {l s='To avoid pop-up form from showing, they must be hidden to show on this website. To hide pop-up forms, go to your Sender account, Forms.' mod='senderautomatedemails'}
+                        {l s='To avoid pop-up or spin-to-win wheel form from showing, they must be hidden to show on this website. To hide pop-up or spin-to-win wheel form, go to your Sender account, Forms.' mod='senderautomatedemails'}
                     </p>
                 </blockquote>
             </div>
