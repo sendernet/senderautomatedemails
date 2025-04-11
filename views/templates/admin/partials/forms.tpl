@@ -64,18 +64,17 @@
                             {l s='Select form' mod='senderautomatedemails'}
                         </label>
                         <select {if not $allowForms}disabled{/if} class="sender-lists" id="swFormsSelect" name="swFormsSelect">
-                            <option value="0">
-                                {l s='Pop-up form' mod='senderautomatedemails'}
-                            </option>
-                            <option value="" disabled>
-                                {l s='Embed forms' mod='senderautomatedemails'}
-                            </option>
                             {foreach $allForms as $form}
                                 {if $form->type === 'embed'}
-                                <option {if $form->id eq $formId}selected="selected"{/if}value="{$form->id|escape:'htmlall':'UTF-8'}"
-                                        {if !$form->is_active} disabled{/if}>
-                                    {$form->title|escape:'htmlall':'UTF-8'} {if !$form->is_active} <strong>| {l s='Form not active' mod='senderautomatedemails'}</strong>  {/if}
-                                </option>
+                                    <option
+                                            value="{$form->id|escape:'htmlall':'UTF-8'}"
+                                            {if $form->id eq $formId}selected="selected"{/if}
+                                            {if !$form->is_active} disabled{/if}>
+                                        {$form->title|escape:'htmlall':'UTF-8'}
+                                        {if !$form->is_active}
+                                            <strong>| {l s='Form not active' mod='senderautomatedemails'}</strong>
+                                        {/if}
+                                    </option>
                                 {/if}
                             {/foreach}
                         </select>
