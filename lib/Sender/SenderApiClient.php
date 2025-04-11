@@ -17,7 +17,7 @@ class SenderApiClient
     protected $prefixAuth = 'Bearer ';
     protected $apiKey;
 
-    private $limit = '?limit=100';
+    private $limit = 'limit=100';
     private $appUrl = 'https://app.sender.net';
     private $senderStatsBaseUrl = 'https://stats.sender.net/commerce/';
 
@@ -152,7 +152,9 @@ class SenderApiClient
         $httpMethod = $requestConfig['http'] ?: 'get';
         switch ($httpMethod) {
             case "get":
-                curl_setopt($ch, CURLOPT_URL, $connectionUrl . $requestConfig['method'] . $this->limit);
+                $limitPrefix = (strpos($requestConfig['method'], '?') !== false) ? '&' : '?';
+                $limitParam = $limitPrefix . $this->limit;
+                curl_setopt($ch, CURLOPT_URL, $connectionUrl . $requestConfig['method'] . $limitParam);
                 curl_setopt($ch, CURLOPT_HTTPGET, 1);
                 break;
             case "post":
@@ -307,7 +309,7 @@ class SenderApiClient
     {
         $requestConfig = [
             "http" => 'get',
-            "method" => "forms",
+            "method" => "forms?type=embed",
         ];
 
         $data = [];
