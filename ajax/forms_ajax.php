@@ -29,9 +29,9 @@ switch (Tools::getValue('action')) {
         die(json_encode(['result' => false]));
 
     case 'saveFormId':
-        $formId = (int)Tools::getValue('form_id');
+        $formId = Tools::getValue('form_id');
 
-        if ($formId > 0) {
+        if (!empty($formId)) {
             if (Configuration::updateValue('SPM_FORM_ID', $formId)) {
                 $senderautomatedemails->resetSenderFormCache();
                 die(json_encode(['result' => true]));
