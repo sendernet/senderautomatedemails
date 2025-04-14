@@ -77,7 +77,7 @@ class SenderAutomatedEmails extends Module
     {
         $this->name = 'senderautomatedemails';
         $this->tab = 'emailing';
-        $this->version = '3.7.4';
+        $this->version = '3.7.5';
         $this->author = 'Sender.net';
         $this->author_uri = 'https://www.sender.net/';
         $this->need_instance = 0;
@@ -194,10 +194,7 @@ class SenderAutomatedEmails extends Module
 
     public function isModuleActive()
     {
-        if (!Configuration::get('SPM_IS_MODULE_ACTIVE')) {
-            return false;
-        }
-        return true;
+        return (bool) Configuration::get('SPM_IS_MODULE_ACTIVE');
     }
 
     public function hookDisplayHeader()
@@ -275,7 +272,7 @@ class SenderAutomatedEmails extends Module
      */
     public function hookDisplayFooterBefore()
     {
-        if (!$this->isModuleActive()) {
+        if (!$this->isModuleActive() || $this->isAdminContext()) {
             return;
         }
         return $this->senderDisplayFooter();
@@ -287,7 +284,7 @@ class SenderAutomatedEmails extends Module
      */
     public function hookDisplayFooter()
     {
-        if (!$this->isModuleActive()) {
+        if (!$this->isModuleActive() || $this->isAdminContext()) {
             return;
         }
         return $this->senderDisplayFooter();
@@ -303,29 +300,58 @@ class SenderAutomatedEmails extends Module
         return false;
     }
 
+    protected function isAdminContext()
+    {
+        return Tools::getValue('controller') && stripos(Tools::getValue('controller'), 'admin') !== false;
+    }
+
     public function senderDisplayFooter()
     {
         $options = [
-            'showForm' => false
+            'showForm' => false,
+            'formUrl' => '',
+            'embedHash' => ''
         ];
 
         if (!Configuration::get('SPM_ALLOW_FORMS') || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
             return;
         }
 
-        $form = $this->senderApiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
-        #Check if form is disabled or pop-up
-        if (!$form || !$form->is_active || $form->type != 'embed') {
+        $cacheTTL = 86400;
+        $cachedForm = Configuration::get('SPM_CACHED_FORM');
+        $lastUpdated = (int) Configuration::get('SPM_CACHED_FORM_UPDATED');
+        $cacheIsExpired = !$cachedForm || !$lastUpdated || (time() - $lastUpdated > $cacheTTL);
+
+        if ($cacheIsExpired) {
+            $form = $this->senderApiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
+
+            if (!$form || !$form->is_active || $form->type !== 'embed') {
+                return;
+            }
+
+            $cachedData = [
+                'formUrl' => isset($form->settings->resource_path) ? $form->settings->resource_path : '',
+                'embedHash' => isset($form->settings->embed_hash) ? $form->settings->embed_hash : ''
+            ];
+
+            Configuration::updateValue('SPM_CACHED_FORM', json_encode($cachedData));
+            Configuration::updateValue('SPM_CACHED_FORM_UPDATED', time());
+        } else {
+            $cachedData = json_decode($cachedForm, true);
+
+            if (!is_array($cachedData)) {
+                $this->resetSenderFormCache();
+                return;
+            }
+        }
+
+        if (!isset($cachedData['formUrl']) || !isset($cachedData['embedHash'])) {
             return;
         }
 
-        if ($form->type === 'embed') {
-            $embedHash = $form->settings->embed_hash;
-        }
-        // Add forms
-        $options['formUrl'] = isset($form->settings->resource_path) ? $form->settings->resource_path : '';
         $options['showForm'] = true;
-        $options['embedHash'] = isset($embedHash) ? $embedHash : '';
+        $options['formUrl'] = $cachedData['formUrl'];
+        $options['embedHash'] = $cachedData['embedHash'];
 
         $this->context->smarty->assign($options);
         return $this->context->smarty->fetch($this->views_url . '/templates/front/form.tpl');
@@ -1106,5 +1132,11 @@ class SenderAutomatedEmails extends Module
         }
 
         return $this->senderApiClient;
+    }
+
+    public function resetSenderFormCache()
+    {
+        Configuration::deleteByName('SPM_CACHED_FORM');
+        Configuration::deleteByName('SPM_CACHED_FORM_UPDATED');
     }
 }

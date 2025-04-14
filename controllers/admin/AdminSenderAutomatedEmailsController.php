@@ -295,6 +295,8 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         Configuration::updateValue('SPM_CUSTOMER_FIELD_FIRSTNAME', 0);
         Configuration::updateValue('SPM_CUSTOMER_FIELD_LASTNAME', 0);
         Configuration::updateValue('SPM_FORM_ID', 0);
+        Configuration::deleteByName('SPM_CACHED_FORM');
+        Configuration::deleteByName('SPM_CACHED_FORM_UPDATED');
     }
 
     /**

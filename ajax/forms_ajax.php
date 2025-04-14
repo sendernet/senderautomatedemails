@@ -23,6 +23,7 @@ if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->na
 switch (Tools::getValue('action')) {
     case 'saveAllowForms':
         if (Configuration::updateValue('SPM_ALLOW_FORMS', !Configuration::get('SPM_ALLOW_FORMS'))) {
+            $senderautomatedemails->resetSenderFormCache();
             die(json_encode(['result' => Configuration::get('SPM_ALLOW_FORMS')]));
         }
         die(json_encode(['result' => false]));
@@ -32,6 +33,7 @@ switch (Tools::getValue('action')) {
 
         if ($formId > 0) {
             if (Configuration::updateValue('SPM_FORM_ID', $formId)) {
+                $senderautomatedemails->resetSenderFormCache();
                 die(json_encode(['result' => true]));
             }
         }
