@@ -732,6 +732,7 @@ class SenderAutomatedEmails extends Module
                 'shipping' => $shipping,
                 'billing' => $billing,
                 'order_id' => (string)$order->id,
+                'phone' => !empty($billingAddress->phone_mobile) ? $billingAddress->phone_mobile : $billingAddress->phone,
             ];
 
             $list = Configuration::get('SPM_CUSTOMERS_LIST_ID');
