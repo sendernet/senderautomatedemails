@@ -64,18 +64,17 @@
                             {l s='Select form' mod='senderautomatedemails'}
                         </label>
                         <select {if not $allowForms}disabled{/if} class="sender-lists" id="swFormsSelect" name="swFormsSelect">
-                            <option value="0">
-                                {l s='Pop-up form' mod='senderautomatedemails'}
-                            </option>
-                            <option value="" disabled>
-                                {l s='Embed forms' mod='senderautomatedemails'}
-                            </option>
                             {foreach $allForms as $form}
                                 {if $form->type === 'embed'}
-                                <option {if $form->id eq $formId}selected="selected"{/if}value="{$form->id|escape:'htmlall':'UTF-8'}"
-                                        {if !$form->is_active} disabled{/if}>
-                                    {$form->title|escape:'htmlall':'UTF-8'} {if !$form->is_active} <strong>| {l s='Form not active' mod='senderautomatedemails'}</strong>  {/if}
-                                </option>
+                                    <option
+                                            value="{$form->id|escape:'htmlall':'UTF-8'}"
+                                            {if $form->id eq $formId}selected="selected"{/if}
+                                            {if !$form->is_active} disabled{/if}>
+                                        {$form->title|escape:'htmlall':'UTF-8'}
+                                        {if !$form->is_active}
+                                            <strong>| {l s='Form not active' mod='senderautomatedemails'}</strong>
+                                        {/if}
+                                    </option>
                                 {/if}
                             {/foreach}
                         </select>
@@ -88,12 +87,15 @@
             <div class="panel-body" style="padding-top: 0!important;">
                 <blockquote>
                     <p>
-                        {l s='If selected option would be ' mod='senderautomatedemails'}
-                        <strong>Pop-up forms</strong>
-                        {l s='Choose the pop-up form to show in you sender.net application' mod='senderautomatedemails'}
+                        {l
+                        s='To display a form on your website, this option must be enabled. If you want to show an Embed form, select it from the dropdown above. If you want to show a Pop-up or Spin-to-win wheel form, you must select it from your Sender.net account.'
+                        mod='senderautomatedemails'}
                     </p>
+
                     <p>
-                        {l s='To avoid pop-up form from showing, they must be hidden to show on this website. To hide pop-up forms, go to your Sender account, Forms.' mod='senderautomatedemails'}
+                        {l
+                        s='To prevent Pop-up or Spin-to-win wheel forms from showing, they must be hidden in your Sender.net account under the Forms section.'
+                        mod='senderautomatedemails'}
                     </p>
                 </blockquote>
             </div>

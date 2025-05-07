@@ -17,25 +17,31 @@ $senderautomatedemails = new SenderAutomatedEmails();
 
 
 if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->name)) {
-    die(json_encode(array( 'result' => false )));
-} else {
-    switch (Tools::getValue('action')) {
-        case 'saveAllowForms':
-            if (Configuration::updateValue('SPM_ALLOW_FORMS', !Configuration::get('SPM_ALLOW_FORMS'))) {
-                die(json_encode(array(
-                    'result' => Configuration::get('SPM_ALLOW_FORMS')
-                )));
-            }
-            die(json_encode(array( 'result' => false )));
-            // break;
-        case 'saveFormId':
-            if (Configuration::updateValue('SPM_FORM_ID', Tools::getValue('form_id'))) {
-                die(json_encode(array( 'result' => true)));
-            }
-            die(json_encode(array( 'result' => false )));
-            // break;
-        default:
-            exit;
-    }
+    die(json_encode(['result' => false]));
 }
+
+switch (Tools::getValue('action')) {
+    case 'saveAllowForms':
+        if (Configuration::updateValue('SPM_ALLOW_FORMS', !Configuration::get('SPM_ALLOW_FORMS'))) {
+            $senderautomatedemails->resetSenderFormCache();
+            die(json_encode(['result' => Configuration::get('SPM_ALLOW_FORMS')]));
+        }
+        die(json_encode(['result' => false]));
+
+    case 'saveFormId':
+        $formId = Tools::getValue('form_id');
+
+        if (!empty($formId)) {
+            if (Configuration::updateValue('SPM_FORM_ID', $formId)) {
+                $senderautomatedemails->resetSenderFormCache();
+                die(json_encode(['result' => true]));
+            }
+        }
+
+        die(json_encode(['result' => false]));
+
+    default:
+        exit;
+}
+
 exit;

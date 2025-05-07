@@ -77,7 +77,7 @@ class SenderAutomatedEmails extends Module
     {
         $this->name = 'senderautomatedemails';
         $this->tab = 'emailing';
-        $this->version = '3.7.4';
+        $this->version = '3.7.5';
         $this->author = 'Sender.net';
         $this->author_uri = 'https://www.sender.net/';
         $this->need_instance = 0;
@@ -194,10 +194,7 @@ class SenderAutomatedEmails extends Module
 
     public function isModuleActive()
     {
-        if (!Configuration::get('SPM_IS_MODULE_ACTIVE')) {
-            return false;
-        }
-        return true;
+        return (bool) Configuration::get('SPM_IS_MODULE_ACTIVE');
     }
 
     public function hookDisplayHeader()
@@ -275,7 +272,7 @@ class SenderAutomatedEmails extends Module
      */
     public function hookDisplayFooterBefore()
     {
-        if (!$this->isModuleActive()) {
+        if (!$this->isModuleActive() || $this->isAdminContext()) {
             return;
         }
         return $this->senderDisplayFooter();
@@ -287,7 +284,7 @@ class SenderAutomatedEmails extends Module
      */
     public function hookDisplayFooter()
     {
-        if (!$this->isModuleActive()) {
+        if (!$this->isModuleActive() || $this->isAdminContext()) {
             return;
         }
         return $this->senderDisplayFooter();
@@ -303,29 +300,58 @@ class SenderAutomatedEmails extends Module
         return false;
     }
 
+    protected function isAdminContext()
+    {
+        return Tools::getValue('controller') && stripos(Tools::getValue('controller'), 'admin') !== false;
+    }
+
     public function senderDisplayFooter()
     {
         $options = [
-            'showForm' => false
+            'showForm' => false,
+            'formUrl' => '',
+            'embedHash' => ''
         ];
 
         if (!Configuration::get('SPM_ALLOW_FORMS') || !Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT')) {
             return;
         }
 
-        $form = $this->senderApiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
-        #Check if form is disabled or pop-up
-        if (!$form || !$form->is_active || $form->type != 'embed') {
+        $cacheTTL = 86400;
+        $cachedForm = Configuration::get('SPM_CACHED_FORM');
+        $lastUpdated = (int) Configuration::get('SPM_CACHED_FORM_UPDATED');
+        $cacheIsExpired = !$cachedForm || !$lastUpdated || (time() - $lastUpdated > $cacheTTL);
+
+        if ($cacheIsExpired) {
+            $form = $this->senderApiClient()->getFormById(Configuration::get('SPM_FORM_ID'));
+
+            if (!$form || !$form->is_active || $form->type !== 'embed') {
+                return;
+            }
+
+            $cachedData = [
+                'formUrl' => isset($form->settings->resource_path) ? $form->settings->resource_path : '',
+                'embedHash' => isset($form->settings->embed_hash) ? $form->settings->embed_hash : ''
+            ];
+
+            Configuration::updateValue('SPM_CACHED_FORM', json_encode($cachedData));
+            Configuration::updateValue('SPM_CACHED_FORM_UPDATED', time());
+        } else {
+            $cachedData = json_decode($cachedForm, true);
+
+            if (!is_array($cachedData)) {
+                $this->resetSenderFormCache();
+                return;
+            }
+        }
+
+        if (!isset($cachedData['formUrl']) || !isset($cachedData['embedHash'])) {
             return;
         }
 
-        if ($form->type === 'embed') {
-            $embedHash = $form->settings->embed_hash;
-        }
-        // Add forms
-        $options['formUrl'] = isset($form->settings->resource_path) ? $form->settings->resource_path : '';
         $options['showForm'] = true;
-        $options['embedHash'] = isset($embedHash) ? $embedHash : '';
+        $options['formUrl'] = $cachedData['formUrl'];
+        $options['embedHash'] = $cachedData['embedHash'];
 
         $this->context->smarty->assign($options);
         return $this->context->smarty->fetch($this->views_url . '/templates/front/form.tpl');
@@ -706,6 +732,7 @@ class SenderAutomatedEmails extends Module
                 'shipping' => $shipping,
                 'billing' => $billing,
                 'order_id' => (string)$order->id,
+                'phone' => !empty($billingAddress->phone_mobile) ? $billingAddress->phone_mobile : $billingAddress->phone,
             ];
 
             $list = Configuration::get('SPM_CUSTOMERS_LIST_ID');
@@ -952,10 +979,6 @@ class SenderAutomatedEmails extends Module
             $languageTableName = _DB_PREFIX_ . "lang";
             $limit = 100;
 
-            $count = Db::getInstance()->executeS("SELECT COUNT(C.id_customer) AS total FROM " . $customerTableName . " C");
-
-            $iterations = isset($count[0]['total']) ? ceil((int) $count[0]['total'] / $limit) : 0;
-
             $exporter = new CustomersExport(Configuration::get('SPM_API_KEY'));
 
             $result = [
@@ -992,8 +1015,9 @@ class SenderAutomatedEmails extends Module
             }
 
             $tagId = Configuration::get('SPM_SENDERAPP_SYNC_LIST_ID');
+            $lastId = 0;
 
-            for ($i = 0; $i < $iterations; $i++) {
+            while (true) {
                 $sql = "SELECT C.id_customer as id," . implode(",", $fields) . " FROM " . $customerTableName . " C ";
 
                 // join area
@@ -1009,10 +1033,16 @@ class SenderAutomatedEmails extends Module
                     $sql .= "LEFT JOIN " . $zoneTableName . " ON " . $zoneTableName . ".id_zone = (SELECT id_zone FROM " . $countryTableName . " WHERE " . $countryTableName . ".id_country = (SELECT id_country FROM " . $addressTableName . " WHERE id_customer = C.id_customer AND active = 1 LIMIT 1) LIMIT 1) ";
                 }
 
-                // conditions
-                $customers = Db::getInstance()->executeS($sql . " LIMIT " . $limit  . " OFFSET " . ($i * $limit));
+                $sql .= "WHERE C.id_customer > " . (int)$lastId . " 
+                     ORDER BY C.id_customer ASC 
+                     LIMIT " . (int)$limit;
 
-                // add tagId and fields to the customer data
+                $customers = Db::getInstance()->executeS($sql);
+
+                if (empty($customers)) {
+                    break;
+                }
+
                 array_walk($customers, function (&$customer) use ($fieldsMap, $tagId) {
                     $customer['fields'] = [];
 
@@ -1022,7 +1052,7 @@ class SenderAutomatedEmails extends Module
                         if(!$id) {
                             continue;
                         }
-                        
+
                         $customer['fields'][$id] = $customer[$column];
                         unset($customer[$column]);
                     }
@@ -1031,15 +1061,18 @@ class SenderAutomatedEmails extends Module
                         $customer['tags'] = [$tagId];
                     }
                 });
-                
+
                 $result = $exporter->export($customers);
+                $lastCustomer = end($customers);
+                $lastId = isset($lastCustomer['id']) ? (int)$lastCustomer['id'] : $lastId;
             }
+            $total = Db::getInstance()->getValue("SELECT COUNT(*) FROM " . $customerTableName);
 
             if(isset($result["success"]) && $result["success"]) {
                 return [
                     "success" => true,
                     "message" => $result["message"],
-                    "total" => isset($count[0]['total']) ? $count[0]['total'] : 0,
+                    "total" => $total,
                 ];
             }
 

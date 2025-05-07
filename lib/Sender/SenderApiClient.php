@@ -17,9 +17,10 @@ class SenderApiClient
     protected $prefixAuth = 'Bearer ';
     protected $apiKey;
 
-    private $limit = '?limit=100';
+    private $limit = 'limit=100';
     private $appUrl = 'https://app.sender.net';
     private $senderStatsBaseUrl = 'https://stats.sender.net/commerce/';
+    private $apiDebug = false;
 
     public function __construct($apiKey = null)
     {
@@ -152,7 +153,9 @@ class SenderApiClient
         $httpMethod = $requestConfig['http'] ?: 'get';
         switch ($httpMethod) {
             case "get":
-                curl_setopt($ch, CURLOPT_URL, $connectionUrl . $requestConfig['method'] . $this->limit);
+                $limitPrefix = (strpos($requestConfig['method'], '?') !== false) ? '&' : '?';
+                $limitParam = $limitPrefix . $this->limit;
+                curl_setopt($ch, CURLOPT_URL, $connectionUrl . $requestConfig['method'] . $limitParam);
                 curl_setopt($ch, CURLOPT_HTTPGET, 1);
                 break;
             case "post":
@@ -307,7 +310,7 @@ class SenderApiClient
     {
         $requestConfig = [
             "http" => 'get',
-            "method" => "forms",
+            "method" => "forms?type=embed",
         ];
 
         $data = [];
@@ -534,22 +537,24 @@ class SenderApiClient
 
     public function logDebug($message, $backoffice = false)
     {
-        try {
-            $debugLogger = new FileLogger(0);
-            $rootPath = _PS_ROOT_DIR_ . __PS_BASE_URI__ . basename(_PS_MODULE_DIR_);
-            $logPath = '/senderautomatedemails/log/sender_automated_emails_logs_' . date('Ymd') . '.log';
-            $logFilePath = $rootPath . $logPath;
+        if ($this->apiDebug) {
+            try {
+                $debugLogger = new FileLogger(0);
+                $rootPath = _PS_ROOT_DIR_ . __PS_BASE_URI__ . basename(_PS_MODULE_DIR_);
+                $logPath = '/senderautomatedemails/log/sender_automated_emails_logs_' . date('Ymd') . '.log';
+                $logFilePath = $rootPath . $logPath;
 
-            if (is_writable(dirname($logFilePath))) {
-                $debugLogger->setFilename($logFilePath);
-                $debugLogger->logDebug($message);
-            }
+                if (is_writable(dirname($logFilePath))) {
+                    $debugLogger->setFilename($logFilePath);
+                    $debugLogger->logDebug($message);
+                }
 
-            if ($backoffice) {
-                $this->logDebugBackoffice($message);
+                if ($backoffice) {
+                    $this->logDebugBackoffice($message);
+                }
+            } catch (Exception $e) {
+                PrestaShopLogger::addLog('Log error: ' . $e->getMessage(), 3);
             }
-        } catch (Exception $e) {
-            PrestaShopLogger::addLog('Log error: ' . $e->getMessage(), 3);
         }
     }
 
