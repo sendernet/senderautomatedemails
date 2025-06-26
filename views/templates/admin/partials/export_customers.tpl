@@ -10,7 +10,6 @@
  *}
 <div id="spm-export-customers" class="spm-tab-content">
 
-    {* ALLOW CART TRACK *}
     <div class="panel panel-default">
         <div class="panel-heading">
             <i class="zmdi zmdi-import-export"></i>

@@ -8,21 +8,17 @@
  * @copyright 2010-2021 Sender.net
  */
 
-/**
- * Class CustomersExport
- */
-class CustomersExport extends SenderApiClient
+class SenderExport extends SenderApiClient
 {
-
-    public function export(array $customers)
+    public function export(array $shopData)
     {
         $storeId = Configuration::get('SPM_SENDERAPP_STORE_ID');
         $endPoint = "stores/".$storeId."/import_shop_data";
 
-        if (!$response = $this->makeExportCurlRequest($endPoint, ['customers' => $customers])){
+        if (!$response = $this->makeExportCurlRequest($endPoint, $shopData)) {
             return [
                 'success' => false,
-                'message' => 'Unable to export customers',
+                'message' => 'Unable to export shop data',
             ];
         }
 
@@ -35,11 +31,6 @@ class CustomersExport extends SenderApiClient
         return $response;
     }
 
-    /**
-     * @param string $endpoint
-     * @param $data
-     * @return bool|mixed|string
-     */
     private function makeExportCurlRequest($endpoint, $data)
     {
         #Forming data for curl request
