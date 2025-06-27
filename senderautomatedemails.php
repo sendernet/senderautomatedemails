@@ -1116,15 +1116,32 @@ class SenderAutomatedEmails extends Module
         $totalExported = 0;
         $lastResult = ['success' => true, 'message' => 'No products to export'];
 
+        $currency = Context::getContext()->currency->iso_code;
+        $langId = (int)Context::getContext()->language->id;
         $sender = new SenderExport(Configuration::get('SPM_API_KEY'));
 
         while (true) {
-            $sql = 'SELECT p.id_product, pl.name, p.price, sa.quantity, pl.description_short
-                FROM '._DB_PREFIX_.'product p
-                LEFT JOIN '._DB_PREFIX_.'product_lang pl ON p.id_product = pl.id_product AND pl.id_lang = '.(int)Context::getContext()->language->id.'
-                LEFT JOIN '._DB_PREFIX_.'stock_available sa ON sa.id_product = p.id_product
-                ORDER BY p.id_product ASC
-                LIMIT '.(int)$limit.' OFFSET '.(int)$offset;
+            $sql = "
+            SELECT 
+                p.id_product,
+                p.price,
+                p.date_add,
+                p.date_upd,
+                p.active,
+                pl.name,
+                pl.description_short,
+                sa.quantity,
+                i.id_image,
+                cl.name AS category
+            FROM "._DB_PREFIX_."product p
+            LEFT JOIN "._DB_PREFIX_."product_lang pl ON p.id_product = pl.id_product AND pl.id_lang = $langId
+            LEFT JOIN "._DB_PREFIX_."stock_available sa ON sa.id_product = p.id_product
+            LEFT JOIN "._DB_PREFIX_."image i ON i.id_product = p.id_product AND i.cover = 1
+            LEFT JOIN "._DB_PREFIX_."category_product cp ON cp.id_product = p.id_product
+            LEFT JOIN "._DB_PREFIX_."category_lang cl ON cl.id_category = cp.id_category AND cl.id_lang = $langId
+            ORDER BY p.id_product ASC
+            LIMIT $limit OFFSET $offset
+        ";
 
             $products = Db::getInstance()->executeS($sql);
 
@@ -1132,13 +1149,29 @@ class SenderAutomatedEmails extends Module
                 break;
             }
 
-            $formatted = array_map(function ($product) {
+            $formatted = array_map(function ($product) use ($currency) {
+                $imageUrl = null;
+
+                if (!empty($product['id_image'])) {
+                    $imageUrl = Context::getContext()->link->getImageLink(
+                        Tools::link_rewrite($product['name']),
+                        $product['id_product'] . '-' . $product['id_image'],
+                        'large_default'
+                    );
+                }
+
                 return [
-                    'product_id' => $product['id_product'],
-                    'name' => $product['name'],
-                    'price' => $product['price'],
-                    'quantity' => $product['quantity'],
+                    'remote_productId' => (string)$product['id_product'],
+                    'title' => $product['name'],
                     'description' => strip_tags($product['description_short']),
+                    'price' => $product['price'],
+                    'quantity' => (int)$product['quantity'],
+                    'currency' => $currency,
+                    'status' => $product['active'] ? 'active' : 'draft',
+                    'image' => $imageUrl,
+                    'updated_at' => $product['date_upd'],
+                    'created_at' => $product['date_add'],
+                    'category' => $product['category'] ?? null,
                 ];
             }, $products);
 
