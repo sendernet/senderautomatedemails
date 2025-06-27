@@ -1121,6 +1121,17 @@ class SenderAutomatedEmails extends Module
         ];
     }
 
+    private function checkIfCustomerHasCart($customerId)
+    {
+        $cartTable = _DB_PREFIX_ . 'cart';
+
+        $sql = "SELECT COUNT(*) FROM {$cartTable}
+            WHERE id_customer = " . (int)$customerId . "
+            AND date_add IS NOT NULL";
+
+        return (int)Db::getInstance()->getValue($sql) > 0;
+    }
+
     private function syncProducts()
     {
         $limit = 100;
