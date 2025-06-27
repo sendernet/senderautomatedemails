@@ -965,7 +965,7 @@ class SenderAutomatedEmails extends Module
     }
 
     /**
-     * CustomersExport
+     * SenderExport
      * @return array
      */
     public function exportDataToSender()
@@ -978,7 +978,6 @@ class SenderAutomatedEmails extends Module
             $results['orders'] = $this->syncOrders();
 
             $success = true;
-            $messages = [];
             $totals = [];
 
             foreach ($results as $type => $result) {
