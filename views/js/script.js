@@ -408,10 +408,20 @@
                             jQuery('#syncDate').html(proceed.result.time);
                         }
                         var responseMessage = proceed.result.message;
-                        if(proceed.result.total) {
-                            responseMessage = `${responseMessage}. Total ${proceed.result.total} customers will be exported.`;
+                        if (proceed.result.total) {
+                            responseMessage = `${responseMessage}`;
                         }
-                        jQuery('#responseMessage').show('fast').html(responseMessage);
+
+                        jQuery('#responseMessage')
+                            .stop(true, true)
+                            .removeClass('alert-danger')
+                            .addClass('alert alert-success')
+                            .html(responseMessage)
+                            .fadeIn('fast');
+
+                        setTimeout(function () {
+                            jQuery('#responseMessage').fadeOut('slow');
+                        }, 15000);
 
                         setTimeout(function(){
                             $('#syncList').removeClass('btn_sender_success').html('Synchronize this list with Sender.net');
