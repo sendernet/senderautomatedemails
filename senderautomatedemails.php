@@ -77,7 +77,7 @@ class SenderAutomatedEmails extends Module
     {
         $this->name = 'senderautomatedemails';
         $this->tab = 'emailing';
-        $this->version = '3.7.5';
+        $this->version = '3.7.6';
         $this->author = 'Sender.net';
         $this->author_uri = 'https://www.sender.net/';
         $this->need_instance = 0;
@@ -1215,14 +1215,38 @@ class SenderAutomatedEmails extends Module
         $totalExported = 0;
         $lastResult = ['success' => true, 'message' => 'No orders to export'];
 
+        $langId = (int)Context::getContext()->language->id;
         $sender = new SenderExport(Configuration::get('SPM_API_KEY'));
 
+        $currencies = Currency::getCurrencies(false);
+        $currencyMap = [];
+        foreach ($currencies as $cur) {
+            $currencyMap[$cur['id_currency']] = $cur['iso_code'];
+        }
+
         while (true) {
-            $sql = 'SELECT o.id_order, o.total_paid, o.date_add, c.email
-                FROM '._DB_PREFIX_.'orders o
-                LEFT JOIN '._DB_PREFIX_.'customer c ON c.id_customer = o.id_customer
-                ORDER BY o.id_order ASC
-                LIMIT '.(int)$limit.' OFFSET '.(int)$offset;
+            $sql = "
+            SELECT 
+                o.id_order,
+                o.reference,
+                o.total_paid,
+                o.date_add,
+                o.date_upd,
+                o.id_currency,
+                o.current_state,
+                osl.name AS order_status,
+                c.email,
+                c.firstname,
+                c.lastname,
+                a.phone
+            FROM "._DB_PREFIX_."orders o
+            LEFT JOIN "._DB_PREFIX_."customer c ON c.id_customer = o.id_customer
+            LEFT JOIN "._DB_PREFIX_."address a ON a.id_address = o.id_address_delivery
+            LEFT JOIN "._DB_PREFIX_."order_state_lang osl 
+                ON osl.id_order_state = o.current_state AND osl.id_lang = $langId
+            ORDER BY o.id_order ASC
+            LIMIT $limit OFFSET $offset
+        ";
 
             $orders = Db::getInstance()->executeS($sql);
 
@@ -1230,12 +1254,35 @@ class SenderAutomatedEmails extends Module
                 break;
             }
 
-            $formatted = array_map(function ($order) {
+            $formatted = array_map(function ($order) use ($currencyMap) {
+                $products = Db::getInstance()->executeS("
+                SELECT
+                    od.product_name,
+                    od.product_quantity,
+                    od.product_price
+                FROM "._DB_PREFIX_."order_detail od
+                WHERE od.id_order = ".(int)$order['id_order']
+                );
+
                 return [
-                    'order_id' => $order['id_order'],
-                    'total_paid' => $order['total_paid'],
-                    'order_date' => $order['date_add'],
-                    'customer_email' => $order['email'],
+                    'remoteId' => $order['id_order'],
+                    'orderId' => $order['reference'],
+                    'price' => $order['total_paid'],
+                    'currency' => $currencyMap[(int)$order['id_currency']] ?? null,
+                    'created_at' => $order['date_add'],
+                    'updated_at' => $order['date_upd'],
+                    'email' => $order['email'],
+                    'firstname' => $order['firstname'],
+                    'lastname' => $order['lastname'],
+                    'phone' => $order['phone'],
+                    'status' => self::slugifyOrderStatus($order['order_status']),
+                    'products' => array_map(function ($p) {
+                        return [
+                            'name' => $p['product_name'],
+                            'quantity' => $p['product_quantity'],
+                            'price' => $p['product_price'],
+                        ];
+                    }, $products),
                 ];
             }, $orders);
 
@@ -1249,6 +1296,11 @@ class SenderAutomatedEmails extends Module
             'message' => $lastResult['message'] ?? 'Order sync completed',
             'total' => $totalExported,
         ];
+    }
+
+    private static function slugifyOrderStatus($name)
+    {
+        return strtolower(trim(str_replace([' ', '-'], '_', $name)));
     }
 
     /**
