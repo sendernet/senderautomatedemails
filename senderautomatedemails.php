@@ -16,7 +16,7 @@ if (!defined('_PS_VERSION_')) {
 }
 
 require_once 'lib/Sender/SenderApiClient.php';
-require_once 'lib/Sender/CustomersExport.php';
+require_once 'lib/Sender/SenderExport.php';
 require_once(_PS_CONFIG_DIR_ . "/config.inc.php");
 
 class SenderAutomatedEmails extends Module
