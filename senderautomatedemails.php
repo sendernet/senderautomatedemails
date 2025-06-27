@@ -1116,7 +1116,17 @@ class SenderAutomatedEmails extends Module
         $totalExported = 0;
         $lastResult = ['success' => true, 'message' => 'No products to export'];
 
-        $currency = Context::getContext()->currency->iso_code;
+        $currency = null;
+
+        if (isset(Context::getContext()->currency) && Context::getContext()->currency instanceof Currency) {
+            $currency = Context::getContext()->currency->iso_code;
+        }
+
+        if (!$currency) {
+            $defaultCurrencyId = (int)Configuration::get('PS_CURRENCY_DEFAULT');
+            $currency = Currency::getIsoCodeById($defaultCurrencyId);
+        }
+
         $langId = (int)Context::getContext()->language->id;
         $sender = new SenderExport(Configuration::get('SPM_API_KEY'));
 
@@ -1130,12 +1140,23 @@ class SenderAutomatedEmails extends Module
                 p.active,
                 pl.name,
                 pl.description_short,
-                sa.quantity,
+                (
+                    SELECT SUM(sa.quantity)
+                    FROM "._DB_PREFIX_."stock_available sa
+                    WHERE sa.id_product = p.id_product
+                      AND sa.id_shop = ".(int)Context::getContext()->shop->id."
+                      AND (
+                          sa.id_product_attribute != 0
+                          OR NOT EXISTS (
+                              SELECT 1 FROM "._DB_PREFIX_."product_attribute pa
+                              WHERE pa.id_product = p.id_product
+                          )
+                      )
+                ) AS total_quantity,
                 i.id_image,
                 cl.name AS category
             FROM "._DB_PREFIX_."product p
             LEFT JOIN "._DB_PREFIX_."product_lang pl ON p.id_product = pl.id_product AND pl.id_lang = $langId
-            LEFT JOIN "._DB_PREFIX_."stock_available sa ON sa.id_product = p.id_product
             LEFT JOIN "._DB_PREFIX_."image i ON i.id_product = p.id_product AND i.cover = 1
             LEFT JOIN "._DB_PREFIX_."category_product cp ON cp.id_product = p.id_product
             LEFT JOIN "._DB_PREFIX_."category_lang cl ON cl.id_category = cp.id_category AND cl.id_lang = $langId
@@ -1165,7 +1186,7 @@ class SenderAutomatedEmails extends Module
                     'title' => $product['name'],
                     'description' => strip_tags($product['description_short']),
                     'price' => $product['price'],
-                    'quantity' => (int)$product['quantity'],
+                    'quantity' => (int)$product['total_quantity'],
                     'currency' => $currency,
                     'status' => $product['active'] ? 'active' : 'draft',
                     'image' => $imageUrl,
