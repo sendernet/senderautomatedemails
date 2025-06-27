@@ -968,7 +968,7 @@ class SenderAutomatedEmails extends Module
      * CustomersExport
      * @return array
      */
-    public function syncList()
+    public function exportDataToSender()
     {
         try {
             $results = [];
@@ -983,13 +983,12 @@ class SenderAutomatedEmails extends Module
 
             foreach ($results as $type => $result) {
                 $success = $success && (!empty($result['success']) && $result['success']);
-                $messages[] = $result['message'] ?? ucfirst($type) . ' export completed.';
                 $totals[$type] = $result['total'] ?? 0;
             }
 
             return [
                 'success' => $success,
-                'message' => implode(' | ', $messages),
+                'message' => 'Export completed, customers, products, and orders have been synced with Sender.net.',
                 'totals' => $totals,
             ];
 
@@ -1014,7 +1013,7 @@ class SenderAutomatedEmails extends Module
         $countryTableName = _DB_PREFIX_ . "country";
         $zoneTableName = _DB_PREFIX_ . "zone";
         $languageTableName = _DB_PREFIX_ . "lang";
-        $limit = 100;
+        $limit = 500;
 
         $exporter = new SenderExport(Configuration::get('SPM_API_KEY'));
 

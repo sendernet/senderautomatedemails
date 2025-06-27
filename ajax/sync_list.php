@@ -21,7 +21,7 @@ if (Tools::getValue('token') !== Tools::getAdminToken($senderautomatedemails->na
     switch (Tools::getValue('action')) {
         case 'syncList':
             try {
-                $response = $senderautomatedemails->syncList();
+                $response = $senderautomatedemails->exportDataToSender();
                 die(json_encode(['result' => $response]));
             } catch (Exception $e) {
                 die(json_encode(['result' => $response]));

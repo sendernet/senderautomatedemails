@@ -62,7 +62,7 @@
                     <li class="tab-link" data-tab="spm-export-customers">
                         <a href="#!spm-export-customers"">
                         <i class="zmdi zmdi-import-export"></i>
-                        {l s='Export customers' mod='senderautomatedemails'}
+                        {l s='Export data to sender app' mod='senderautomatedemails'}
                         </a>
                     </li>
                 </ul>

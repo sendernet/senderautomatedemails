@@ -60,10 +60,11 @@
                 <br><br>
                 <blockquote>
                     <p>
-                        {l s='Would be migrating all your customers to Sender.net which bought products.'
-                        mod='senderautomatedemails'}
+                        {l s='Would be migrating all your customers to Sender.net which bought products.' mod='senderautomatedemails'}
                         <br><br>
                         {l s='If a subscriber already exists it would get updated according to your customer information.' mod='senderautomatedemails'}
+                        <br><br>
+                        {l s='Additionally, all your products and order history will be exported to Sender.net' mod='senderautomatedemails'}
                     </p>
                 </blockquote>
 
