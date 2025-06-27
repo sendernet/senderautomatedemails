@@ -1355,4 +1355,10 @@ class SenderAutomatedEmails extends Module
 
         return $this->senderApiClient;
     }
+
+    public function resetSenderFormCache()
+    {
+        Configuration::deleteByName('SPM_CACHED_FORM');
+        Configuration::deleteByName('SPM_CACHED_FORM_UPDATED');
+    }
 }

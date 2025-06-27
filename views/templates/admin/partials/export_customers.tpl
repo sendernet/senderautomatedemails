@@ -60,7 +60,7 @@
                 <br><br>
                 <blockquote>
                     <p>
-                        {l s='Would be migrating all your customers to Sender.net which bought products.' mod='senderautomatedemails'}
+                        {l s='Would be exporting all your customers to Sender.net' mod='senderautomatedemails'}
                         <br><br>
                         {l s='If a subscriber already exists it would get updated according to your customer information.' mod='senderautomatedemails'}
                         <br><br>
@@ -80,6 +80,13 @@
                             <span id="syncDate">{$syncedList|escape:'htmlall':'UTF-8'}</span>
                         </small>
                     </p>
+
+                    <a href="https://app.sender.net/settings/connected-stores"
+                       target="_blank"
+                       class="btn btn-default"
+                       style="margin-top: 10px;">
+                        {l s='View exported data in Sender.net' mod='senderautomatedemails'}
+                    </a>
 
                     <div id="responseMessage"
                          class="alert alert-success"
