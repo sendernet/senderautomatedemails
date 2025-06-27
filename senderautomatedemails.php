@@ -16,7 +16,7 @@ if (!defined('_PS_VERSION_')) {
 }
 
 require_once 'lib/Sender/SenderApiClient.php';
-require_once 'lib/Sender/CustomersExport.php';
+require_once 'lib/Sender/SenderExport.php';
 require_once(_PS_CONFIG_DIR_ . "/config.inc.php");
 
 class SenderAutomatedEmails extends Module
@@ -77,7 +77,7 @@ class SenderAutomatedEmails extends Module
     {
         $this->name = 'senderautomatedemails';
         $this->tab = 'emailing';
-        $this->version = '3.7.5';
+        $this->version = '3.7.6';
         $this->author = 'Sender.net';
         $this->author_uri = 'https://www.sender.net/';
         $this->need_instance = 0;
@@ -965,125 +965,365 @@ class SenderAutomatedEmails extends Module
     }
 
     /**
-     * CustomersExport
+     * SenderExport
      * @return array
      */
-    public function syncList()
+    public function exportDataToSender()
     {
         try {
-            $customerTableName = _DB_PREFIX_ . "customer";
-            $genderTableName = _DB_PREFIX_ . "gender_lang";
-            $addressTableName = _DB_PREFIX_ . "address";
-            $countryTableName = _DB_PREFIX_ . "country";
-            $zoneTableName = _DB_PREFIX_ . "zone";
-            $languageTableName = _DB_PREFIX_ . "lang";
-            $limit = 100;
+            $results = [];
 
-            $exporter = new CustomersExport(Configuration::get('SPM_API_KEY'));
+            $results['customers'] = $this->syncCustomers();
+            $results['products'] = $this->syncProducts();
+            $results['orders'] = $this->syncOrders();
 
-            $result = [
-                'success' => true,
-                'message' => 'No customers to be exported',
+            $success = true;
+            $totals = [];
+
+            foreach ($results as $type => $result) {
+                $success = $success && (!empty($result['success']) && $result['success']);
+                $totals[$type] = $result['total'] ?? 0;
+            }
+
+            return [
+                'success' => $success,
+                'message' => 'Export completed, customers, products, and orders have been synced with Sender.net.',
+                'totals' => $totals,
             ];
 
-            $fields = ["email", "newsletter"];
-            $fieldsMap = [
-                'gender' => Configuration::get('SPM_CUSTOMER_FIELD_GENDER'), 
-                'birthday' => Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY'), 
-                'language' => Configuration::get('SPM_CUSTOMER_FIELD_LANGUAGE'), 
-                'country' => Configuration::get('SPM_CUSTOMER_FIELD_COUNTRY')
-            ];
-
-            // adding the to the fields which will be use for selecting those columns
-            if (Configuration::get('SPM_CUSTOMER_FIELD_FIRSTNAME')) {
-                $fields[] = 'firstname';
-            }
-            if (Configuration::get('SPM_CUSTOMER_FIELD_LASTNAME')) {
-                $fields[] = 'lastname';
-            }
-            if ($fieldsMap["gender"]) {
-                $fields[] = $genderTableName . '.name AS gender';
-            }
-            if ($fieldsMap["birthday"]) {
-                $fields[] = 'birthday';
-            }
-            if ($fieldsMap["country"]) {
-                $fields[] = $zoneTableName . '.name AS country';
-            }
-            if ($fieldsMap["language"]) {
-                $fields[] =  $languageTableName . '.name AS language';
-            }
-
-            $tagId = Configuration::get('SPM_SENDERAPP_SYNC_LIST_ID');
-            $lastId = 0;
-
-            while (true) {
-                $sql = "SELECT C.id_customer as id," . implode(",", $fields) . " FROM " . $customerTableName . " C ";
-
-                // join area
-                if ($fieldsMap["gender"]) {
-                    $sql .= "LEFT JOIN " . $genderTableName . " ON " . $genderTableName . ".id_gender = C.id_gender ";
-                }
-
-                if ($fieldsMap["language"]) {
-                    $sql .= "LEFT JOIN " . $languageTableName . " ON " . $languageTableName . ".id_lang = C.id_lang ";
-                }
-
-                if ($fieldsMap["country"]) {
-                    $sql .= "LEFT JOIN " . $zoneTableName . " ON " . $zoneTableName . ".id_zone = (SELECT id_zone FROM " . $countryTableName . " WHERE " . $countryTableName . ".id_country = (SELECT id_country FROM " . $addressTableName . " WHERE id_customer = C.id_customer AND active = 1 LIMIT 1) LIMIT 1) ";
-                }
-
-                $sql .= "WHERE C.id_customer > " . (int)$lastId . " 
-                     ORDER BY C.id_customer ASC 
-                     LIMIT " . (int)$limit;
-
-                $customers = Db::getInstance()->executeS($sql);
-
-                if (empty($customers)) {
-                    break;
-                }
-
-                array_walk($customers, function (&$customer) use ($fieldsMap, $tagId) {
-                    $customer['fields'] = [];
-
-                    foreach($fieldsMap as $column => $id) {
-
-                        // customer didn't added this column for export
-                        if(!$id) {
-                            continue;
-                        }
-
-                        $customer['fields'][$id] = $customer[$column];
-                        unset($customer[$column]);
-                    }
-
-                    if ($tagId) {
-                        $customer['tags'] = [$tagId];
-                    }
-                });
-
-                $result = $exporter->export($customers);
-                $lastCustomer = end($customers);
-                $lastId = isset($lastCustomer['id']) ? (int)$lastCustomer['id'] : $lastId;
-            }
-            $total = Db::getInstance()->getValue("SELECT COUNT(*) FROM " . $customerTableName);
-
-            if(isset($result["success"]) && $result["success"]) {
-                return [
-                    "success" => true,
-                    "message" => $result["message"],
-                    "total" => $total,
-                ];
-            }
-
-            return $result;
         } catch (PrestaShopDatabaseException $e) {
-            $data = [
+            return [
                 'success' => false,
                 'message' => $e ? $e->getMessage() : 'Unexpected error',
+                'totals' => [
+                    'customers' => 0,
+                    'products' => 0,
+                    'orders' => 0,
+                ],
             ];
-            return $data;
         }
+    }
+
+    private function syncCustomers()
+    {
+        $customerTableName = _DB_PREFIX_ . "customer";
+        $genderTableName = _DB_PREFIX_ . "gender_lang";
+        $addressTableName = _DB_PREFIX_ . "address";
+        $countryTableName = _DB_PREFIX_ . "country";
+        $zoneTableName = _DB_PREFIX_ . "zone";
+        $languageTableName = _DB_PREFIX_ . "lang";
+        $limit = 500;
+
+        $exporter = new SenderExport(Configuration::get('SPM_API_KEY'));
+
+        $fields = ["email", "newsletter"];
+        $fieldsMap = [
+            'gender' => Configuration::get('SPM_CUSTOMER_FIELD_GENDER'),
+            'birthday' => Configuration::get('SPM_CUSTOMER_FIELD_BIRTHDAY'),
+            'language' => Configuration::get('SPM_CUSTOMER_FIELD_LANGUAGE'),
+            'country' => Configuration::get('SPM_CUSTOMER_FIELD_COUNTRY')
+        ];
+
+        if (Configuration::get('SPM_CUSTOMER_FIELD_FIRSTNAME')) {
+            $fields[] = 'firstname';
+        }
+        if (Configuration::get('SPM_CUSTOMER_FIELD_LASTNAME')) {
+            $fields[] = 'lastname';
+        }
+        if ($fieldsMap["gender"]) {
+            $fields[] = $genderTableName . '.name AS gender';
+        }
+        if ($fieldsMap["birthday"]) {
+            $fields[] = 'birthday';
+        }
+        if ($fieldsMap["country"]) {
+            $fields[] = $zoneTableName . '.name AS country';
+        }
+        if ($fieldsMap["language"]) {
+            $fields[] =  $languageTableName . '.name AS language';
+        }
+
+        $tagId = Configuration::get('SPM_SENDERAPP_SYNC_LIST_ID');
+        $lastId = 0;
+        $totalSynced = 0;
+        $lastResult = ['success' => true, 'message' => 'No customers to be exported'];
+
+        while (true) {
+            $sql = "SELECT C.id_customer as id," . implode(",", $fields) . " FROM " . $customerTableName . " C ";
+
+            if ($fieldsMap["gender"]) {
+                $sql .= "LEFT JOIN " . $genderTableName . " ON " . $genderTableName . ".id_gender = C.id_gender ";
+            }
+
+            if ($fieldsMap["language"]) {
+                $sql .= "LEFT JOIN " . $languageTableName . " ON " . $languageTableName . ".id_lang = C.id_lang ";
+            }
+
+            if ($fieldsMap["country"]) {
+                $sql .= "LEFT JOIN " . $zoneTableName . " ON " . $zoneTableName . ".id_zone = (
+                        SELECT id_zone FROM " . $countryTableName . " 
+                        WHERE id_country = (
+                            SELECT id_country FROM " . $addressTableName . " 
+                            WHERE id_customer = C.id_customer AND active = 1 LIMIT 1
+                        ) LIMIT 1
+                    ) ";
+            }
+
+            $sql .= "WHERE C.id_customer > " . (int)$lastId . " 
+                 ORDER BY C.id_customer ASC 
+                 LIMIT " . (int)$limit;
+
+            $customers = Db::getInstance()->executeS($sql);
+
+            if (empty($customers)) {
+                break;
+            }
+
+            array_walk($customers, function (&$customer) use ($fieldsMap, $tagId) {
+                $customer['fields'] = [];
+
+                foreach($fieldsMap as $column => $id) {
+                    if (!$id) continue;
+                    $customer['fields'][$id] = $customer[$column];
+                    unset($customer[$column]);
+                }
+
+                if ($tagId) {
+                    $customer['tags'] = [$tagId];
+                }
+
+                $hasCart = $this->checkIfCustomerHasCart($customer['id']);
+
+                if ($hasCart) {
+                    $customerListTag = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+                    if ($customerListTag != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
+                        $customer['tags'][] = $customerListTag;
+                    }
+                } else {
+                    $guestListTag = Configuration::get('SPM_GUEST_LIST_ID');
+                    if ($guestListTag != $this->defaultSettings['SPM_GUEST_LIST_ID']) {
+                        $customer['tags'][] = $guestListTag;
+                    }
+                }
+            });
+
+            $lastResult = $exporter->export(['customers' => $customers]);
+            $totalSynced += count($customers);
+
+            $lastCustomer = end($customers);
+            $lastId = isset($lastCustomer['id']) ? (int)$lastCustomer['id'] : $lastId;
+        }
+
+        return [
+            'success' => $lastResult['success'] ?? false,
+            'message' => $lastResult['message'] ?? 'Customer sync completed',
+            'total' => $totalSynced ?: 0
+        ];
+    }
+
+    private function checkIfCustomerHasCart($customerId)
+    {
+        $cartTable = _DB_PREFIX_ . 'cart';
+
+        $sql = "SELECT COUNT(*) FROM {$cartTable}
+            WHERE id_customer = " . (int)$customerId . "
+            AND date_add IS NOT NULL";
+
+        return (int)Db::getInstance()->getValue($sql) > 0;
+    }
+
+    private function syncProducts()
+    {
+        $limit = 100;
+        $offset = 0;
+        $totalExported = 0;
+        $lastResult = ['success' => true, 'message' => 'No products to export'];
+
+        $currency = null;
+
+        if (isset(Context::getContext()->currency) && Context::getContext()->currency instanceof Currency) {
+            $currency = Context::getContext()->currency->iso_code;
+        }
+
+        if (!$currency) {
+            $defaultCurrencyId = (int)Configuration::get('PS_CURRENCY_DEFAULT');
+            $currency = Currency::getIsoCodeById($defaultCurrencyId);
+        }
+
+        $langId = (int)Context::getContext()->language->id;
+        $sender = new SenderExport(Configuration::get('SPM_API_KEY'));
+
+        while (true) {
+            $sql = "
+            SELECT 
+                p.id_product,
+                p.price,
+                p.date_add,
+                p.date_upd,
+                p.active,
+                pl.name,
+                pl.description_short,
+                (
+                    SELECT SUM(sa.quantity)
+                    FROM "._DB_PREFIX_."stock_available sa
+                    WHERE sa.id_product = p.id_product
+                      AND sa.id_shop = ".(int)Context::getContext()->shop->id."
+                      AND (
+                          sa.id_product_attribute != 0
+                          OR NOT EXISTS (
+                              SELECT 1 FROM "._DB_PREFIX_."product_attribute pa
+                              WHERE pa.id_product = p.id_product
+                          )
+                      )
+                ) AS total_quantity,
+                i.id_image,
+                cl.name AS category
+            FROM "._DB_PREFIX_."product p
+            LEFT JOIN "._DB_PREFIX_."product_lang pl ON p.id_product = pl.id_product AND pl.id_lang = $langId
+            LEFT JOIN "._DB_PREFIX_."image i ON i.id_product = p.id_product AND i.cover = 1
+            LEFT JOIN "._DB_PREFIX_."category_product cp ON cp.id_product = p.id_product
+            LEFT JOIN "._DB_PREFIX_."category_lang cl ON cl.id_category = cp.id_category AND cl.id_lang = $langId
+            ORDER BY p.id_product ASC
+            LIMIT $limit OFFSET $offset
+        ";
+
+            $products = Db::getInstance()->executeS($sql);
+
+            if (empty($products)) {
+                break;
+            }
+
+            $formatted = array_map(function ($product) use ($currency) {
+                $imageUrl = null;
+
+                if (!empty($product['id_image'])) {
+                    $imageUrl = Context::getContext()->link->getImageLink(
+                        Tools::link_rewrite($product['name']),
+                        $product['id_product'] . '-' . $product['id_image'],
+                        'large_default'
+                    );
+                }
+
+                return [
+                    'remote_productId' => (string)$product['id_product'],
+                    'title' => $product['name'],
+                    'description' => strip_tags($product['description_short']),
+                    'price' => $product['price'],
+                    'quantity' => (int)$product['total_quantity'],
+                    'currency' => $currency,
+                    'status' => $product['active'] ? 'active' : 'draft',
+                    'image' => $imageUrl,
+                    'updated_at' => $product['date_upd'],
+                    'created_at' => $product['date_add'],
+                    'category' => $product['category'] ?? null,
+                ];
+            }, $products);
+
+            $lastResult = $sender->export(['products' => $formatted]);
+            $totalExported += count($formatted);
+            $offset += $limit;
+        }
+
+        return [
+            'success' => $lastResult['success'] ?? false,
+            'message' => $lastResult['message'] ?? 'Product sync completed',
+            'total' => $totalExported,
+        ];
+    }
+
+    private function syncOrders()
+    {
+        $limit = 100;
+        $offset = 0;
+        $totalExported = 0;
+        $lastResult = ['success' => true, 'message' => 'No orders to export'];
+
+        $langId = (int)Context::getContext()->language->id;
+        $sender = new SenderExport(Configuration::get('SPM_API_KEY'));
+
+        $currencies = Currency::getCurrencies(false);
+        $currencyMap = [];
+        foreach ($currencies as $cur) {
+            $currencyMap[$cur['id_currency']] = $cur['iso_code'];
+        }
+
+        while (true) {
+            $sql = "
+            SELECT 
+                o.id_order,
+                o.reference,
+                o.total_paid,
+                o.date_add,
+                o.date_upd,
+                o.id_currency,
+                o.current_state,
+                osl.name AS order_status,
+                c.email,
+                c.firstname,
+                c.lastname,
+                a.phone
+            FROM "._DB_PREFIX_."orders o
+            LEFT JOIN "._DB_PREFIX_."customer c ON c.id_customer = o.id_customer
+            LEFT JOIN "._DB_PREFIX_."address a ON a.id_address = o.id_address_delivery
+            LEFT JOIN "._DB_PREFIX_."order_state_lang osl 
+                ON osl.id_order_state = o.current_state AND osl.id_lang = $langId
+            ORDER BY o.id_order ASC
+            LIMIT $limit OFFSET $offset
+        ";
+
+            $orders = Db::getInstance()->executeS($sql);
+
+            if (empty($orders)) {
+                break;
+            }
+
+            $formatted = array_map(function ($order) use ($currencyMap) {
+                $products = Db::getInstance()->executeS("
+                SELECT
+                    od.product_name,
+                    od.product_quantity,
+                    od.product_price
+                FROM "._DB_PREFIX_."order_detail od
+                WHERE od.id_order = ".(int)$order['id_order']
+                );
+
+                return [
+                    'remoteId' => $order['id_order'],
+                    'orderId' => $order['reference'],
+                    'price' => $order['total_paid'],
+                    'currency' => $currencyMap[(int)$order['id_currency']] ?? null,
+                    'created_at' => $order['date_add'],
+                    'updated_at' => $order['date_upd'],
+                    'email' => $order['email'],
+                    'firstname' => $order['firstname'],
+                    'lastname' => $order['lastname'],
+                    'phone' => $order['phone'],
+                    'status' => self::slugifyOrderStatus($order['order_status']),
+                    'products' => array_map(function ($p) {
+                        return [
+                            'name' => $p['product_name'],
+                            'quantity' => $p['product_quantity'],
+                            'price' => $p['product_price'],
+                        ];
+                    }, $products),
+                ];
+            }, $orders);
+
+            $lastResult = $sender->export(['orders' => $formatted]);
+            $totalExported += count($formatted);
+            $offset += $limit;
+        }
+
+        return [
+            'success' => $lastResult['success'] ?? false,
+            'message' => $lastResult['message'] ?? 'Order sync completed',
+            'total' => $totalExported,
+        ];
+    }
+
+    private static function slugifyOrderStatus($name)
+    {
+        return strtolower(trim(str_replace([' ', '-'], '_', $name)));
     }
 
     /**
@@ -1139,5 +1379,11 @@ class SenderAutomatedEmails extends Module
         }
 
         return $this->senderApiClient;
+    }
+
+    public function resetSenderFormCache()
+    {
+        Configuration::deleteByName('SPM_CACHED_FORM');
+        Configuration::deleteByName('SPM_CACHED_FORM_UPDATED');
     }
 }

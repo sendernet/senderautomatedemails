@@ -10,7 +10,6 @@
  *}
 <div id="spm-export-customers" class="spm-tab-content">
 
-    {* ALLOW CART TRACK *}
     <div class="panel panel-default">
         <div class="panel-heading">
             <i class="zmdi zmdi-import-export"></i>
@@ -61,24 +60,43 @@
                 <br><br>
                 <blockquote>
                     <p>
-                        {l s='Would be migrating all your customers to Sender.net which bought products.'
-                        mod='senderautomatedemails'}
+                        {l s='Would be exporting all your customers to Sender.net' mod='senderautomatedemails'}
                         <br><br>
                         {l s='If a subscriber already exists it would get updated according to your customer information.' mod='senderautomatedemails'}
+                        <br><br>
+                        {l s='Additionally, all your products and order history will be exported to Sender.net' mod='senderautomatedemails'}
                     </p>
                 </blockquote>
 
                 <div class="panel-body">
                     <button id="syncList"
-                            class="btn btn-lg btn-sender">{l s='Synchronize this list with Sender.net' mod='senderautomatedemails'}</button>
-                    <p style="margin-top: 15px" id="syncDataParent">
-                        <small id="syncTime">Last time synchronized: <span id="syncDate">{$syncedList|escape:'htmlall':'UTF-8'}</span></small>
-                        <br />
-                        <small class="alert alert-success" id="responseMessage" style="display: none; margin-bottom: 0; margin-top: 15px;"></small>
+                            class="btn btn-lg btn-sender">
+                        {l s='Synchronize with Sender.net' mod='senderautomatedemails'}
+                    </button>
+
+                    <p style="margin-top: 15px;" id="syncDataParent">
+                        <small id="syncTime">
+                            Last time synchronized:
+                            <span id="syncDate">{$syncedList|escape:'htmlall':'UTF-8'}</span>
+                        </small>
                     </p>
-                    <p style="margin-top: 15px">
-                        <small class="alert alert-danger" id="syncError" style="display: none"></small>
-                    </p>
+
+                    <a href="https://app.sender.net/settings/connected-stores"
+                       target="_blank"
+                       class="btn btn-default"
+                       style="margin-top: 10px;">
+                        {l s='View exported data in Sender.net' mod='senderautomatedemails'}
+                    </a>
+
+                    <div id="responseMessage"
+                         class="alert alert-success"
+                         style="display: none; margin-top: 10px; margin-bottom: 0;">
+                    </div>
+
+                    <div id="syncError"
+                         class="alert alert-danger"
+                         style="display: none; margin-top: 10px;">
+                    </div>
                 </div>
             </div>
         </div>
