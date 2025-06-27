@@ -1091,6 +1091,20 @@ class SenderAutomatedEmails extends Module
                 if ($tagId) {
                     $customer['tags'] = [$tagId];
                 }
+
+                $hasCart = $this->checkIfCustomerHasCart($customer['id']);
+
+                if ($hasCart) {
+                    $customerListTag = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+                    if ($customerListTag != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
+                        $customer['tags'][] = $customerListTag;
+                    }
+                } else {
+                    $guestListTag = Configuration::get('SPM_GUEST_LIST_ID');
+                    if ($guestListTag != $this->defaultSettings['SPM_GUEST_LIST_ID']) {
+                        $customer['tags'][] = $guestListTag;
+                    }
+                }
             });
 
             $lastResult = $exporter->export(['customers' => $customers]);
