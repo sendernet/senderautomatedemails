@@ -77,13 +77,13 @@ class SenderAutomatedEmails extends Module
     {
         $this->name = 'senderautomatedemails';
         $this->tab = 'emailing';
-        $this->version = '3.7.6';
+        $this->version = '3.7.7';
         $this->author = 'Sender.net';
         $this->author_uri = 'https://www.sender.net/';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = array(
             'min' => '1.6.1.24',
-            'max' => _PS_VERSION_
+            'max' => '8.1.5'
         );
 
         $this->displayName = $this->l('Sender.net Automated Emails');
@@ -120,7 +120,6 @@ class SenderAutomatedEmails extends Module
         if (
             !$this->registerHook('displayBackOfficeHeader')
             || !$this->registerHook('displayOrderConfirmation')
-            || !$this->registerHook('registerUnsubscribedWebhook')
             || !$this->registerHook('displayHeader')
             || !$this->registerHook('actionObjectCartUpdateAfter') // Getting it on all pages
             || !$this->registerHook('actionCustomerAccountAdd')  //Adding customer and tracking the customer track
