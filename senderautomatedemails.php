@@ -83,12 +83,12 @@ class SenderAutomatedEmails extends Module
         $this->need_instance = 0;
         $this->ps_versions_compliancy = array(
             'min' => '1.6.1.24',
-            'max' => '8.1.5'
+            'max' => _PS_VERSION_
         );
 
-        $this->displayName = $this->l('Sender.net Automated Emails');
-        $this->description = $this->l('All you need for your email marketing in one tool.');
-        $this->confirmUninstall = $this->l('Are you sure you want to uninstall?');
+        $this->displayName = $this->lCompat('Sender.net Automated Emails');
+        $this->description = $this->lCompat('All you need for your email marketing in one tool.');
+        $this->confirmUninstall = $this->lCompat('Are you sure you want to uninstall?');
     }
 
     public function senderDirectories()
@@ -107,7 +107,9 @@ class SenderAutomatedEmails extends Module
             Shop::setContext(Shop::CONTEXT_ALL);
         }
 
-        $this->addTabs();
+        if (!$this->installTab()) {
+            return false;
+        }
 
         if (parent::install()) {
             foreach ($this->defaultSettings as $defaultSettingKey => $defaultSettingValue) {
@@ -125,7 +127,6 @@ class SenderAutomatedEmails extends Module
             || !$this->registerHook('actionCustomerAccountAdd')  //Adding customer and tracking the customer track
             || !$this->registerHook('actionCustomerAccountUpdate')
             || !$this->registerHook('actionAuthentication')
-            || !$this->registerHook('actionObjectNewsletterAddAfter')
             || !$this->registerHook('actionObjectCustomerUpdateAfter')
             || !$this->registerHook('displayFooterProduct')
             || !$this->registerHook('actionOrderHistoryAddAfter')
@@ -145,6 +146,33 @@ class SenderAutomatedEmails extends Module
 
         return true;
     }
+
+    protected function installTab()
+    {
+        $className = 'AdminSenderAutomatedEmails';
+
+        if (method_exists('Tab', 'getIdFromClassName')) {
+            $tabId = \Tab::getIdFromClassName($className);
+            if ($tabId) {
+                return true;
+            }
+        }
+
+        $tab = new Tab();
+        $tab->class_name = $className;
+        $tab->module = $this->name;
+        $tab->id_parent = Tab::getIdFromClassName('CONFIGURE');
+        $tab->active = 1;
+        $tab->position = 1;
+
+        foreach (Language::getLanguages() as $lang) {
+            $tab->name[$lang['id_lang']] = $this->lCompat('Sender.net');
+        }
+
+        return $tab->add();
+    }
+
+
 
     /**
      * @return bool
@@ -1384,5 +1412,14 @@ class SenderAutomatedEmails extends Module
     {
         Configuration::deleteByName('SPM_CACHED_FORM');
         Configuration::deleteByName('SPM_CACHED_FORM_UPDATED');
+    }
+
+    public function lCompat($string)
+    {
+        if (method_exists($this, 'getTranslator') && $this->getTranslator()) {
+            return $this->getTranslator()->trans($string);
+        }
+
+        return $this->l($string);
     }
 }
