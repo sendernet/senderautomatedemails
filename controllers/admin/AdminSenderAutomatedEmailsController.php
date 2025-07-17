@@ -135,6 +135,10 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         $this->module->apiClient = new SenderApiClient();
         $this->module->apiClient->setApiKey(Configuration::get('SPM_API_KEY'));
 
+        if (!Configuration::get('SPM_SENDERAPP_MODULE_TOKEN')) {
+            Configuration::updateValue('SPM_SENDERAPP_MODULE_TOKEN', Tools::passwdGen(32));
+        }
+
         if (version_compare(_PS_VERSION_, '1.6.0.0', '>=')) {
             $disconnectUrl = $this->context->link->getAdminLink('AdminSenderAutomatedEmails') . '&disconnect=true';
         } else {
@@ -194,15 +198,15 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             'allowCartTrack' => Configuration::get('SPM_ALLOW_TRACK_CARTS'),
             'allowForms' => Configuration::get('SPM_ALLOW_FORMS'),
             'cartsAjaxurl' => $this->module->module_url . '/ajax/carts_ajax.php?token='
-                . Tools::getAdminToken($this->module->name),
+                . Configuration::get('SPM_SENDERAPP_MODULE_TOKEN'),
             'formsAjaxurl' => $this->module->module_url . '/ajax/forms_ajax.php?token='
-                . Tools::getAdminToken($this->module->name),
+                . Configuration::get('SPM_SENDERAPP_MODULE_TOKEN'),
             'listsAjaxurl' => $this->module->module_url . '/ajax/lists_ajax.php?token='
-                . Tools::getAdminToken($this->module->name),
+                . Configuration::get('SPM_SENDERAPP_MODULE_TOKEN'),
             'dataAjaxurl' => $this->module->module_url . '/ajax/data_ajax.php?token='
-                . Tools::getAdminToken($this->module->name),
+                . Configuration::get('SPM_SENDERAPP_MODULE_TOKEN'),
             'syncListAjaxUrl' => $this->module->module_url . '/ajax/sync_list.php?token='
-                . Tools::getAdminToken($this->module->name),
+                . Configuration::get('SPM_SENDERAPP_MODULE_TOKEN'),
             'formId' => Configuration::get('SPM_FORM_ID'),
             'partnerOfferId' => Configuration::get('SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID'),
             'guestListId' => Configuration::get('SPM_GUEST_LIST_ID'),

@@ -117,6 +117,10 @@ class SenderAutomatedEmails extends Module
                     return false;
                 }
             }
+
+            if (!Configuration::get('SPM_SENDERAPP_MODULE_TOKEN')) {
+                Configuration::updateValue('SPM_SENDERAPP_MODULE_TOKEN', Tools::passwdGen(32));
+            }
         }
 
         if (
@@ -171,8 +175,6 @@ class SenderAutomatedEmails extends Module
 
         return $tab->add();
     }
-
-
 
     /**
      * @return bool
@@ -973,7 +975,7 @@ class SenderAutomatedEmails extends Module
                         $customerFields[$configValue] = $customer->birthday;
                         break;
                     case 'gender':
-                        $value = $customer->id_gender == 1 ? $this->l('Male') : $this->l('Female');
+                        $value = $customer->id_gender == 1 ? $this->lCompat('Male') : $this->lCompat('Female');
                         $customerFields[$configValue] = $value;
                         break;
                 }
@@ -1022,6 +1024,16 @@ class SenderAutomatedEmails extends Module
             return [
                 'success' => false,
                 'message' => $e ? $e->getMessage() : 'Unexpected error',
+                'totals' => [
+                    'customers' => 0,
+                    'products' => 0,
+                    'orders' => 0,
+                ],
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'message' => 'Fatal error: ' . $e->getMessage(),
                 'totals' => [
                     'customers' => 0,
                     'products' => 0,
@@ -1225,7 +1237,7 @@ class SenderAutomatedEmails extends Module
 
                 if (!empty($product['id_image'])) {
                     $imageUrl = Context::getContext()->link->getImageLink(
-                        Tools::link_rewrite($product['name']),
+                        Tools::str2url($product['name']),
                         $product['id_product'] . '-' . $product['id_image'],
                         'large_default'
                     );
@@ -1372,7 +1384,7 @@ class SenderAutomatedEmails extends Module
         $newTab->id_parent = Tab::getIdFromClassName('CONFIGURE');
         $newTab->active = 1;
         foreach ($langs as $l) {
-            $newTab->name[$l['id_lang']] = $this->l('Sender.net');
+            $newTab->name[$l['id_lang']] = $this->lCompat('Sender.net');
         }
         $newTab->save();
         return true;
