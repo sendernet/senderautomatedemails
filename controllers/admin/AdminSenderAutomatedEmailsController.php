@@ -183,6 +183,11 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             $status = false;
         }
 
+        $connectedStore = $this->module->senderApiClient()->getCurrentStore();
+        if (!$connectedStore){
+            $this->addStore();
+        }
+
         $this->context->smarty->assign(array(
             'imageUrl' => $this->module->getPathUri() . 'views/img/sender_logo.png',
             'connectedAccount' => $this->module->senderApiClient()->getCurrentAccount(),

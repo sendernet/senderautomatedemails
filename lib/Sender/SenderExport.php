@@ -15,15 +15,10 @@ class SenderExport extends SenderApiClient
         $storeId = Configuration::get('SPM_SENDERAPP_STORE_ID');
         $endPoint = "stores/".$storeId."/import_shop_data";
 
-        $response = $this->makeExportCurlRequest($endPoint, $shopData);
-
-        if (!$response['success']) {
+        if (!$response = $this->makeExportCurlRequest($endPoint, $shopData)) {
             return [
                 'success' => false,
                 'message' => 'Unable to export shop data',
-                'http_status' => $response['status'] ?? null,
-                'error' => $response['curl_error'] ?? null,
-                'raw_response' => $response['raw'] ?? null,
             ];
         }
 
@@ -57,24 +52,10 @@ class SenderExport extends SenderApiClient
 
         $server_output = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
 
         curl_close($ch);
 
-        if ($status === 200 && $server_output !== false) {
-            return [
-                'success' => true,
-                'status' => $status,
-                'raw' => $server_output,
-            ];
-        }
-
-        return [
-            'success' => false,
-            'status' => $status,
-            'curl_error' => $curlError ?: null,
-            'raw' => $server_output ?: null,
-        ];
+        return $status === 200 ? $server_output : false;
     }
 
 }

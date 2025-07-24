@@ -521,7 +521,22 @@ class SenderApiClient
         }
 
     }
-    
+
+    public function getCurrentStore()
+    {
+        $requestConfig = [
+            'http' => 'get',
+            'method' => "stores/" . Configuration::get('SPM_SENDERAPP_STORE_ID'),
+            'stats' => false,
+        ];
+        $response = $this->makeApiRequest($requestConfig, []);
+        if ($response){
+            return Configuration::get('SPM_SENDERAPP_STORE_ID');
+        }
+
+        return $response;
+    }
+
     public function removeStore()
     {
         $storeId = Configuration::get('SPM_SENDERAPP_STORE_ID');
