@@ -29,8 +29,8 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
      */
     public function customMessages()
     {
-        $this->_error[100] = $this->l('Could not authenticate. Incorrect api access token, please try again');
-        $this->_error[101] = $this->l('No Api access token provided');
+        $this->_error[100] = $this->module->lCompat('Could not authenticate. Incorrect api access token, please try again');
+        $this->_error[101] = $this->module->lCompat('No Api access token provided');
     }
 
     // Do not init Header
@@ -135,6 +135,10 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         $this->module->apiClient = new SenderApiClient();
         $this->module->apiClient->setApiKey(Configuration::get('SPM_API_KEY'));
 
+        if (!Configuration::get('SPM_SENDERAPP_MODULE_TOKEN')) {
+            Configuration::updateValue('SPM_SENDERAPP_MODULE_TOKEN', Tools::passwdGen(32));
+        }
+
         if (version_compare(_PS_VERSION_, '1.6.0.0', '>=')) {
             $disconnectUrl = $this->context->link->getAdminLink('AdminSenderAutomatedEmails') . '&disconnect=true';
         } else {
@@ -148,11 +152,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         $output = '';
 
         // Add dependencies
-        $this->context->controller->addJquery();
-        $this->context->controller->addJS($this->module->views_url . '/js/script.js');
-        $this->context->controller->addJS($this->module->views_url . '/js/sp-vendor-table-sorter.js');
-        $this->context->controller->addCSS($this->module->views_url . '/css/style.css');
-        $this->context->controller->addCSS($this->module->views_url . '/css/material-font.css');
+        $this->loadAssets();
 
         $customFields = $this->module->senderApiClient()->getCustomFields();
 
@@ -183,6 +183,11 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             $status = false;
         }
 
+        $connectedStore = $this->module->senderApiClient()->getCurrentStore();
+        if (!$connectedStore){
+            $this->addStore();
+        }
+
         $this->context->smarty->assign(array(
             'imageUrl' => $this->module->getPathUri() . 'views/img/sender_logo.png',
             'connectedAccount' => $this->module->senderApiClient()->getCurrentAccount(),
@@ -198,15 +203,15 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
             'allowCartTrack' => Configuration::get('SPM_ALLOW_TRACK_CARTS'),
             'allowForms' => Configuration::get('SPM_ALLOW_FORMS'),
             'cartsAjaxurl' => $this->module->module_url . '/ajax/carts_ajax.php?token='
-                . Tools::getAdminToken($this->module->name),
+                . Configuration::get('SPM_SENDERAPP_MODULE_TOKEN'),
             'formsAjaxurl' => $this->module->module_url . '/ajax/forms_ajax.php?token='
-                . Tools::getAdminToken($this->module->name),
+                . Configuration::get('SPM_SENDERAPP_MODULE_TOKEN'),
             'listsAjaxurl' => $this->module->module_url . '/ajax/lists_ajax.php?token='
-                . Tools::getAdminToken($this->module->name),
+                . Configuration::get('SPM_SENDERAPP_MODULE_TOKEN'),
             'dataAjaxurl' => $this->module->module_url . '/ajax/data_ajax.php?token='
-                . Tools::getAdminToken($this->module->name),
+                . Configuration::get('SPM_SENDERAPP_MODULE_TOKEN'),
             'syncListAjaxUrl' => $this->module->module_url . '/ajax/sync_list.php?token='
-                . Tools::getAdminToken($this->module->name),
+                . Configuration::get('SPM_SENDERAPP_MODULE_TOKEN'),
             'formId' => Configuration::get('SPM_FORM_ID'),
             'partnerOfferId' => Configuration::get('SPM_CUSTOMER_FIELD_PARTNER_OFFERS_ID'),
             'guestListId' => Configuration::get('SPM_GUEST_LIST_ID'),
@@ -222,7 +227,7 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
                 ? Configuration::get('SPM_SENDERAPP_SYNC_LIST_DATE') : '',
             'integration_status' => isset($status) ? $status : true,
             'link' => $this->context->link,
-    ));
+        ));
         #loading templates
         $output .= $this->context->smarty->fetch($this->module->views_url . '/templates/admin/view.tpl');
 
@@ -321,5 +326,42 @@ class AdminSenderAutomatedEmailsController extends ModuleAdminController
         }
 
         Tools::redirect($url);
+    }
+
+    private function loadAssets()
+    {
+        $controller = $this->context->controller;
+        $moduleUrl = $this->module->getPathUri();
+
+        if (method_exists($controller, 'registerJavascript')) {
+            $controller->registerJavascript(
+                'module-' . $this->module->name . '-script',
+                $moduleUrl . 'views/js/script.js',
+                ['position' => 'bottom', 'priority' => 150]
+            );
+            $controller->registerJavascript(
+                'module-' . $this->module->name . '-table-sorter',
+                $moduleUrl . 'views/js/sp-vendor-table-sorter.js',
+                ['position' => 'bottom', 'priority' => 150]
+            );
+            $controller->registerStylesheet(
+                'module-' . $this->module->name . '-style',
+                $moduleUrl . 'views/css/style.css',
+                ['media' => 'all', 'priority' => 150]
+            );
+            $controller->registerStylesheet(
+                'module-' . $this->module->name . '-material-font',
+                $moduleUrl . 'views/css/material-font.css',
+                ['media' => 'all', 'priority' => 150]
+            );
+        } else {
+            if (method_exists($controller, 'addJquery')) {
+                $controller->addJquery();
+            }
+            $controller->addJS($moduleUrl . 'views/js/script.js');
+            $controller->addJS($moduleUrl . 'views/js/sp-vendor-table-sorter.js');
+            $controller->addCSS($moduleUrl . 'views/css/style.css');
+            $controller->addCSS($moduleUrl . 'views/css/material-font.css');
+        }
     }
 }
