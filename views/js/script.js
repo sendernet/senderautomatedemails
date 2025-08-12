@@ -70,9 +70,7 @@
             newSignupButton.attr('disabled', true);
 
             jQuery.post(listsAjaxurl, { action: 'saveALlowNewSignups' }, function(response) {
-                var proceed = jQuery.parseJSON(response);
-
-                if (!proceed.result) {
+                if (!response.result) {
 
                     statusTitle
                         .text('disabled')
@@ -110,7 +108,7 @@
             jQuery('#swToggleCartTrack').text('Saving...');
             jQuery('#swToggleCartTrack').attr('disabled', true);
             jQuery.post(cartsAjaxurl, { action: 'saveAllowCartTracking' }, function(response) {
-                var proceed = jQuery.parseJSON(response);
+                var proceed = response;
 
                 if (!proceed.result) {
                     jQuery('#swToggleCartTrackTitle').text('disabled');
@@ -142,7 +140,7 @@
             jQuery('#swToggleWidget').attr('disabled', true);
 
             jQuery.post(formsAjaxurl, { action: 'saveAllowForms' }, function(response) {
-                var proceed = jQuery.parseJSON(response);
+                var proceed = response;
 
                 if (!proceed.result) {
                     jQuery('#swToggleWidgetTitle').text('disabled');
@@ -174,9 +172,7 @@
             jQuery.post(cartsAjaxurl, {
                 action: 'saveAllowGuestCartTracking'
             }, function (response) {
-                var proceed = jQuery.parseJSON(response);
-                console.log(proceed.result);
-                if (!proceed.result) {
+                if (!response.result) {
                     jQuery('#swToggleGuestCartTrackingTitle').text('disabled');
                     jQuery('#swToggleGuestCartTrackingTitle').css('color', 'red');
                     jQuery('#swToggleGuestCartTracking').text('Enable');
@@ -205,9 +201,7 @@
             jQuery('#swTogglePush').attr('disabled', true);
 
             jQuery.post(pushAjaxurl, { action: 'saveAllowPush' }, function(response) {
-                var proceed = jQuery.parseJSON(response);
-
-                if (!proceed.result) {
+                if (!response.result) {
                     jQuery('#swTogglePushTitle').text('disabled');
                     jQuery('#swTogglePushTitle').css('color', 'red');
                     jQuery('#swTogglePush').text('Enable');
@@ -237,9 +231,7 @@
                 action: 'saveFormId',
                 form_id: jQuery('#swFormsSelect').val()
             }, function(response) {
-                var proceed = jQuery.parseJSON(response);
-
-                if (!proceed.result) {
+                if (!response.result) {
                     console.log('save error');
                 } else {
                     actionSaved($('#forms_tab').find('span'));
@@ -258,9 +250,7 @@
                 list_id: jQuery('#swGuestListSelect').val(),
                 list_name: jQuery('#swGuestListSelect option:selected').attr("id")
             }, function(response) {
-                var proceed = jQuery.parseJSON(response);
-
-                if (!proceed.result) {
+                if (!response.result) {
                     console.log('save error');
                 } else {
                     actionSaved($('#guest_list_tab').find('span'));
@@ -299,9 +289,7 @@
                 field_id: jQuery('#swPartnerOffers').val(),
                 field_name: jQuery('#swPartnerOffers option:selected').attr("id")
             }, function(response) {
-                var proceed = jQuery.parseJSON(response);
-
-                if (!proceed.result) {
+                if (!response.result) {
                     console.log('save error');
                 } else {
                     console.log('save success');
@@ -310,24 +298,23 @@
         });
 
         jQuery(".sender-custom-field").each((i, el) => {
-          jQuery(el).on("change", function (event) {
-            var fieldName = event.target.name;
-            jQuery.post(
-              dataAjaxurl,
-              {
-                action: `${fieldName}Field`,
-                field_id: event.target.value
-              },
-              function (response) {
-                var proceed = jQuery.parseJSON(response);
-                if (!proceed.result) {
-                  console.log("save error");
-                } else {
-                  actionSaved($(`#${fieldName}_tab`).find("span"));
-                }
-              }
-            );
-          });
+            jQuery(el).on("change", function (event) {
+                var fieldName = event.target.name;
+                jQuery.post(
+                    dataAjaxurl,
+                    {
+                        action: `${fieldName}Field`,
+                        field_id: event.target.value
+                    },
+                    function (response) {
+                        if (!response.result) {
+                            console.log("save error");
+                        } else {
+                            actionSaved($(`#${fieldName}_tab`).find("span"));
+                        }
+                    }
+                );
+            });
         });
 
         jQuery('#swCustomerListSelect').on('change', function(event) {
@@ -341,9 +328,7 @@
                 list_id: jQuery('#swCustomerListSelect').val(),
                 list_name: jQuery('#swCustomerListSelect option:selected').attr("id")
             }, function(response) {
-                var proceed = jQuery.parseJSON(response);
-
-                if (!proceed.result) {
+                if (!response.result) {
                     console.log('save error');
                 } else {
                     actionSaved($('#customer_list_tab').find('span'));
@@ -360,8 +345,7 @@
                 action: 'exportList',
                 list_id: jQuery('#swExportClientToList').val(),
             }, function(response) {
-                var proceed = jQuery.parseJSON(response);
-                if (!proceed.result) {
+                if (!response.result) {
                     console.log('Export list not saved');
                 } else {
                     console.log('Export list saved');
@@ -391,27 +375,28 @@
             buttonElm.html('Working on it');
             buttonElm.attr('disabled', true);
             jQuery('#responseMessage').hide();
+            jQuery('#syncError').hide();
 
             jQuery.get(syncListAjaxUrl, {
                 action: 'syncList',
             }, function(response) {
                 try {
-                    var proceed = jQuery.parseJSON(response);
-                    if (!proceed.result.success) {
+                    const proceed = typeof response === 'string' ? JSON.parse(response) : response;
+
+                    if (!proceed.result || proceed.result.success === false) {
+                        const errorMsg = proceed.result?.message || proceed.message || proceed.error || 'Something went wrong, please try again.';
                         buttonElm.html('Synchronize this list with Sender.net');
-                        jQuery('#syncError').show().html(proceed.result.message);
+                        jQuery('#syncError').show().html(errorMsg);
                     } else {
-                        $('#syncError').css('display', 'none');
+                        jQuery('#syncError').hide();
                         buttonElm.addClass('btn_sender_success');
                         buttonElm.html('Synchronized');
-                        if(proceed.result.time) {
+
+                        if (proceed.result.time) {
                             jQuery('#syncDate').html(proceed.result.time);
                         }
-                        var responseMessage = proceed.result.message;
-                        if (proceed.result.total) {
-                            responseMessage = `${responseMessage}`;
-                        }
 
+                        const responseMessage = proceed.result.message || 'Sync completed.';
                         jQuery('#responseMessage')
                             .stop(true, true)
                             .removeClass('alert-danger')
@@ -423,20 +408,25 @@
                             jQuery('#responseMessage').fadeOut('slow');
                         }, 15000);
 
-                        setTimeout(function(){
-                            $('#syncList').removeClass('btn_sender_success').html('Synchronize this list with Sender.net');
+                        setTimeout(function () {
+                            buttonElm.removeClass('btn_sender_success').html('Synchronize this list with Sender.net');
                         }, 5000);
                     }
-                } catch(e) {
+                } catch (e) {
                     buttonElm.html('Synchronize this list with Sender.net');
-                    jQuery('#syncError').show().html('Something went wrong, please try again.');
+                    jQuery('#syncError').show().html('Unexpected error: ' + e.message);
                 }
             })
-            .fail(() => {
-                buttonElm.html('Synchronize this list with Sender.net');
-                jQuery('#syncError').show().html('Something went wrong, please try again.');
-            })
-            .always(() => buttonElm.attr('disabled', false));
+                .fail((jqXHR) => {
+                    let errorMsg = 'Something went wrong, please try again.';
+                    try {
+                        const json = JSON.parse(jqXHR.responseText);
+                        errorMsg = json.message || json.error || errorMsg;
+                    } catch (_) {}
+                    buttonElm.html('Synchronize this list with Sender.net');
+                    jQuery('#syncError').show().html(errorMsg);
+                })
+                .always(() => buttonElm.attr('disabled', false));
         });
 
         function actionSaved(element){
