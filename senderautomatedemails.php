@@ -396,11 +396,11 @@ class SenderAutomatedEmails extends Module
             return;
         }
 
-        if (!Validate::isLoadedObject($context['newCustomer'])) {
+        $customer = $context['newCustomer'];
+
+        if (!Validate::isLoadedObject($customer)) {
             return;
         }
-
-        $customer = $this->context->customer;
 
         if (!Configuration::get('SPM_ALLOW_TRACK_CARTS')) {
             return;
@@ -428,6 +428,11 @@ class SenderAutomatedEmails extends Module
         }
 
         $customer = $this->context->customer;
+
+        if (!$customer instanceof Customer || empty($customer->id)) {
+            return;
+        }
+
         $this->formVisitor($customer, false);
     }
 
