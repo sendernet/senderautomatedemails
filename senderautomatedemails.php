@@ -649,12 +649,12 @@ class SenderAutomatedEmails extends Module
             ];
 
             if ($addToList) {
-                $visitorRegistration['list_id'] = (int)Configuration::get('SPM_GUEST_LIST_ID');
+                $visitorRegistration['list_id'] = Configuration::get('SPM_GUEST_LIST_ID');
             }
 
             if ($this->isExistingCustomer((int)$customer->id)) {
-                $customersListId = (int)Configuration::get('SPM_CUSTOMERS_LIST_ID');
-                if ($customersListId && $customersListId !== (int)$this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
+                $customersListId = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+                if ($customersListId && $customersListId !== $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
                     $visitorRegistration['list_id'] = $customersListId;
                 }
             }
@@ -856,7 +856,7 @@ class SenderAutomatedEmails extends Module
             return false;
         }
 
-        $sql = 'SELECT 1 FROM `' . _DB_PREFIX_ . 'orders` WHERE id_customer = ' . $customerId . ' LIMIT 1';
+        $sql = 'SELECT 1 FROM `' . _DB_PREFIX_ . 'orders` WHERE id_customer = ' . $customerId;
 
         return (bool) Db::getInstance()->getValue($sql);
     }
