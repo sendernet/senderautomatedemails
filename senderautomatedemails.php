@@ -851,16 +851,12 @@ class SenderAutomatedEmails extends Module
      */
     private function isExistingCustomer($customerId)
     {
-        if (!(int)$customerId) {
+        $customerId = (int)$customerId;
+        if ($customerId <= 0) {
             return false;
         }
 
-        $sql = '
-        SELECT 1
-        FROM ' . _DB_PREFIX_ . 'orders
-        WHERE id_customer = ' . (int)$customerId . '
-        LIMIT 1
-    ';
+        $sql = 'SELECT 1 FROM `' . _DB_PREFIX_ . 'orders` WHERE id_customer = ' . $customerId . ' LIMIT 1';
 
         return (bool) Db::getInstance()->getValue($sql);
     }
