@@ -659,10 +659,8 @@ class SenderAutomatedEmails extends Module
                 }
             }
 
-            $this->senderApiClient()->createSubscriber($visitorRegistration);
-
-            $subscriber = $this->senderApiClient()->isAlreadySubscriber(strtolower($customer->email));
-            if (!$subscriber || empty($subscriber->id)) {
+            $subscriber = $this->senderApiClient()->createSubscriber($visitorRegistration);
+            if (!$subscriber || empty($subscriber->id)){
                 return;
             }
 
