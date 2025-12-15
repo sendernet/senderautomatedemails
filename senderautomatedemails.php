@@ -77,7 +77,7 @@ class SenderAutomatedEmails extends Module
     {
         $this->name = 'senderautomatedemails';
         $this->tab = 'emailing';
-        $this->version = '3.7.9';
+        $this->version = '3.8.0';
         $this->author = 'Sender.net';
         $this->author_uri = 'https://www.sender.net/';
         $this->need_instance = 0;
@@ -627,54 +627,55 @@ class SenderAutomatedEmails extends Module
      */
     private function formVisitor($customer, $saveFields = true, $addToList = true)
     {
-        if (
-            $this->context->cookie->__isset('sender-added-visitor')
-            && !empty($this->context->cookie->__get('sender-added-visitor'))
-        ) {
-            if ($this->compareSenderDateTime($this->context->cookie->__get('sender-added-visitor'))) {
+        try {
+            if (!$customer || empty($customer->email)) {
                 return;
             }
-        }
 
-        $visitorRegistration = [
-            'email' => $customer->email,
-            'firstname' => $customer->firstname,
-            'lastname' => $customer->lastname,
-            'newsletter' => $customer->newsletter,
-            'resource_key' => Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'),
-            'store_id' => Configuration::get('SPM_SENDERAPP_STORE_ID'),
-        ];
-
-        if ($addToList) {
-            $visitorRegistration['list_id'] = Configuration::get('SPM_GUEST_LIST_ID');
-        }
-
-        if ($this->checkOrderHistory($customer->id)) {
-            if (Configuration::get('SPM_CUSTOMERS_LIST_ID') != $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
-                $visitorRegistration['list_id'] = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+            if ($this->context->cookie->__isset('sender-added-visitor')
+                && !empty($this->context->cookie->__get('sender-added-visitor'))
+                && $this->compareSenderDateTime($this->context->cookie->__get('sender-added-visitor'))
+            ) {
+                return;
             }
-        }
 
-        $this->senderApiClient()->createSubscriber($visitorRegistration);
+            $visitorRegistration = [
+                'email' => (string)$customer->email,
+                'firstname' => (string)$customer->firstname,
+                'lastname' => (string)$customer->lastname,
+                'newsletter' => (int)(bool)$customer->newsletter,
+                'resource_key' => (string)Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'),
+                'store_id' => Configuration::get('SPM_SENDERAPP_STORE_ID'),
+            ];
 
-        if (!$subscriber = $this->senderApiClient()->isAlreadySubscriber(strtolower($customer->email))) {
-            return;
-        }
-
-        if ($saveFields) {
-            if (!empty($customFields = $this->getCustomFields($customer))) {
-                $this->senderApiClient()->addFields($subscriber->id, $customFields);
+            if ($addToList) {
+                $visitorRegistration['list_id'] = Configuration::get('SPM_GUEST_LIST_ID');
             }
+
+            if ($this->isExistingCustomer((int)$customer->id)) {
+                $customersListId = Configuration::get('SPM_CUSTOMERS_LIST_ID');
+                if ($customersListId && $customersListId !== $this->defaultSettings['SPM_CUSTOMERS_LIST_ID']) {
+                    $visitorRegistration['list_id'] = $customersListId;
+                }
+            }
+
+            $subscriber = $this->senderApiClient()->createSubscriber($visitorRegistration);
+            if (!$subscriber || empty($subscriber->id)){
+                return;
+            }
+
+            if ($saveFields) {
+                $customFields = $this->getCustomFields($customer);
+                if (!empty($customFields)) {
+                    $this->senderApiClient()->addFields($subscriber->id, $customFields);
+                }
+            }
+
+            $this->safeSetVisitorCookies($customer);
+
+        } catch (\Throwable $e) {
+            PrestaShopLogger::addLog('[Sender][formVisitor] ' . $e->getMessage(), 3);
         }
-
-        $this->context->cookie->__set('sender-added-visitor', strtotime(date('Y-m-d H:i:s')));
-        $this->context->cookie->write();
-
-        $this->context->cookie->__set('visitorData', json_encode([
-            'email' => $customer->email,
-            'resource_key' => Configuration::get('SPM_SENDERAPP_RESOURCE_KEY_CLIENT'),
-            'visitor_added_time' => strtotime(date('Y-m-d H:i:s')),
-        ]));
     }
 
     /**
@@ -848,13 +849,16 @@ class SenderAutomatedEmails extends Module
      * @param $customerId
      * @return bool
      */
-    private function checkOrderHistory($customerId)
+    private function isExistingCustomer($customerId)
     {
-        $customerOrders = Order::getCustomerOrders($customerId);
-        if ($customerOrders && count($customerOrders) > 0) {
-            return true;
+        $customerId = (int)$customerId;
+        if ($customerId <= 0) {
+            return false;
         }
-        return false;
+
+        $sql = 'SELECT 1 FROM `' . _DB_PREFIX_ . 'orders` WHERE id_customer = ' . $customerId;
+
+        return (bool) Db::getInstance()->getValue($sql);
     }
 
     /**
