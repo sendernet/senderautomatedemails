@@ -1131,12 +1131,28 @@ class SenderAutomatedEmails extends Module
                 break;
             }
 
+            $customers = array_map(function ($row) {
+                $fixed = [];
+                foreach ($row as $k => $v) {
+                    $fixed[trim($k)] = $v;
+                }
+                return $fixed;
+            }, $customers);
+
             array_walk($customers, function (&$customer) use ($fieldsMap, $tagId) {
                 $customer['fields'] = [];
 
-                foreach($fieldsMap as $column => $id) {
-                    if (!$id) continue;
-                    $customer['fields'][$id] = $customer[$column];
+                foreach ($fieldsMap as $column => $id) {
+                    $id = (string) $id;
+                    if ($id === '' || $id === '0') continue;
+
+                    $val = $customer[$column] ?? null;
+
+                    if ($column === 'birthday' && ($val === '0000-00-00' || $val === '0000-00-00 00:00:00')) {
+                        $val = null;
+                    }
+
+                    $customer['fields'][$id] = $val;
                     unset($customer[$column]);
                 }
 
@@ -1144,7 +1160,7 @@ class SenderAutomatedEmails extends Module
                     $customer['tags'] = [$tagId];
                 }
 
-                $hasCart = $this->checkIfCustomerHasCart($customer['id']);
+                $hasCart = $this->checkIfCustomerHasCart((int) $customer['id']);
 
                 if ($hasCart) {
                     $customerListTag = Configuration::get('SPM_CUSTOMERS_LIST_ID');
