@@ -1060,7 +1060,7 @@ class SenderAutomatedEmails extends Module
         $countryTableName = _DB_PREFIX_ . "country";
         $zoneTableName = _DB_PREFIX_ . "zone";
         $languageTableName = _DB_PREFIX_ . "lang";
-        $limit = 500;
+        $limit = 200;
 
         $exporter = new SenderExport(Configuration::get('SPM_API_KEY'));
 
@@ -1100,7 +1100,11 @@ class SenderAutomatedEmails extends Module
             $sql = "SELECT C.id_customer as id," . implode(",", $fields) . " FROM " . $customerTableName . " C ";
 
             if ($fieldsMap["gender"]) {
-                $sql .= "LEFT JOIN " . $genderTableName . " ON " . $genderTableName . ".id_gender = C.id_gender ";
+                $langId = (int)Context::getContext()->language->id;
+
+                $sql .= "LEFT JOIN " . $genderTableName . "
+                    ON " . $genderTableName . ".id_gender = C.id_gender
+                    AND " . $genderTableName . ".id_lang = " . $langId . " ";
             }
 
             if ($fieldsMap["language"]) {
