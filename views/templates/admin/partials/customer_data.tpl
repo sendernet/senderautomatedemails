@@ -29,15 +29,21 @@ enable feature Cart tracking.' mod='senderautomatedemails'}
             </blockquote>
             <div>
                 <label class="FIRSTNAME">
-                    <input class="spm-customer-data-input sender-checkbox" type="checkbox"
-                           value="FIRSTNAME" name="FIRSTNAME">
+                    <input class="spm-customer-data-input sender-checkbox"
+                           type="checkbox"
+                           value="FIRSTNAME"
+                           name="FIRSTNAME"
+                           {if $firstnameEnabled}checked="checked"{/if}>
                     <span>{l s='Firstname' mod='senderautomatedemails'}</span>
                 </label>
             </div>
             <div>
                 <label class="LASTNAME">
-                    <input class="spm-customer-data-input sender-checkbox" type="checkbox"
-                           value="LASTNAME" name="LASTNAME">
+                    <input class="spm-customer-data-input sender-checkbox"
+                           type="checkbox"
+                           value="LASTNAME"
+                           name="LASTNAME"
+                           {if $lastnameEnabled}checked="checked"{/if}>
                     <span>{l s='Lastname' mod='senderautomatedemails'}</span>
                 </label>
             </div>

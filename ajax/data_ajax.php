@@ -61,19 +61,19 @@ switch (Tools::getValue('action')) {
         die(json_encode(['result' => true]));
 
     case 'genderField':
-        Configuration::updateValue('SPM_CUSTOMER_FIELD_GENDER', Tools::getValue('field_id') == 0 ? Tools::getValue('field_id') : null);
+        Configuration::updateValue('SPM_CUSTOMER_FIELD_GENDER', Tools::getValue('field_id'));
         die(json_encode(['result' => true]));
 
     case 'birthdayField':
-        Configuration::updateValue('SPM_CUSTOMER_FIELD_BIRTHDAY', Tools::getValue('field_id') == 0 ? Tools::getValue('field_id') : null);
+        Configuration::updateValue('SPM_CUSTOMER_FIELD_BIRTHDAY', Tools::getValue('field_id'));
         die(json_encode(['result' => true]));
 
     case 'languageField':
-        Configuration::updateValue('SPM_CUSTOMER_FIELD_LANGUAGE', Tools::getValue('field_id') == 0 ? Tools::getValue('field_id') : null);
+        Configuration::updateValue('SPM_CUSTOMER_FIELD_LANGUAGE', Tools::getValue('field_id'));
         die(json_encode(['result' => true]));
 
     case 'countryField':
-        Configuration::updateValue('SPM_CUSTOMER_FIELD_COUNTRY', Tools::getValue('field_id') == 0 ? Tools::getValue('field_id') : null);
+        Configuration::updateValue('SPM_CUSTOMER_FIELD_COUNTRY', Tools::getValue('field_id'));
         die(json_encode(['result' => true]));
 
     default:
