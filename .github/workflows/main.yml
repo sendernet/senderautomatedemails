@@ -3,7 +3,7 @@ name: Build Prestashop Release Package
 on:
   push:
     branches:
-      - '**'
+      - master
 
 permissions:
   contents: write
@@ -90,9 +90,26 @@ jobs:
           files: senderautomatedemails.zip
           generate_release_notes: true
 
-      - name: Upload workflow artifact
-        if: github.ref != 'refs/heads/master'
-        uses: actions/upload-artifact@v4
-        with:
-          name: senderautomatedemails
-          path: senderautomatedemails.zip
+      - name: Notify WordPress to sync integrations
+        if: github.ref == 'refs/heads/master' && steps.release_check.outputs.exists == 'false' && secrets.SENDER_INTEGRATIONS_SYNC_URL != '' && secrets.SENDER_INTEGRATIONS_SYNC_SECRET != ''
+        env:
+          SYNC_URL: ${{ secrets.SENDER_INTEGRATIONS_SYNC_URL }}
+          SYNC_SECRET: ${{ secrets.SENDER_INTEGRATIONS_SYNC_SECRET }}
+        run: |
+          set -euo pipefail
+
+          HTTP_STATUS="$(curl -sS -o /tmp/sender-integrations-sync-response.json -w "%{http_code}" \
+            -X POST "${SYNC_URL}" \
+            -H "Content-Type: application/json" \
+            -H "X-Sender-Integrations-Secret: ${SYNC_SECRET}" \
+            --data '{"integration":"Prestashop"}' || true)"
+
+          echo "WordPress sync response status: ${HTTP_STATUS}"
+
+          if [ -f /tmp/sender-integrations-sync-response.json ]; then
+            cat /tmp/sender-integrations-sync-response.json
+          fi
+
+          if [ "${HTTP_STATUS}" -lt 200 ] || [ "${HTTP_STATUS}" -ge 300 ]; then
+            echo "WordPress sync notification did not succeed. Daily cron remains as fallback."
+          fi
