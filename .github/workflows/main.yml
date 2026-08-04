@@ -4,14 +4,12 @@ on:
   push:
     branches:
       - '**'
-  release:
-    types:
-      - published
+
+permissions:
+  contents: write
 
 jobs:
   package:
-    # Re-enable this when switching back to release-only packaging on master.
-    # if: github.event.release.target_commitish == 'master'
     runs-on: ubuntu-latest
 
     steps:
@@ -51,14 +49,49 @@ jobs:
 
           echo "Created ${ZIP_PATH}"
 
-      - name: Upload release asset
-        if: github.event_name == 'release'
+      - name: Detect module version
+        id: version
+        if: github.ref == 'refs/heads/master'
+        run: |
+          set -euo pipefail
+
+          VERSION="$(sed -n "s/.*\\\$this->version = '\\([^']*\\)'.*/\\1/p" senderautomatedemails.php | head -n 1)"
+
+          if [ -z "${VERSION}" ]; then
+            echo "Could not detect module version from senderautomatedemails.php" >&2
+            exit 1
+          fi
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether release already exists
+        id: release_check
+        if: github.ref == 'refs/heads/master'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          if gh release view "${TAG_NAME}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub release
+        if: github.ref == 'refs/heads/master' && steps.release_check.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          target_commitish: master
           files: senderautomatedemails.zip
+          generate_release_notes: true
 
       - name: Upload workflow artifact
-        if: github.event_name == 'push'
+        if: github.ref != 'refs/heads/master'
         uses: actions/upload-artifact@v4
         with:
           name: senderautomatedemails
