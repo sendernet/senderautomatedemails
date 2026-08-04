@@ -91,12 +91,17 @@ jobs:
           generate_release_notes: true
 
       - name: Notify WordPress to sync integrations
-        if: github.ref == 'refs/heads/master' && steps.release_check.outputs.exists == 'false' && secrets.SENDER_INTEGRATIONS_SYNC_URL != '' && secrets.SENDER_INTEGRATIONS_SYNC_SECRET != ''
+        if: github.ref == 'refs/heads/master' && steps.release_check.outputs.exists == 'false'
         env:
           SYNC_URL: ${{ secrets.SENDER_INTEGRATIONS_SYNC_URL }}
           SYNC_SECRET: ${{ secrets.SENDER_INTEGRATIONS_SYNC_SECRET }}
         run: |
           set -euo pipefail
+
+          if [ -z "${SYNC_URL}" ] || [ -z "${SYNC_SECRET}" ]; then
+            echo "WordPress sync secrets are not configured. Skipping immediate sync notification."
+            exit 0
+          fi
 
           HTTP_STATUS="$(curl -sS -o /tmp/sender-integrations-sync-response.json -w "%{http_code}" \
             -X POST "${SYNC_URL}" \
