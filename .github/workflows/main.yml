@@ -1,0 +1,115 @@
+name: Build Prestashop Release Package
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build release ZIP
+        run: |
+          set -euo pipefail
+
+          ROOT_DIR="$GITHUB_WORKSPACE"
+          STAGE_DIR="${ROOT_DIR}/.release-build"
+          PACKAGE_DIR="${STAGE_DIR}/senderautomatedemails"
+          ZIP_PATH="${ROOT_DIR}/senderautomatedemails.zip"
+
+          rm -rf "${STAGE_DIR}" "${ZIP_PATH}"
+          mkdir -p "${PACKAGE_DIR}"
+
+          shopt -s dotglob
+          for entry in "${ROOT_DIR}"/*; do
+            name="$(basename "${entry}")"
+
+            case "${name}" in
+              .git|.github|.idea|.release-build|log|test|DEV.MD|docker-compose.yml|.env|.env.example)
+                continue
+                ;;
+            esac
+
+            cp -R "${entry}" "${PACKAGE_DIR}/"
+          done
+          shopt -u dotglob
+
+          (
+            cd "${STAGE_DIR}"
+            zip -rq "${ZIP_PATH}" senderautomatedemails
+          )
+
+          echo "Created ${ZIP_PATH}"
+
+      - name: Detect module version
+        id: version
+        if: github.ref == 'refs/heads/master'
+        run: |
+          set -euo pipefail
+
+          VERSION="$(sed -n "s/.*\\\$this->version = '\\([^']*\\)'.*/\\1/p" senderautomatedemails.php | head -n 1)"
+
+          if [ -z "${VERSION}" ]; then
+            echo "Could not detect module version from senderautomatedemails.php" >&2
+            exit 1
+          fi
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether release already exists
+        id: release_check
+        if: github.ref == 'refs/heads/master'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          if gh release view "${TAG_NAME}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub release
+        if: github.ref == 'refs/heads/master' && steps.release_check.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          target_commitish: master
+          files: senderautomatedemails.zip
+          generate_release_notes: true
+
+      - name: Notify WordPress to sync integrations
+        if: github.ref == 'refs/heads/master' && steps.release_check.outputs.exists == 'false' && secrets.SENDER_INTEGRATIONS_SYNC_URL != '' && secrets.SENDER_INTEGRATIONS_SYNC_SECRET != ''
+        env:
+          SYNC_URL: ${{ secrets.SENDER_INTEGRATIONS_SYNC_URL }}
+          SYNC_SECRET: ${{ secrets.SENDER_INTEGRATIONS_SYNC_SECRET }}
+        run: |
+          set -euo pipefail
+
+          HTTP_STATUS="$(curl -sS -o /tmp/sender-integrations-sync-response.json -w "%{http_code}" \
+            -X POST "${SYNC_URL}" \
+            -H "Content-Type: application/json" \
+            -H "X-Sender-Integrations-Secret: ${SYNC_SECRET}" \
+            --data '{"integration":"Prestashop"}' || true)"
+
+          echo "WordPress sync response status: ${HTTP_STATUS}"
+
+          if [ -f /tmp/sender-integrations-sync-response.json ]; then
+            cat /tmp/sender-integrations-sync-response.json
+          fi
+
+          if [ "${HTTP_STATUS}" -lt 200 ] || [ "${HTTP_STATUS}" -ge 300 ]; then
+            echo "WordPress sync notification did not succeed. Daily cron remains as fallback."
+          fi
