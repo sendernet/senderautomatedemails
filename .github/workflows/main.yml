@@ -1,0 +1,65 @@
+name: Build Prestashop Release Package
+
+on:
+  push:
+    branches:
+      - '**'
+  release:
+    types:
+      - published
+
+jobs:
+  package:
+    # Re-enable this when switching back to release-only packaging on master.
+    # if: github.event.release.target_commitish == 'master'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build release ZIP
+        run: |
+          set -euo pipefail
+
+          ROOT_DIR="$GITHUB_WORKSPACE"
+          STAGE_DIR="${ROOT_DIR}/.release-build"
+          PACKAGE_DIR="${STAGE_DIR}/senderautomatedemails"
+          ZIP_PATH="${ROOT_DIR}/senderautomatedemails.zip"
+
+          rm -rf "${STAGE_DIR}" "${ZIP_PATH}"
+          mkdir -p "${PACKAGE_DIR}"
+
+          shopt -s dotglob
+          for entry in "${ROOT_DIR}"/*; do
+            name="$(basename "${entry}")"
+
+            case "${name}" in
+              .git|.github|.idea|.release-build|log|test|DEV.MD|docker-compose.yml|.env|.env.example)
+                continue
+                ;;
+            esac
+
+            cp -R "${entry}" "${PACKAGE_DIR}/"
+          done
+          shopt -u dotglob
+
+          (
+            cd "${STAGE_DIR}"
+            zip -rq "${ZIP_PATH}" senderautomatedemails
+          )
+
+          echo "Created ${ZIP_PATH}"
+
+      - name: Upload release asset
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: senderautomatedemails.zip
+
+      - name: Upload workflow artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: senderautomatedemails
+          path: senderautomatedemails.zip
